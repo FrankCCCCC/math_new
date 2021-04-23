@@ -1,0 +1,31 @@
+---
+header-includes:
+- \usepackage{xeCJK} 
+- \usepackage{fontspec} 
+- \setCJKmainfont{微軟正黑體} 
+- \XeTeXlinebreaklocale "zh"
+- \XeTeXlinebreakskip = 0pt plus 1pt
+title: "Statistical Computing HW3"
+author: "周聖諺"
+date: "4/23/2021"
+output: html_document
+output:
+  pdf_document: 
+   latex_engine: xelatex
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem 1:
+
+```{r }
+print(dgamma(1,scale=0.5,shape=2))
+```
+
+## Problem 2:
+
+## Problem 3:

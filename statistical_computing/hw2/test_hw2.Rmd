@@ -1,0 +1,216 @@
+---
+header-includes:
+- \usepackage{xeCJK} 
+- \usepackage{fontspec} 
+- \setCJKmainfont{微軟正黑體} 
+- \XeTeXlinebreaklocale "zh"
+- \XeTeXlinebreakskip = 0pt plus 1pt
+title: "Test HW2"
+author: "106033233 資工21 周聖諺"
+date: "4/3/2021"
+output:
+  pdf_document: 
+   latex_engine: xelatex
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Some Essential Functions
+
+```{r ess_func, echo=FALSE, results='markup'}
+# Global Variables
+mean_e <<- 0
+sigma_e2 <<- 1
+
+mean_x <<- 0
+sigma_x2 <<- 2
+
+beta_0 <<- 1
+beta_1 <<- 2
+
+gen_y <- function(x){
+  #mean_e <- 0
+  #sigma_e2 <- 1
+  epsilon <- rnorm(1, mean_e, sigma_e2)
+  
+  #beta_0 <- 1
+  #beta_1 <- 2
+  
+  return(beta_0 + x * beta_1 + epsilon)
+}
+
+gen_ys <- function(xs){
+  return(sapply(xs, gen_y))
+}
+
+inverse_v <-function(v){
+  return(1/v)
+}
+
+OLS_beta_0 <- function(xs, ys){
+  return(mean(ys) - OLS_beta_1(xs, ys) * mean(xs))
+}
+
+OLS_beta_1 <- function(xs, ys){
+  #beta_0 <- 1
+  #return(1/sum(xs * xs) * sum(xs * (ys - beta_0)))
+  return(cov(xs, ys) / var(xs))
+}
+
+bootstrap_beta_1_est <- function(n){
+  #mean_x <- 0
+  #sigma_x2 <- 2
+  xs <- rnorm(n, mean_x, sigma_x2)
+  ys <- gen_ys(xs)
+  
+  return(OLS_beta_1(xs, ys))
+}
+
+bootstrap_beta_1_ests <- function(n, m){
+  ests <- rep(n, m)
+  return(sapply(ests, bootstrap_beta_1_est))
+}
+n <- 500
+m <- 200
+ests <- bootstrap_beta_1_ests(n, m)
+
+print(cat("The OLS Estimate With Bootstrap: Mean=", mean(ests), "Variance=", var(ests)))
+hist(ests, main="Regression of Beta1", xlab="Value of Beta1", breaks=20, freq = FALSE)
+```
+## Problem 2
+
+### (d) Observation Resampling & Residual Resampling
+
+```{r, echo=FALSE, results='markup'}
+# Observation Resampling
+adapter <- function(data, n){
+  return(bootstrap_beta_1_est_rand(data[1:n], data[(n+1):(2*n)]))
+}
+
+bootstrap_beta_1_est_rand <- function(xs, ys){
+  return(OLS_beta_1(xs, ys))
+}
+
+idx2element <- function(idxs, list){
+  return(list[idxs])
+}
+
+bootstrap_beta_1_ests_rand <- function(n, m, xs, ys){
+  seq <- 1:n
+  sample_idxs <- replicate(m, sample(seq, n, replace=TRUE))
+  
+  sample_xs <- apply(sample_idxs, 2, idx2element, xs)
+  #print(sample_xs)
+  sample_ys <- apply(sample_idxs, 2, idx2element, ys)
+  #print(sample_ys)
+  sample_xys <- rbind(sample_xs, sample_ys)
+  
+  #ests <- replicate(m, sample(xs, n, replace=TRUE))
+  return(apply(sample_xys, 2, adapter, n))
+}
+
+# Residual Resampling
+gen_residuals <- function(n, xs, ys){
+  est_beta_1 <- OLS_beta_1(xs, ys)
+  est_beta_0 <- OLS_beta_0(xs, ys)
+  
+  residuals <- sapply(1:n, function(i) return(ys[i] - (est_beta_0 + est_beta_1 * xs[i])))
+  return(residuals)
+}
+
+bootstrap_beta_1_ests_fixed <- function(n, m, xs, ys){
+  est_beta_1 <- OLS_beta_1(xs, ys)
+  est_beta_0 <- OLS_beta_0(xs, ys)
+  residuals <- gen_residuals(n, xs, ys)
+    
+  sample_xs <- replicate(m, xs)
+  sample_ys <- replicate(m, xs)
+  sample_residuals <- replicate(m, sample(residuals, n, replace=TRUE))
+  
+  sample_ys <- apply(sample_xs, 2, function(x, est_beta_0, est_beta_1) return(est_beta_0 + est_beta_1 * x), est_beta_0, est_beta_1)
+  
+  sample_ys <- sample_ys + sample_residuals
+  sample_xys <- rbind(sample_xs, sample_ys)
+  
+  return(apply(sample_xys, 2, adapter, n))
+}
+
+n <- 500
+m <- 200
+xs <- rnorm(n, mean_x, sigma_x2)
+ys <- gen_ys(xs)
+
+ests_o <- bootstrap_beta_1_ests_rand(n, m, xs, ys)
+ests_r <- bootstrap_beta_1_ests_fixed(n, m, xs, ys)
+
+# 
+print(cat("The OLS Estimate With Observation Resampling: Mean=", mean(ests_o), "Variance=", var(ests_o)))
+hist(ests_o, main="OLS Estimate of Beta1 With Observation Resampling", xlab="Value of Beta1", breaks=20, freq = FALSE)
+
+# 
+print(cat("The OLS Estimate With Residual Resampling: Mean=", mean(ests_r), "Variance=", var(ests_r)))
+hist(ests_r, main="OLS Estimate of Beta1 With Residual Resampling", xlab="Value of Beta1", breaks=20, freq = FALSE)
+```
+
+### (e) Perturbation Bootstrap
+
+```{r, echo=FALSE, results='markup'}
+# Perturbation Bootstraping
+OLS_beta_1_perturb <- function(xs, ys){
+  #beta_0 <- 1
+  len <- length(xs)
+  perturbs <- rexp(len, 1)
+  mean_x <- mean(xs)
+  mean_y <- mean(ys)
+  
+  w_cov <- sum((xs - mean_x) * (ys - mean_y) * perturbs)
+  w_var <- sum((xs - mean_x) * (xs - mean_x) * perturbs)
+  #return(w_cov/weighted.var(xs, perturbs))
+  return(w_cov/w_var)
+}
+
+bootstrap_beta_1_est_perturb <- function(xs, ys){
+  return(OLS_beta_1_perturb(xs, ys))
+}
+
+adapter_perturb <- function(data, n){
+  return(bootstrap_beta_1_est_rand(data[1:n], data[(n+1):(2*n)]))
+}
+
+bootstrap_beta_1_ests_perturb <- function(n, m, xs, ys){
+  seq <- 1:n
+  sample_idxs <- replicate(m, sample(seq, n, replace=TRUE))
+  
+  sample_xs <- apply(sample_idxs, 2, idx2element, xs)
+  #print(sample_xs)
+  sample_ys <- apply(sample_idxs, 2, idx2element, ys)
+  #print(sample_ys)
+  sample_xys <- rbind(sample_xs, sample_ys)
+  
+  #ests <- replicate(m, sample(xs, n, replace=TRUE))
+  return(apply(sample_xys, 2, adapter_perturb, n))
+}
+
+n <- 500
+m <- 2000
+xs <- rnorm(n, mean_x, sigma_x2)
+ys <- gen_ys(xs)
+
+ests <- bootstrap_beta_1_ests_perturb(n, m, xs, ys)
+
+# 
+print(cat("The OLS Estimate With Perturbation Bootstrap: Mean=", mean(ests), "Variance=", var(ests)))
+hist(ests, main="OLS Estimate of Beta1 With Perturbation Bootstrap", xlab="Value of Beta1", breaks=20, freq = FALSE)
+```
+
+
+# Code
+
+Some Essential Functions
+
+```{r ess_func, eval=FALSE}
+```
