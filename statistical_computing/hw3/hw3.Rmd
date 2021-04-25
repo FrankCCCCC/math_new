@@ -107,75 +107,75 @@ gen_datas <- function(n){
   return(x)
 }
 
-data <- gen_datas(500000)
+data <- gen_datas(5000)
 
 hist(data, breaks=50, freq = FALSE)
 ```
 
 ```{r}
-e_step <- function(ys, w2, mus, sigmas){
-  like_sum <- (1 - w2) * dnorm(ys, mus[1], sigmas[1]) + w2 * dnorm(ys, mus[2], sigmas[2])
-  like_2 <- w2 * dnorm(ys, mus[2], sigmas[2])
-  div <- like_2 / like_sum
+e_step <- function(ys, ws, mus, sigmas){
+  k <- length(ws)
+  n <- length(ys)
+  likelihoods <- matrix(rep(0, k*n), nrow = n)
+  weighted_likelihoods <- matrix(rep(0, k*n), nrow = n)
   
-  print(like_2[1])
-  print(like_sum[1])
-  print(like_2[1] / like_sum[1])
-  print("---")
-  print(like_2[2])
-  print(like_sum[2])
-  print(like_2[2] / like_sum[2])
-  print("---")
-  
-  print(like_2)
-  print(like_sum)
-  
-  return(div)
-}
-
-m_step <- function(ys, mus, sigmas, gammas){
-  w_modal_1 <- 1 - gammas
-  w_modal_2 <- gammas
-  
-  sum_w_modal_1 <- sum(w_modal_1)
-  sum_w_modal_2 <- sum(w_modal_2)
-  
-  print(sum_w_modal_1)
-  print(sum_w_modal_2)
-  
-  mus[1] <- (w_modal_1 * ys) / sum_w_modal_1
-  mus[2] <- (w_modal_2 * ys) / sum_w_modal_2
-  
-  sigmas[1] <- (w_modal_1 * (ys - mus[1]) * (ys - mus[1])) / sum_w_modal_1
-  sigmas[2] <- (w_modal_2 * (ys - mus[2]) * (ys - mus[2])) / sum_w_modal_2
-  
-  w2 <- mean(w_modal_2)
-  
-  return(c(mus, sigmas, w2))
-}
-
-em <- function(ys){
-  mus <- c(2, 1)
-  sigmas <- c(1, 1)
-  w2 <- 0.5
-  
-  for(i in 1:2){
-    print("E Step")
-    gammas <- e_step(ys, w2, mus, sigmas)
-    print(gammas)
-    print("M Step")
-    params <- m_step(ys, mus, sigmas, gammas)
-    
-    mus <- params[1:2]
-    sigmas <- params[3:4]
-    w2 <- params[5]
-    
-    #print(params)
-    #print(mus)
-    #print(sigmas)
-    #print(w2)
+  # Evaluate the hidden variables
+  for(j in 1:k){
+    likelihoods[, j] <- sapply(ys, dnorm, mus[j], sigmas[j])
+    weighted_likelihoods[, j] <- ws[j] * likelihoods[, j]
   }
+  # gamma_i
+  weighted_likelihoods <- weighted_likelihoods / rowSums(weighted_likelihoods)
+  
+  return(weighted_likelihoods)
 }
 
-em(data)
+m_step <- function(ys, ws, mus, sigmas, gammas){
+  k <- length(ws)
+  n <- length(ys)
+  
+  #Maximize the estimate
+  for(j in 1:k){
+    sum_gammas <- sum(gammas[, j])
+    mus[j] <- sum(ys * gammas[, j]) / sum_gammas
+    sigmas[j] <- sqrt(sum(gammas[, j] * (ys - mus[j])^2) / sum_gammas)
+    ws[j] <- mean(gammas[, j])
+  }
+  
+  return(rbind(ws, mus, sigmas))
+}
+
+em <- function(ys, k, threshold=1e-9, max_iter=201){
+  mus <- runif(k)
+  sigmas <- runif(k)
+  ws <- rep(1/k, k)
+
+  for(i in 1:max_iter){
+    # Record old values
+    old_params <- params
+    
+    gammas <- e_step(data, ws, mus, sigmas)
+    params <- m_step(data, ws, mus, sigmas, gammas)
+    #print(gammas)
+    
+    # Update parameters
+    ws <- params[1, ]
+    mus <- params[2, ]
+    sigmas <- params[3, ]
+    
+    # Until converge
+    if(abs(mean(params - old_params)) < threshold){
+      break
+    }
+    
+    #if(i %% 10 == 1){
+    #  print(cat("Iter ", i))
+    #  print(params)
+    #}
+  }
+  return(params)
+}
+
+em(data, 2)
 ```
+
