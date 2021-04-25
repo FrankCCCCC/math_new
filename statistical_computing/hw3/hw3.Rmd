@@ -22,10 +22,160 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Problem 1:
 
+$$
+X_1 = \sigma_{X_1} Z_1 + \mu_{X_1}
+$$
+
+$$
+X_2 = \sigma_{X_2} (\rho Z_1 + \sqrt{1 - \rho^2} Z_2  + \mu_{X_2}
+$$
+
+The Expectation 
+
+$$
+E[X_1] = E[\sigma_{X_1} Z_1 + \mu_{X_1}] = \sigma_{X_1} E[Z_1] + \mu_{X_1} = \mu_{X_1}
+$$
+$$
+E[X_2] = E[\sigma_{X_2} (\rho Z_1 + \sqrt{1 - \rho^2} Z_2  + \mu_{X_2}]
+$$
+
+$$
+= \sigma_{X_2} E[\rho Z_1 + \sqrt{1 - \rho^2} Z_2]  + \mu_{X_2}
+$$
+
+$$
+= \sigma_{X_2} (\rho E[Z_1] + \sqrt{1 - \rho^2} E[Z_2])  + \mu_{X_2} = \mu_{X_2}
+$$
+
+$$
+X = \{ X_1, X_2 \}, \ E[X] = \{ \mu_{X_1}, \mu_{X_2} \}
+$$
+
+The Covariance
+
+$$
+\sigma_{X_1, X_2} = \sigma_{X_2, X_1} = E[(X_1 - \mu_{X_1})(X_2 - \mu_{X_2})]
+$$
+
 ```{r }
-print(dgamma(1,scale=0.5,shape=2))
+#print(dgamma(1,scale=0.5,shape=2))
+
+gen_binorm <- function(n, mu_1, mu_2, sigma_1, sigma_2, rho){
+  z_1 <- rnorm(n, 0, 1)
+  z_2 <- rnorm(n, 0, 1)
+  z_bind <- rbind(z_1, z_2)
+  
+  x_1 <- sapply(z_1, function(z){return(sigma_1 * z + mu_1)})
+  x_2 <- apply(z_bind, 2, function(z){return(sigma_2 * (rho * z[1] + sqrt(1 - rho * rho) * z[2]) + mu_2)})
+  
+  x_bind <- rbind(x_1, x_2)
+  return(x_bind)
+}
+
+x <- gen_binorm(5000, 1, 2, 1, 2, 0.4)
+
+print(cat("Mean of X_1: ", format(mean(x[1, ])), " \n"))
+print(cat("Mean of X_2: ", format(mean(x[2, ])), " \n"))
+print(cat("Covariance of (X_1, X_2): ", format(cov(x[1, ], x[2, ])), " \n"))
 ```
 
 ## Problem 2:
 
 ## Problem 3:
+
+```{r}
+gen_datas <- function(n){
+  p_1 <- 0.6
+  mu_1 <- 0
+  sigma_1 <- 1
+  mu_2 <- 3
+  sigma_2 <- 1
+  
+  p <- runif(n, 0, 1)
+  
+  switch_func <- function(p){
+    if(p < p_1){
+      # Cluster 1
+      return(rnorm(1, mu_1, sigma_1))
+    }else{
+      # Cluster 2
+      return(rnorm(1, mu_2, sigma_2))
+    }
+  }
+  x <- sapply(p, switch_func)
+  
+  return(x)
+}
+
+data <- gen_datas(500000)
+
+hist(data, breaks=50, freq = FALSE)
+```
+
+```{r}
+e_step <- function(ys, w2, mus, sigmas){
+  like_sum <- (1 - w2) * dnorm(ys, mus[1], sigmas[1]) + w2 * dnorm(ys, mus[2], sigmas[2])
+  like_2 <- w2 * dnorm(ys, mus[2], sigmas[2])
+  div <- like_2 / like_sum
+  
+  print(like_2[1])
+  print(like_sum[1])
+  print(like_2[1] / like_sum[1])
+  print("---")
+  print(like_2[2])
+  print(like_sum[2])
+  print(like_2[2] / like_sum[2])
+  print("---")
+  
+  print(like_2)
+  print(like_sum)
+  
+  return(div)
+}
+
+m_step <- function(ys, mus, sigmas, gammas){
+  w_modal_1 <- 1 - gammas
+  w_modal_2 <- gammas
+  
+  sum_w_modal_1 <- sum(w_modal_1)
+  sum_w_modal_2 <- sum(w_modal_2)
+  
+  print(sum_w_modal_1)
+  print(sum_w_modal_2)
+  
+  mus[1] <- (w_modal_1 * ys) / sum_w_modal_1
+  mus[2] <- (w_modal_2 * ys) / sum_w_modal_2
+  
+  sigmas[1] <- (w_modal_1 * (ys - mus[1]) * (ys - mus[1])) / sum_w_modal_1
+  sigmas[2] <- (w_modal_2 * (ys - mus[2]) * (ys - mus[2])) / sum_w_modal_2
+  
+  w2 <- mean(w_modal_2)
+  
+  return(c(mus, sigmas, w2))
+}
+
+em <- function(ys){
+  mus <- c(2, 1)
+  sigmas <- c(1, 1)
+  w2 <- 0.5
+  
+  for(i in 1:2){
+    print("E Step")
+    gammas <- e_step(ys, w2, mus, sigmas)
+    print(gammas)
+    print("M Step")
+    params <- m_step(ys, mus, sigmas, gammas)
+    
+    mus <- params[1:2]
+    sigmas <- params[3:4]
+    w2 <- params[5]
+    
+    #print(params)
+    #print(mus)
+    #print(sigmas)
+    #print(w2)
+  }
+}
+
+em(data)
+```
