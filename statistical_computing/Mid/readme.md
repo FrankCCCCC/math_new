@@ -47,7 +47,7 @@ $$
 $$
 
 $$
-= log \ p(X) - KL[q(Z) || p(Z|X)]
+= log \ p(X) - KL[q(Z) || p(Z|X)] \ \tag{5}
 $$
 
 Where $q(Z)$ in Eq. (2) is the **approximation of the true posterior distribution $p(Z|X)$**, since we don't know the distribution of the $p(Z|X)$ of hidden state $Z$. To derive the lower bound, we apply Jensen's inequality in Eq. (4).
@@ -57,5 +57,7 @@ Also, the Eq. (5) is the ELBO.
 Then, we denote L as ELBO as following
 
 $$
-L = E_q[log \ p(X, Z)] + H(Z)
+L = log \ p(X) - KL[q(Z) || p(Z|X)]
 $$
+
+### Variational Expectation Maximization
