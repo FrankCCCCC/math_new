@@ -39,7 +39,15 @@ $$
 $$
 
 $$
-= \int_Z q(Z)log \ \frac{p(X|Z) p(Z)}{q(Z)} dZ
+= - \int_Z q(Z)log \ \frac{q(Z)}{p(Z|X)p(X)} dZ
+$$
+
+$$
+= log \ p(X) - \int_Z q(Z) \ log \ \frac{q(Z)}{p(Z|X)} dZ
+$$
+
+$$
+= log \ p(X) - KL[q(Z) || p(Z|X)]
 $$
 
 Where $q(Z)$ in Eq. (2) is the **approximation of the true posterior distribution $p(Z|X)$**, since we don't know the distribution of the $p(Z|X)$ of hidden state $Z$. To derive the lower bound, we apply Jensen's inequality in Eq. (4).
