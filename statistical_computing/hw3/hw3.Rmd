@@ -121,14 +121,14 @@ mixture_binorm <- function(n, mus, sigmas, rhos, ws){
   
   #print(modals)
   #print(d)
-  print(inds)
+  #print(inds)
   #print(total_rvs)
   
   for(i in 1:modals){
     total_rvs[,,i] <- binorm(n, mus[i, ], sigmas[i, ], rhos[i])
   }
   i <- 1
-  print(total_rvs)
+  #print(total_rvs)
   
   rvs <- matrix(0, ncol=d, nrow=n)
   #rvs[, 1] = rvs[, 2] <- c(1:n)
@@ -140,15 +140,20 @@ mixture_binorm <- function(n, mus, sigmas, rhos, ws){
 }
 
 #res <- binorm(10000, c(1, 2), c(1, 2), 0.4)
-res <- mixture_binorm(10, matrix(c(1, 2, 2, 1), ncol=2), matrix(c(1, 2, 2, 1), ncol=2), c(0.4, 0.6), c(0.4, 0.6))
-print(res)
+res <- mixture_binorm(100, matrix(c(1, 2, 2, 1), ncol=2), matrix(c(1, 2, 2, 1), ncol=2), c(0.4, 0.6), c(0.4, 0.6))
 
-print(mean(res[, 1]))
-print(mean(res[, 2]))
+print(cat("Mean of Y1: ", mean(res[, 1])))
+print(cat("Mean of Y2: ", mean(res[, 2])))
+print("Covariance Matrix")
 print(cov(res))
-print(length(res[, 1]))
+print(cat("Number of data point: ", length(res[, 1])))
 
+# Scatter
+plot(res[,1], res[,2], main="Scatter Plot", xlab="Y1", ylab="Y2")
 
+# Dendrogram
+dg <- hclust(dist(scale(res), method = "euclidean"), method = "ward.D2")
+plot(dg, hang=0.1, main="Cluster Dendrogram", sub=NULL, xlab="Points", ylab="Height")
 ```
 
 ## Problem 3:
@@ -177,11 +182,69 @@ gen_datas <- function(n){
   return(x)
 }
 
-data <- gen_datas(5000)
+data <- gen_datas(2000)
 
 hist(data, breaks=50, freq = FALSE)
 ```
 
+
+```{r}
+
+dis <- function(a, b){
+  return(sum((a - b)^2))
+}
+
+kmean <- function(X, K, threshold=1e-6, max_iter=10){
+  n <- length(X)
+  d <- 1
+  cent_idxs <- sample(1:n, K)
+  cent_cord <- matrix(0, nrow=K, ncol=d)
+  dis_table <- matrix(0, nrow=n, ncol=K)
+  clustered <- array(0, c(n))
+  tot_dis <- Inf
+  
+  for(k in 1:K){
+    cent_cord[k] <- X[cent_idxs[k]]
+  }
+  
+  for(iter in 1:max_iter){
+    for(k in 1:K){
+      dis_table[, k] <- sapply(X, dis, cent_cord[k])
+    }
+    
+    clustered <- apply(dis_table, 1, which.min)
+    
+    for(k in 1:K){
+      idxs <- which(clustered == k)
+      cent_cord[k] <- mean(X[idxs])
+      
+      #print(idxs)
+      #print(X[idxs])
+    }
+    
+    temp_tot_dis <- sum(dis_table)
+    if(abs(temp_tot_dis - tot_dis) < threshold){break}
+    tot_dis <- temp_tot_dis
+    
+    #print(dis_table)
+    #print(clustered)
+    #print(tot_dis)
+  }
+  
+  #print(clustered)
+  #print(tot_dis)
+  
+  res <- structure(list(label=clustered, total_distance=tot_dis, cluster_centers=cent_cord), class= "KMEAN_res")
+    
+  return(res)
+}
+
+res <- kmean(data, 2)
+print(res)
+#print(data)
+```
+
+(2) Expectation Maximization
 ```{r}
 e_step <- function(ys, ws, mus, sigmas){
   k <- length(ws)
@@ -243,9 +306,26 @@ em <- function(ys, k, threshold=1e-9, max_iter=201){
     #  print(params)
     #}
   }
-  return(params)
+  
+  dens_table <- matrix(0, nrow=length(ys), ncol=k)
+  for(j in 1:k){
+    dens_table[, j] <- dnorm(ys, mus[j], sigmas[j])
+  }
+  #print(dens_table)
+  
+  clustered <- apply(dens_table, 1, which.max)
+  res <- structure(list(label=clustered, params=params), class= "EM-GMM_res")
+  return(res)
 }
 
-em(data, 2)
+res <- em(data, 2)
+print(res)
+
+emgmm_df <- data.frame(data=data, label=res$label)
+plot(label~data, data=emgmm_df)
 ```
 
+# Reference
+- [Gibbs Sampling from a Bivariate Normal Distribution](https://www.aptech.com/resources/tutorials/bayesian-fundamentals/gibbs-sampling-from-a-bivariate-normal-distribution/)
+- [21.1 - Conditional Distribution of Y Given X](https://online.stat.psu.edu/stat414/lesson/21/21.1)
+- [Cross Validated - Deriving the conditional distributions of a multivariate normal distribution](https://stats.stackexchange.com/questions/30588/deriving-the-conditional-distributions-of-a-multivariate-normal-distribution)
