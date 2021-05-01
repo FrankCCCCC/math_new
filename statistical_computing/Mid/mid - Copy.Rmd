@@ -194,7 +194,7 @@ ln \ \bar{\pi}_k = E[ln \ \pi_k] = \psi(\alpha_k) - \psi(\hat{\alpha})
 $$
 
 ```{r}
-update_log_Lambda_k <- function(k, nu_k, D, W_k){
+update_log_lambda_k <- function(k, nu_k, D, W_k){
   return(sum(digamma((nu_k[k] + 1 - 1:D)/2)) + D*log(2) + log(det(W_k[,,k])))
 }
 
@@ -403,13 +403,8 @@ vb_gmm <- function(X,
   D <- NCOL(X)              # Number of features
   N <- NROW(X)              # Number of observations
   
-  # Gaussian Mixture
-  log_pi <- rep(0, K)
-  
   # Gaussian Wishart
-  W_k <- array(0, c(D, D, K))
   W_0_inv <- solve(W_0)     # Compute W^{-1}
-  log_Lambda <- rep(0, K)
   m_k     <- t(kmeans(X, K, nstart = 25)$centers)  # Mean of Gaussian Wishart
   beta_k  <- rep(beta_0, K)                # Scale of precision matrix, Gaussian Wishart
   nu_k    <- rep(nu_0, K)                  # Degrees of freedom, Wishart
@@ -423,7 +418,8 @@ vb_gmm <- function(X,
   # Utility Variable
   r_nk = log_r_nk = log_rho_nk <- matrix(0, nrow = N, ncol = K)
   x_bar_k <- matrix(0, nrow = D, ncol = K)
-  S_k <- array(0, c(D, D, K))
+  S_k = W_k <- array(0, c(D, D, K))
+  log_pi = log_Lambda <- rep(0, K)
   
   # Initialization
   log_pi <- digamma(alpha) - digamma(sum(alpha))
@@ -492,7 +488,7 @@ vb_gmm <- function(X,
     # 10.66
     log_pi <- update_log_pi(alpha)
     for (k in 1:K) { # 10.65                                              
-      log_Lambda[k] <- update_log_Lambda_k(k, nu_k, D, W_k)
+      log_Lambda[k] <- update_log_lambda_k(k, nu_k, D, W_k)
     }
     
     ##-------------------------------

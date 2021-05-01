@@ -233,12 +233,12 @@ $$
 
 **Symmetric Dirichlet distribution**
 
-In order to reduce the number of parameters, we use **Symmetric Dirichlet distribution** which is a  special form of Dirichlet distribution that defined as the following
+In order to reduce the number of initial parameters, we use **Symmetric Dirichlet distribution** which is a  special form of Dirichlet distribution that defined as the following
 
 $$
 X \sim \mathcal{SymmDir}(\alpha_0) = \frac{\Gamma(\alpha_0 K)}{\Gamma(\alpha_0)^K} \prod^K_{i=1} x^{\alpha_0-1}_i = f(x_1, ..., x_{K-1}; \alpha_0)
 $$
-where $X = \{ X_1, ..., X_{K-1} \}$. The $\alpha$ parameter of the symmetric Dirichlet is a scalar which means all the elements $\alpha_i$ of the $\alpha$ are the same $\alpha = \{ \alpha_0, ..., \alpha_0 \}$. With this property, we can greatly reduce the number of the parameters of Dirichlet distribution.
+where $X = \{ X_1, ..., X_{K-1} \}$. The $\alpha$ parameter of the symmetric Dirichlet is a scalar which means all the elements $\alpha_i$ of the $\alpha$ are the same $\alpha = \{ \alpha_0, ..., \alpha_0 \}$. 
 
 **With Gaussian Mixture Model**
 
@@ -298,7 +298,7 @@ $$
 ln \ q(Z; \phi^{Z}) \propto \mathbb{E}_{q(\theta; \phi^{\theta})} [log \ p(Y, Z, \theta)]
 $$
 
-Thus
+Thus, 
 
 $$
 ln\;q^{*}(Z) = \mathbb{E}_{\pi, \mu, \Lambda} [\text{ln}\;p(X, Z, \pi, \mu, \Lambda)]
