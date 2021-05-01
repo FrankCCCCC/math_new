@@ -81,14 +81,74 @@ print(cat("Covariance of (X_1, X_2): ", format(cov(x[1, ], x[2, ])), " \n"))
 
 ## Problem 2:
 
+$$
+\begin{eqnarray*} \begin{pmatrix} X\\ Y \end{pmatrix} & \sim & N\left[\left(\begin{array}{c} \mu_X\\ \mu_Y \end{array}\right),\left(\begin{array}{ccc} \sigma_X^2 & \rho \sigma_X \sigma_Y\\ \rho \sigma_X \sigma_Y & \sigma_Y^2 \end{array}\right)\right]\\ \end{eqnarray*}
+$$
+
+$$
+Y|X = N\left(\mu_Y+\rho \frac{\sigma_Y}{\sigma_X}(X-\mu_X),\ \sigma^2_Y(1-\rho^2)\right)
+$$
+
+$$
+= \mu_Y+\rho \frac{\sigma_Y}{\sigma_X}(X-\mu_X) + \sigma_Y \sqrt{(1-\rho^2)} \mathcal{N}(0, 1)
+$$
+
 ```{r}
 library(Rlab)
 
-x <- 10
-res <- rbern(x, prob = 0.5)
+binorm <- function(n, mus, sigmas, rho, warmup=10000){
+  # Dimension
+  d <- length(mus)
+  total_n <- n+warmup
+  rvs <- matrix(0, nrow = total_n, ncol = d)
+  
+  for(i in 2:total_n){
+    # Generate X_1
+    rvs[i, 2] <- mus[2] + (rho * sigmas[2] / sigmas[1] * (rvs[i-1, 1] - mus[1])) + sigmas[2] * sqrt(1-rho^2) * rnorm(1, 0, 1)
+    
+    # Generate X_2
+    rvs[i, 1] <- mus[1] + (rho * sigmas[1] / sigmas[2] * (rvs[i, 2] - mus[2])) + sigmas[1] * sqrt(1-rho^2) * rnorm(1, 0, 1)
+  }
+  
+  return(rvs[(warmup+1):total_n, ])
+}
+
+mixture_binorm <- function(n, mus, sigmas, rhos, ws){
+  modals <- length(mus[, 1])
+  d <- length(mus[1, ])
+  total_rvs <- array(0, c(n, d, modals))
+  inds <- rbern(n, ws[2])
+  
+  #print(modals)
+  #print(d)
+  print(inds)
+  #print(total_rvs)
+  
+  for(i in 1:modals){
+    total_rvs[,,i] <- binorm(n, mus[i, ], sigmas[i, ], rhos[i])
+  }
+  i <- 1
+  print(total_rvs)
+  
+  rvs <- matrix(0, ncol=d, nrow=n)
+  #rvs[, 1] = rvs[, 2] <- c(1:n)
+  for(i in 1:n){
+    rvs[i, ] <- c(total_rvs[i,,inds[i]+1])
+  }
+  
+  return(rvs)
+}
+
+#res <- binorm(10000, c(1, 2), c(1, 2), 0.4)
+res <- mixture_binorm(10, matrix(c(1, 2, 2, 1), ncol=2), matrix(c(1, 2, 2, 1), ncol=2), c(0.4, 0.6), c(0.4, 0.6))
 print(res)
 
-hist(res)
+print(mean(res[, 1]))
+print(mean(res[, 2]))
+print(cov(res))
+print(length(res[, 1]))
+
+
 ```
 
 ## Problem 3:
