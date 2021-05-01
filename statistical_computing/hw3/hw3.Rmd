@@ -81,6 +81,16 @@ print(cat("Covariance of (X_1, X_2): ", format(cov(x[1, ], x[2, ])), " \n"))
 
 ## Problem 2:
 
+```{r}
+library(Rlab)
+
+x <- 10
+res <- rbern(x, prob = 0.5)
+print(res)
+
+hist(res)
+```
+
 ## Problem 3:
 
 ```{r}
