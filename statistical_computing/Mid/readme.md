@@ -171,7 +171,7 @@ $$
 - \frac{d}{d q(Z; \phi^{Z})} \int_{Z, \theta} q(Z; \phi^{Z}) q(\theta; \phi^{\theta}) log \ q(Z; \phi^{Z}) dZ d\theta
 $$
 
-Variational Bayesian EM Algorithm
+**Variational Bayesian EM Algorithm**
 
 ---
 Iterate until $\mathcal{L}(\phi^Z, \phi^{\theta})$ converge
@@ -267,35 +267,35 @@ $$
 If a normal distribution whose parameters follow the Wishart distribution. It is called **Gaussian-Wishart distribution**. Support $\mu \in \mathbb{R}^D$ and $\Lambda \in \mathbb{R}^{D \times D}$, they are generated from Gaussian-Wishart distribution which is defined as
 
 $$
-(\mu, \Lambda) \sim \mathcal{NW}(\mu_0, \lambda, W, \nu) = \mathcal{N}(\mu | \mu_0, (\lambda \Lambda)^{-1} )\mathcal{W}(\Lambda | W, \nu)
+(\mu, \Lambda) \sim \mathcal{NW}(m_0, \beta_0, W_0, \nu_0) = \mathcal{N}(\mu | m_0, (\beta_0 \Lambda)^{-1} )\mathcal{W}(\Lambda | W_0, \nu_0)
 $$
 
-where $\mu_0 \in \mathbb{R}^D$ is the location, $W \in \mathbb{R}^{D \times D}$ represent the scale matrix, $\lambda \in \mathbb{R}, \lambda > 0$, and $\nu \in \mathbb{R}, \nu > D - 1$.
+where $m_0 \in \mathbb{R}^D$ is the location, $W \in \mathbb{R}^{D \times D}$ represent the scale matrix, $\beta_0 \in \mathbb{R}, \beta_0 > 0$, and $\nu \in \mathbb{R}, \nu > D - 1$.
 
 **Posterior**
 
 After making $n$ observations $\{ x_1, ..., x_n \}$ with mean $\bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_i$, the posterior distribution of the parameters is
 
 $$
-(\mu, \Lambda) \sim \mathcal{NW}(\mu_n, \lambda_n, W_n, \nu_n)
+(\mu, \Lambda) \sim \mathcal{NW}(m_n, \beta_n, W_n, \nu_n)
 $$
 
 where
 
 $$
-\lambda_n = \lambda + n
+\beta_n = \beta_0 + n
 $$
 
 $$
-\mu_n = \frac{\lambda \mu_0 + n \bar{x}}{\lambda + n}
+m_n = \frac{\beta_0 m_0 + n \bar{x}}{\beta_0 + n}
 $$
 
 $$
-\nu_n = \nu + n
+\nu_n = \nu_0 + n
 $$
 
 $$
-W^{-1}_n = W^{-1}_0 + \sum_{i=1}^{n} (x_i - \bar{x}) (x_i - \bar{x})^{\top} + \frac{n \lambda}{n + \lambda} (\bar{x} - \mu_0) (\bar{x} - \mu_0)^{\top}
+W^{-1}_n = W^{-1}_0 + \sum_{i=1}^{n} (x_i - \bar{x}) (x_i - \bar{x})^{\top} + \frac{n \beta_0}{n + \beta_0} (\bar{x} - m_0) (\bar{x} - m_0)^{\top}
 $$
 
 **With Gaussian Mixture Model**
@@ -462,7 +462,7 @@ $$
 \mathbb{E}_{Z} [ln \ q(\mu, \Lambda)] = \mathbb{E}_{Z}\Big[ ln \ \prod^K_{k=1} \mathcal{N}(\mu_k | m_k, (\beta_k \Lambda_k)^{-1}) \mathcal{W}(\Lambda_k | W_k, \nu_k) \Big]
 $$
 
-where the parameters we've given before.
+where the parameters of the prior $\lambda$ we've given before.
 
 $$
 \beta_k = \beta_0 + N_k
@@ -480,5 +480,15 @@ $$
 W^{-1}_k = W^{-1}_0 + N_k S_k + \frac{N_k \beta_0}{N_k + \beta_0} (\bar{x}_k - m_0) (\bar{x}_k - m_0)^{\top}
 $$
 
-**Variational Lower Bound**
+So far, we've derive the parameters of the prior of the bayesian model. Let's move on to the next iteration of VBEM. 
+
+In order to conduct the E-step in the next iteration, we need the parameters of Gaussian mixture model which is denoted by $\theta$. We denote the parameters of Gaussian mixture as $\pi^*, \Lambda^*$
+
+$$
+ln \ \pi_k^* = \mathbb{E}[ln \ \pi_k] = \psi(\alpha_k) - \psi \Big(\sum_{k=1}^K \alpha_k \Big)
+$$
+
+$$
+ln \ \Lambda_k^* = \mathbb{E}[ln \ det(\Lambda_k)] = \sum_{d=1}^{D} \psi \Big( \frac{\nu_{k} + 1 - d}{2} \Big) + D \ ln 2 + ln \ det(W_k)
+$$
 
