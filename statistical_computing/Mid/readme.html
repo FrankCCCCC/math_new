@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>readme.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h2 id="1-expectation-maximization">1. Expectation Maximization</h2>
+<p>EM algorithm is useful for the model containing latent variables $Z$ when the maximum likelihood is hard to derive from the observed data $Y$. We can write the maximum likelihood of $Y$ like following</p>
+<p>$$
+\arg \max_{\theta} \mathcal{L}(Y; \theta) = \arg \max_{\theta} log(p(Y; \theta))
+$$</p>
+<p>The Expectation Maximization rewrites the question as the following</p>
+<p>$$
+\arg \max_{\theta} \ log \int_{Z} p(Y, Z; \theta) dZ
+$$</p>
+<p>Thus, we can derive the EM with an approximation $q(Z; \gamma)$ for $p(Z|Y)$ to avoid evaluating such complex distribution directly</p>
+<p>$$
+= \arg \max_{\theta} \ log \int_{Z} \frac{q(Z; \gamma)}{q(Z; \gamma)} p(Y, Z; \theta) dZ
+$$</p>
+<p>$$
+= \arg \max_{\theta} \ log \ \mathbb{E}_{q} [\frac{p(Y, Z; \theta)}{q(Z; \gamma)}]
+$$</p>
+<p>Since the $log$ function is concave, $log(\mathbb{E}<em>{p}[X]) \geq \mathbb{E}</em>{p}[log(X)]$ with Jensen's inequality.</p>
+<p>$$
+\geq \arg \max_{\theta} \ \mathbb{E}_{q} [log(\frac{p(Y, Z; \theta)}{q(Z; \gamma)})]
+$$</p>
+<p>$$
+= \arg \max_{\theta} \ \int_Z q(Z; \gamma) log \ p(Y, Z; \theta) dZ - \int_Z q(Z; \gamma) log \ q(Z; \gamma) dZ
+$$</p>
+<p>$$
+= \arg \max_{\theta} \ \int_Z q(Z; \gamma) log \ p(Y, Z; \theta) dZ - H_q[Z]
+$$</p>
+<p>Where $H_q[Z]$ is the entropy of $Z$ over distribution $q$</p>
+<p>So far, we can express the EM algorithm in a simpler way as</p>
+<hr>
+<p>Iterate until $\theta$ converge</p>
+<ul>
+<li>
+<p>E Step</p>
+<p>Evaluate $q(Z; \gamma) = p(Z|Y)$</p>
+</li>
+<li>
+<p>M Step</p>
+<p>$\arg \max_{\theta} \ \int_Z q(Z; \gamma) log \ p(Y, Z; \theta) dZ$</p>
+</li>
+</ul>
+<hr>
+<h2 id="2-em-in-general-form">2. EM In General Form</h2>
+<p>Actually, we can represent the EM algorithm with variational lower bound $\mathcal{L}(\theta, \gamma)$</p>
+<p>$$
+\mathcal{L}(\theta, \gamma) = \mathbb{E}_{q} [log(\frac{p(Y, Z; \theta)}{q(Z; \gamma)})]
+$$</p>
+<p>$$
+= \int_Z q(Z; \gamma)log \ \frac{p(Y, Z; \theta)}{q(Z; \gamma)} dZ
+$$</p>
+<p>$$
+= - \int_Z q(Z; \gamma)log \ \frac{q(Z; \gamma)}{p(Z|Y)p(Y; \theta)} dZ
+$$</p>
+<p>$$
+= log \ p(Y; \theta) - \int_Z q(Z; \gamma) \ log \ \frac{q(Z; \gamma)}{p(Z|Y)} dZ
+$$</p>
+<p>$$
+= log \ p(Y; \theta) - KL[q(Z; \gamma) || p(Z|Y)] \ \tag{5}
+$$</p>
+<p>Thus</p>
+<p>$$
+\max_{\theta} \mathcal{L}(Y; \theta) \geq \arg \max_{\theta, \gamma} \mathcal{L}(\theta, \gamma)
+$$</p>
+<p>With KKT, the constrained optimization problem can be solve with Lagrange multiplier</p>
+<p>$$
+\arg \max_{\theta, \gamma} \mathcal{L}(\theta, \gamma) = \arg \max_{\theta, \gamma} log \ p(Y; \theta) - \beta KL[q(Z; \gamma) || p(Z|Y)]
+$$</p>
+<p>Since we've known the KL-divergence is always greater or equal to 0, when $KL[q(Z; \gamma) || p(Z|Y)] = 0$, the result of EM algorithm will be equal to the maximum likelihood $\mathcal{L}(\theta, \gamma) = \mathcal{L}(Y; \theta)$. In the mean time, minimizing the KL-divergence is actually find the best approximation $q(Z; \gamma)$ for $p(Z|Y)$.</p>
+<p>Thus, we can also represent the EM algorithm as</p>
+<hr>
+<p>Iterate until $\theta$ converge</p>
+<ul>
+<li>
+<p>E Step at k-th iteration</p>
+<p>$\gamma_{k+1} = \arg \max_{\gamma} \mathcal{L}(\theta_{k}, \gamma_{k})$</p>
+</li>
+<li>
+<p>M Step at k-th iteration</p>
+<p>$\theta_{k+1} = \arg \max_{\theta} \mathcal{L}(\theta_{k}, \gamma_{k+1})$</p>
+</li>
+</ul>
+<hr>
+<h2 id="3-variational-bayesian-expectation-maximization">3. Variational  Bayesian Expectation Maximization</h2>
+<p>In EM, we approximate a posterior $p(Y, Z; \theta)$ without any prior over the parameters $\theta$. Variational Bayesian Expectation Maximization(VBEM) defines a prior $p(\theta; \lambda)$ over the parameters. Thus, VBEM approximates the bayesian model $p(Y, Z, \theta; \lambda) = p(Y, Z|\theta) p(\theta; \lambda)$. Then, we can define a lower bound on the log marginal likelihood</p>
+<p>$$
+log \ p(Y) = log \int_{Z, \theta} p(Y, Z, \theta; \lambda) dZ d\theta
+$$</p>
+<p>$$
+= log \int_{Z, \theta} q(Z, \theta; \phi^{Z}, \phi^{\theta}) \frac{p(Y, Z |\theta) p(\theta; \lambda)}{q(Z, \theta; \phi^{Z}, \phi^{\theta})} dZ d\theta
+$$</p>
+<p>With mean field theory, we factorize $q$ into a joint distribution $q(Z, \theta; \phi^{Z}, \phi^{\theta}) = q(Z; \phi^{Z}) q(\theta; \phi^{\theta})$. Thus, the equation can be rewritten as</p>
+<p>$$
+= log \int_{Z, \theta} q(Z; \phi^{Z}) q(\theta; \phi^{\theta}) \frac{p(Y, Z |\theta) p(\theta; \lambda)}{q(Z; \phi^{Z}) q(\theta; \phi^{\theta})} dZ d\theta
+$$</p>
+<p>$$
+= log \ \mathbb{E}_{q(Z; \phi^{Z}) q(\theta; \phi^{\theta})} [\frac{p(Y, Z |\theta) p(\theta; \lambda)}{q(Z; \phi^{Z}) q(\theta; \phi^{\theta})}]
+$$</p>
+<p>Since the $log$ function is concave, $log(\mathbb{E}<em>{p}[X]) \geq \mathbb{E}</em>{p}[log(X)]$ with Jensen's inequality</p>
+<p>$$
+\geq \mathbb{E}_{q(Z; \phi^{Z}) q(\theta; \phi^{\theta})} [log \  \frac{p(Y, Z |\theta) p(\theta; \lambda)}{q(Z; \phi^{Z}) q(\theta; \phi^{\theta})}]
+$$</p>
+<p>Thus, we get the ELBO $\mathcal{L}(\phi^{Z}, \phi^{\theta})$</p>
+<p>$$
+\mathcal{L}(\phi^{Z}, \phi^{\theta}) = \mathbb{E}_{q(Z; \phi^{Z}) q(\theta; \phi^{\theta})} [log \  \frac{p(Y, Z |\theta) p(\theta; \lambda)}{q(Z; \phi^{Z}) q(\theta; \phi^{\theta})}]
+$$</p>
+<p>Recall that we need to solve $\arg \max_{\phi^{Z}} \mathcal{L}(\phi^{Z}, \phi^{\theta})$ and $\arg \max_{\phi^{\theta}} \mathcal{L}(\phi^{Z}, \phi^{\theta})$ separately in E-step and M-step. Thus, we can derive</p>
+<p>$$
+\frac{d}{d \phi^{Z}} \mathcal{L}(\phi^{Z}, \phi^{\theta}) = 0
+$$</p>
+<p>$$
+\frac{d}{d \phi^{\theta}} \mathcal{L}(\phi^{Z}, \phi^{\theta}) = 0
+$$</p>
+<p>Then, we can derive further</p>
+<p>$$
+\frac{d}{d q(Z; \phi^{Z})} \mathcal{L}(\phi^{Z}, \phi^{\theta})
+$$</p>
+<p>$$
+= \frac{d}{d q(Z; \phi^{Z})} \int_{Z, \theta} q(Z; \phi^{Z}) q(\theta; \phi^{\theta}) log \frac{p(Y, Z |\theta) p(\theta; \lambda)}{q(Z; \phi^{Z}) q(\theta; \phi^{\theta})} dZ d\theta
+$$</p>
+<p>$$
+= \int_{Z, \theta} q(\theta; \phi^{\theta}) log \ p(Y, Z |\theta) p(\theta; \lambda) dZ d\theta - \int_{Z, \theta} q(\theta; \phi^{\theta}) log \ q(\theta; \phi^{\theta}) dZ d\theta
+$$</p>
+<p>$$</p>
+<ul>
+<li>\int_{Z, \theta} q(\theta; \phi^{\theta}) log \ q(Z; \phi^{Z}) dZ d\theta - \int_{Z, \theta} q(Z; \phi^{Z}) q(\theta; \phi^{\theta}) \frac{1}{q(Z; \phi^{Z})} dZ d\theta
+$$</li>
+</ul>
+<p>$$
+= \mathbb{E}<em>{q(\theta; \phi^{\theta})} [log \ p(Y, Z |\theta) + log \ p(\theta; \lambda) - log \ q(\theta; \phi^{\theta}) - \mathbb{E}</em>{q(Z; \phi^{Z})}[log \ q(Z; \phi^{Z})] - 1]
+$$</p>
+<p>$$</p>
+<ul>
+<li>\frac{d}{d q(Z; \phi^{Z})} \int_{Z, \theta} q(Z; \phi^{Z}) q(\theta; \phi^{\theta}) log \ q(Z; \phi^{Z}) dZ d\theta
+$$</li>
+</ul>
+<p>Variational Bayesian EM Algorithm</p>
+<hr>
+<p>Iterate until $\mathcal{L}(\phi^Z, \phi^{\theta})$ converge</p>
+<ul>
+<li>
+<p>E Step: Update the variational distribution on $Z$</p>
+<p>$q(Z; \phi^{Z}) \propto e^{(\mathbb{E}_{q(\theta; \phi^{\theta})} [log \ p(Y, Z, \theta)])}$</p>
+</li>
+<li>
+<p>M Step: Update the variational distribution on $\theta$</p>
+<p>$q(\theta; \phi^{\theta}) \propto e^{(\mathbb{E}_{q(Z; \phi^{Z})} [log \ p(Y, Z, \theta)])}$</p>
+</li>
+</ul>
+<hr>
+<h2 id="3-variational-bayesian-gaussian-mixture-model">3. Variational Bayesian Gaussian Mixture Model</h2>
+<h3 id="graphical-model">Graphical Model</h3>
+<p><strong>Gaussian Mixture Model &amp; Clustering</strong></p>
+<p><img src="./imgs/graphical_model.png" alt=""></p>
+<p>The variational Bayesian Gaussian mixture model(VB-GMM) can be represented as the above graphical model. We see each data point as a Gaussian mixture distribution with $K$ components. We also denote the number of data points as $N$. Each $x_n$ is a Gaussian mixture distribution with a weight $\pi_n$ corresponds to a data point. $z_n$ is an one-hot latent variable that indicates which cluster(component) does the data point belongs to. Finally, A component $k$ follows the Gaussian distribution with mean $\mu_k$ and covariance matrix $\Lambda_k$. $\Lambda = { \Lambda_1, ..., \Lambda_K }$ and $\mu = { \mu_1, ..., \mu_K }$ are vectors denote the parameters of Gaussian mixture distribution.</p>
+<p>Thus, the joint distribution of the VB-GMM is</p>
+<p>$$
+p(X, Z, \pi, \mu, \Lambda) = p(X | Z, \pi, \mu, \Lambda) p(Z | \pi) p(\pi) p(\mu | \Lambda) p(\Lambda)
+$$</p>
+<p>$p(X | Z, \pi, \mu, \Lambda)$ denotes the Gaussian mixture model given on the latent variables and parameters. $p(Z | \pi)$ denotes the latent variables. As for priors, $p(\pi)$ denotes the prior distribution on the latent variables $Z$ and $p(\mu | \Lambda) p(\Lambda)$ denotes the priors distribution on the Gaussian distribution $X$.</p>
+<h4 id="gaussian-mixture-model">Gaussian Mixture Model</h4>
+<p>Suppose each data point $x_n \in \mathbb{R}^D$ has dimension $D$. We define the latent variables $Z = { z_1, ..., z_N }, Z \in \mathbb{R}^{N \times K}$, where $z_i ={z_{i1}, ..., z_{iK} }, z_i \in \mathbb{R}^K, z_{ij} \in { 0, 1}$. Each $z_{i}$ is a vector containing k binary variables. $z_i$ can be seen as an one-hot encoding that indicates which cluster belongs to. As for $\pi \in \mathbb{R}^K$, $\pi$ is the weight of the Gaussian mixture model of each component.</p>
+<p>$$
+p(Z | \pi) = \prod_{n=1}^{N}\prod_{k=1}^{K}\pi_{k}^{z_{nk}}
+$$</p>
+<p>Then, we define the components of the Gaussian mixture model. Each component follows Gaussian distribution and is parametrized by the mean $\mu_k$ and covariance matrix $\Lambda_k^{-1}$. Thus, the conditional distribution of the observed data $X \in \mathbb{R}^{N \times D}$, given the variables $Z, \mu, \Lambda$ is</p>
+<p>$$
+p(X | Z, \mu, \Lambda) = \prod_{n=1}^{N} \prod_{k=1}^{K} \mathcal{N}(x_{n} | \mu_{k}, \Lambda_{k}^{-1})^{z_{nk}}
+$$</p>
+<p>where data $X$ contains $N$ data points and $D$ dimensions, parameter $\mu \in \mathbb{R}^K, \mu = { \mu_1, ..., \mu_K }$ and $\Lambda \in \mathbb{R}^{K \times D \times D}, \Lambda_k \in \mathbb{R}^{D \times D}, \Lambda = { \Lambda_1, ..., \Lambda_K }$ are the mean  and the covariance matrix of each component of Gaussian mixture model.</p>
+<h4 id="dirichlet-distribution">Dirichlet Distribution</h4>
+<p>Next, we introduce another prior over the parameters. We choose the symmetric Dirichlet distribution over the mixing proportions $\pi$. Support $x_1, ..., x_K$ where $x_i \in (0, 1)$ and $\sum^K_{i=1} x_i = 1, K &gt; 2$ with parameters $\alpha_1, ..., \alpha_K &gt; 0$</p>
+<p>$$
+X \sim \mathcal{Dir}(\alpha) = \frac{1}{B(\alpha)} \prod^K_{i=1} x^{\alpha_i - 1}_{i}
+$$</p>
+<p>where the Beta function $B(\alpha)=\frac{\prod^K_{i=1} \Gamma(\alpha_i)}{\Gamma(\sum^K_{i=1} \alpha_i)}$ and $\alpha$ and $X$ are a set of random variables that $\alpha = { \alpha_1, ..., \alpha_K}$ and $X = { X_1, ..., X_K}$. Note that $x_i$ is a sample value generated by $X_i$.</p>
+<p><strong>Expectation</strong></p>
+<p>The mean of the Dirichlet distribution is</p>
+<p>$$
+E[X_i] = \frac{\alpha_i}{\sum^K_{k=1} \alpha_k}
+$$</p>
+<p>$$
+E[ln \ X_i] = \psi(\alpha_i) - \psi(\sum^K_{k=1} \alpha_k)
+$$</p>
+<p>where $\psi$ is <strong>digamma</strong> function</p>
+<p>$$
+\psi(x) = \frac{d}{dx} ln(\Gamma(x)) = \frac{\Gamma'(x)}{\Gamma(x)} \approx ln(x) - \frac{1}{2x}
+$$</p>
+<p><strong>Symmetric Dirichlet distribution</strong></p>
+<p>In order to reduce the number of initial parameters, we use <strong>Symmetric Dirichlet distribution</strong> which is a  special form of Dirichlet distribution that defined as the following</p>
+<p>$$
+X \sim \mathcal{SymmDir}(\alpha_0) = \frac{\Gamma(\alpha_0 K)}{\Gamma(\alpha_0)^K} \prod^K_{i=1} x^{\alpha_0-1}<em>i = f(x_1, ..., x</em>{K-1}; \alpha_0)
+$$
+where $X = { X_1, ..., X_{K-1} }$. The $\alpha$ parameter of the symmetric Dirichlet is a scalar which means all the elements $\alpha_i$ of the $\alpha$ are the same $\alpha = { \alpha_0, ..., \alpha_0 }$.</p>
+<p><strong>With Gaussian Mixture Model</strong></p>
+<p>Thus, we can model the distribution of the weights of Gaussian mixture model as a symmetric Dirichlet distribution.</p>
+<p>$$
+p(\pi) = \mathcal{Dir}(\pi | \alpha_0) = \frac{1}{B(\alpha_0)} \prod^K_{k=1} \pi^{\alpha_0 - 1}<em>{k} = C(\alpha_0) \prod^K</em>{k=1} \pi^{\alpha_0 - 1}_{k}
+$$</p>
+<h4 id="gaussian-wishart-distribution">Gaussian Wishart Distribution</h4>
+<p>If a normal distribution whose parameters follow the Wishart distribution. It is called <strong>Gaussian-Wishart distribution</strong>. Support $\mu \in \mathbb{R}^D$ and $\Lambda \in \mathbb{R}^{D \times D}$, they are generated from Gaussian-Wishart distribution which is defined as</p>
+<p>$$
+(\mu, \Lambda) \sim \mathcal{NW}(\mu_0, \lambda, W, \nu) = \mathcal{N}(\mu | \mu_0, (\lambda \Lambda)^{-1} )\mathcal{W}(\Lambda | W, \nu)
+$$</p>
+<p>where $\mu_0 \in \mathbb{R}^D$ is the location, $W \in \mathbb{R}^{D \times D}$ represent the scale matrix, $\lambda \in \mathbb{R}, \lambda &gt; 0$, and $\nu \in \mathbb{R}, \nu &gt; D - 1$.</p>
+<p><strong>Posterior</strong></p>
+<p>After making $n$ observations ${ x_1, ..., x_n }$ with mean $\bar{x} = \frac{1}{n} \sum_{i=1}^{n} x_i$, the posterior distribution of the parameters is</p>
+<p>$$
+(\mu, \Lambda) \sim \mathcal{NW}(\mu_n, \lambda_n, W_n, \nu_n)
+$$</p>
+<p>where</p>
+<p>$$
+\lambda_n = \lambda + n
+$$</p>
+<p>$$
+\mu_n = \frac{\lambda \mu_0 + n \bar{x}}{\lambda + n}
+$$</p>
+<p>$$
+\nu_n = \nu + n
+$$</p>
+<p>$$
+W^{-1}_n = W^{-1}<em>0 + \sum</em>{i=1}^{n} (x_i - \bar{x}) (x_i - \bar{x})^{\top} + \frac{n \lambda}{n + \lambda} (\bar{x} - \mu_0) (\bar{x} - \mu_0)^{\top}
+$$</p>
+<p><strong>With Gaussian Mixture Model</strong></p>
+<p>$$
+p(\mu, \Lambda) = p(\mu | \Lambda) p(\Lambda) = \prod^K_{k=1} \mathcal{N}(\mu_k | m_0, (\beta_0 \Lambda_k)^{-1}) \mathcal{W}(\Lambda_k | W_0, \nu_0)
+$$</p>
+<h3 id="e-step">E-Step</h3>
+<p>E-Step aims to update the variational distribution on latent variables $Z$</p>
+<p>$$
+ln \ q(Z; \phi^{Z}) \propto \mathbb{E}_{q(\theta; \phi^{\theta})} [log \ p(Y, Z, \theta)]
+$$</p>
+<p>Thus, we can derive</p>
+<p>$$
+ln\ q(Z) \propto \mathbb{E}_{\pi, \mu, \Lambda} [\text{ln};p(X, Z, \pi, \mu, \Lambda)]
+$$</p>
+<p>$$
+= \mathbb{E}<em>{\pi} [ln \ p(Z | \pi)] + \mathbb{E}</em>{\mu, \Lambda}[ln \ p(X | Z, \mu, \Lambda)] + \mathbb{E}_{\pi, \mu, \Lambda}[ln \ p(\pi, \mu, \Lambda)]
+$$</p>
+<p>$$
+= \mathbb{E}<em>{\pi} [ln \ p(Z | \pi)] + \mathbb{E}</em>{\mu, \Lambda}[ln \ p(X | Z, \mu, \Lambda)] + C
+$$</p>
+<p>where</p>
+<p>$$
+\mathbb{E}<em>{\pi} [ln \ p(Z | \pi)] = \mathbb{E}</em>{\pi} \Big[ ln \ \prod_{n=1}^{N}\prod_{k=1}^{K}\pi_{k}^{z_{nk}} \Big]
+$$</p>
+<p>$$
+= \mathbb{E}<em>{\pi} \Big[ \sum</em>{n=1}^{N}\sum_{k=1}^{K} z_{nk} \ ln \ \pi_{k} \Big]
+$$</p>
+<p>$$
+= \sum_{n=1}^{N}\sum_{k=1}^{K} z_{nk} \ \mathbb{E}<em>{\pi} [ln \ \pi</em>{k}]
+$$</p>
+<p>and</p>
+<p>$$
+\mathbb{E}<em>{\mu, \Lambda}[ln \ p(X | Z, \mu, \Lambda)] = \mathbb{E}</em>{\mu, \Lambda} \Big[ ln \ \prod_{n=1}^{N} \prod_{k=1}^{K} \mathcal{N}(x_{n} | \mu_{k}, \Lambda_{k}^{-1})^{z_{nk}} \Big]
+$$</p>
+<p>$$
+= \sum_{n=1}^{N} \sum_{k=1}^{K} z_{nk} \ \mathbb{E}_{\mu_k, \Lambda_k} \Big[ ln \ \frac{e^{-\frac{1}{2} (x_n - \mu_k)^{\top} \Lambda (x_n - \mu_k)}}{\sqrt{(2 \pi)^D det(\Lambda_k^{-1})}} \Big]
+$$</p>
+<p>$$
+= \sum_{n=1}^{N} \sum_{k=1}^{K} z_{nk} \ \mathbb{E}_{\mu_k, \Lambda_k} \Big[ -\frac{1}{2} (x_n - \mu_k)^{\top} \Lambda (x_n - \mu_k) - \frac{1}{2} ln ((2 \pi)^D det(\Lambda_k^{-1})) \Big]
+$$</p>
+<p>$$
+= \sum_{n=1}^{N} \sum_{k=1}^{K} z_{nk} \Big( -\frac{1}{2}\mathbb{E}<em>{\mu_k, \Lambda_k} \Big[ (x_n - \mu_k)^{\top} \Lambda (x_n - \mu_k) \Big] - \frac{D}{2} ln \ 2 \pi + \mathbb{E}</em>{\Lambda_k} \Big[ ln \ det(\Lambda_k) \Big] \Big)
+$$</p>
+<p>Due to simplification, let</p>
+<p>$$
+ln \ \rho_{nk} = \mathbb{E}<em>{\pi} [ln \ \pi</em>{k}] - \frac{1}{2}\mathbb{E}<em>{\mu_k, \Lambda_k} \Big[ (x_n - \mu_k)^{\top} \Lambda (x_n - \mu_k) \Big] - \frac{D}{2} ln \ 2 \pi + \mathbb{E}</em>{\Lambda_k} \Big[ ln \ det(\Lambda_k) \Big]
+$$</p>
+<p>Thus,</p>
+<p>$$
+ln\ q(Z) = \sum_{n=1}^{N}\sum_{k=1}^{K} z_{nk} ln \ \rho_{nk} + C
+$$</p>
+<p>In order to normalize the factor of $\rho_{nk}$, we divide the $\rho_{nk}$ by $\sum_{j=1}^K \rho_{nj}$ and obtain the $r_{nk}$.</p>
+<p>$$
+ln\ q(Z) \propto \sum_{n=1}^{N}\sum_{k=1}^{K} z_{nk} ln \ r_{nk}, \text{where} \ r_{nk} = \frac{\rho_{nk}}{\sum_{j=1}^K \rho_{nj}}
+$$</p>
+<p>For convenience, we also define some useful variables.</p>
+<p>$$
+N_k = \sum_{n=1}^N r_{nk}, \quad \bar{x}<em>k = \frac{1}{N_k} \sum</em>{n=1}^N r_{nk} x_n, \quad S_k = \frac{1}{N_k} r_{nk} (x_n - \bar{x}_k) (x_n - \bar{x}_k)^{\top}
+$$</p>
+<h3 id="m-step">M-Step</h3>
+<p>E-Step aims to update the variational distribution on variables $\theta$</p>
+<p>$$
+ln \ q(\theta; \phi^{\theta}) \propto \mathbb{E}_{q(Z; \phi^{Z})} [log \ p(Y, Z, \theta)]
+$$</p>
+<p>Thus, we can derive</p>
+<p>$$
+ln\ q(\pi, \mu, \Lambda) \propto \mathbb{E}_{Z} [ln \ p(X, Z, \pi, \mu, \Lambda)]
+$$</p>
+<p>$$
+= \mathbb{E}<em>{Z} [ln \ p(X | Z, \pi, \mu, \Lambda)] + \mathbb{E}</em>{Z} [ln \ p(Z | \pi)] + \mathbb{E}<em>{Z} [ln \ p(\pi)] + \mathbb{E}</em>{Z} [ln \ p(\mu, \Lambda)]
+$$</p>
+<p>Absolutely, we assume the joint distribution of parameters follows <strong>mean field theorem</strong> that the parameters of each component are independent $q(\pi, \mu, \Lambda) = q(\pi) \prod_{i=1}^N q(\mu_i, \Lambda_i)$. With it, the problem would be easier to solve.</p>
+<p><strong>Dirichlet Distribution</strong></p>
+<p><strong>Gaussian-Wishart Distribution</strong></p>
+
+</body>
+</html>

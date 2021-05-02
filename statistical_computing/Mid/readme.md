@@ -86,7 +86,7 @@ $$
 \arg \max_{\theta, \gamma} \mathcal{L}(\theta, \gamma) = \arg \max_{\theta, \gamma} log \ p(Y; \theta) - \beta KL[q(Z; \gamma) || p(Z|Y)]
 $$
 
-Since we've known the KL-divergnce is always greater or equal to 0, when $KL[q(Z; \gamma) || p(Z|Y)] = 0$, the result of EM algorithm will be equal to the maximum likelihood $\mathcal{L}(\theta, \gamma) = \mathcal{L}(Y; \theta)$. In the mean time, minimizing the KL-divergence is actually find the best approximation $q(Z; \gamma)$ for $p(Z|Y)$. 
+Since we've known the KL-divergence is always greater or equal to 0, when $KL[q(Z; \gamma) || p(Z|Y)] = 0$, the result of EM algorithm will be equal to the maximum likelihood $\mathcal{L}(\theta, \gamma) = \mathcal{L}(Y; \theta)$. In the mean time, minimizing the KL-divergence is actually find the best approximation $q(Z; \gamma)$ for $p(Z|Y)$. 
 
 Thus, we can also represent the EM algorithm as
 
@@ -134,7 +134,7 @@ $$
 \mathcal{L}(\phi^{Z}, \phi^{\theta}) = \mathbb{E}_{q(Z; \phi^{Z}) q(\theta; \phi^{\theta})} [log \  \frac{p(Y, Z |\theta) p(\theta; \lambda)}{q(Z; \phi^{Z}) q(\theta; \phi^{\theta})}]
 $$
 
-Recall that we need to solve $\arg \max_{\phi^{Z}} \mathcal{L}(\phi^{Z}, \phi^{\theta})$ and $\arg \max_{\phi^{\theta}} \mathcal{L}(\phi^{Z}, \phi^{\theta})$ seperately in E-step and M-step. Thus, we can derive
+Recall that we need to solve $\arg \max_{\phi^{Z}} \mathcal{L}(\phi^{Z}, \phi^{\theta})$ and $\arg \max_{\phi^{\theta}} \mathcal{L}(\phi^{Z}, \phi^{\theta})$ separately in E-step and M-step. Thus, we can derive
 
 $$
 \frac{d}{d \phi^{Z}} \mathcal{L}(\phi^{Z}, \phi^{\theta}) = 0
@@ -187,15 +187,29 @@ Iterate until $\mathcal{L}(\phi^Z, \phi^{\theta})$ converge
 
 ### Graphical Model
 
+**Gaussian Mixture Model & Clustering**
+
+![](./imgs/graphical_model.png)
+
+The variational Bayesian Gaussian mixture model(VB-GMM) can be represented as the above graphical model. We see each data point as a Gaussian mixture distribution with $K$ components. We also denote the number of data points as $N$. Each $x_n$ is a Gaussian mixture distribution with a weight $\pi_n$ corresponds to a data point. $z_n$ is an one-hot latent variable that indicates which cluster(component) does the data point belongs to. Finally, A component $k$ follows the Gaussian distribution with mean $\mu_k$ and covariance matrix $\Lambda_k$. $\Lambda = \{ \Lambda_1, ..., \Lambda_K \}$ and $\mu = \{ \mu_1, ..., \mu_K \}$ are vectors denote the parameters of Gaussian mixture distribution.
+
+Thus, the joint distribution of the VB-GMM is
+
+$$
+p(X, Z, \pi, \mu, \Lambda) = p(X | Z, \pi, \mu, \Lambda) p(Z | \pi) p(\pi) p(\mu | \Lambda) p(\Lambda)
+$$
+
+$p(X | Z, \pi, \mu, \Lambda)$ denotes the Gaussian mixture model given on the latent variables and parameters. $p(Z | \pi)$ denotes the latent variables. As for priors, $p(\pi)$ denotes the prior distribution on the latent variables $Z$ and $p(\mu | \Lambda) p(\Lambda)$ denotes the priors distribution on the Gaussian distribution $X$. 
+
 #### Gaussian Mixture Model
 
-Suppose that for each data point $x_n \in \mathbb{R}^D$ with dimension $D$, we have a binary latent variable $z_n \in \mathbb{R}^K, z_n \in \{ 0, 1 \}_K$. The conditional distribution of $Z \in \mathbb{R}^{N \times K}, Z = \{ z_1, ..., z_n \}$, given the mixing coefficiens $\pi \in \mathbb{R}^K, \pi = \{ \pi_1, ..., \pi_k\}$, is given by
+Suppose each data point $x_n \in \mathbb{R}^D$ has dimension $D$. We define the latent variables $Z = \{ z_1, ..., z_N \}, Z \in \mathbb{R}^{N \times K}$, where $z_i =\{z_{i1}, ..., z_{iK} \}, z_i \in \mathbb{R}^K, z_{ij} \in \{ 0, 1\}$. Each $z_{i}$ is a vector containing k binary variables. $z_i$ can be seen as an one-hot encoding that indicates which cluster belongs to. As for $\pi \in \mathbb{R}^K$, $\pi$ is the weight of the Gaussian mixture model of each component.
 
 $$
 p(Z | \pi) = \prod_{n=1}^{N}\prod_{k=1}^{K}\pi_{k}^{z_{nk}}
 $$
 
-The conditional distribution of the observed data $X \in \mathbb{R}^{N \times D}$, given the latent variables $Z$ and the component parameters $\mu, \Lambda$ is
+Then, we define the components of the Gaussian mixture model. Each component follows Gaussian distribution and is parametrized by the mean $\mu_k$ and covariance matrix $\Lambda_k^{-1}$. Thus, the conditional distribution of the observed data $X \in \mathbb{R}^{N \times D}$, given the variables $Z, \mu, \Lambda$ is
 
 $$
 p(X | Z, \mu, \Lambda) = \prod_{n=1}^{N} \prod_{k=1}^{K} \mathcal{N}(x_{n} | \mu_{k}, \Lambda_{k}^{-1})^{z_{nk}}
@@ -286,26 +300,185 @@ $$
 
 **With Gaussian Mixture Model**
 
+We define the Gaussian mixture model with Gaussian-Wishart prior. 
+
 $$
 p(\mu, \Lambda) = p(\mu | \Lambda) p(\Lambda) = \prod^K_{k=1} \mathcal{N}(\mu_k | m_0, (\beta_0 \Lambda_k)^{-1}) \mathcal{W}(\Lambda_k | W_0, \nu_0)
 $$
 
 ### E-Step
 
-E-Step aims to update the variational distribution on $Z$
+E-Step aims to update the variational distribution on latent variables $Z$
 
 $$
 ln \ q(Z; \phi^{Z}) \propto \mathbb{E}_{q(\theta; \phi^{\theta})} [log \ p(Y, Z, \theta)]
 $$
 
+Thus, we can derive
+
+$$
+ln\ q(Z) \propto \mathbb{E}_{\pi, \mu, \Lambda} [\text{ln}\;p(X, Z, \pi, \mu, \Lambda)]
+$$
+
+$$
+= \mathbb{E}_{\pi} [ln \ p(Z | \pi)] + \mathbb{E}_{\mu, \Lambda}[ln \ p(X | Z, \mu, \Lambda)] + \mathbb{E}_{\pi, \mu, \Lambda}[ln \ p(\pi, \mu, \Lambda)]
+$$
+
+$$
+= \mathbb{E}_{\pi} [ln \ p(Z | \pi)] + \mathbb{E}_{\mu, \Lambda}[ln \ p(X | Z, \mu, \Lambda)] + C
+$$
+
+where $C$ is a constant, 
+
+$$
+\mathbb{E}_{\pi} [ln \ p(Z | \pi)] = \mathbb{E}_{\pi} \Big[ ln \ \prod_{n=1}^{N}\prod_{k=1}^{K}\pi_{k}^{z_{nk}} \Big]
+$$
+
+$$
+= \mathbb{E}_{\pi} \Big[ \sum_{n=1}^{N}\sum_{k=1}^{K} z_{nk} \ ln \ \pi_{k} \Big]
+$$
+
+$$
+= \sum_{n=1}^{N}\sum_{k=1}^{K} z_{nk} \ \mathbb{E}_{\pi} [ln \ \pi_{k}]
+$$
+
+and
+
+$$
+\mathbb{E}_{\mu, \Lambda}[ln \ p(X | Z, \mu, \Lambda)] = \mathbb{E}_{\mu, \Lambda} \Big[ ln \ \prod_{n=1}^{N} \prod_{k=1}^{K} \mathcal{N}(x_{n} | \mu_{k}, \Lambda_{k}^{-1})^{z_{nk}} \Big]
+$$
+
+$$
+= \sum_{n=1}^{N} \sum_{k=1}^{K} z_{nk} \ \mathbb{E}_{\mu_k, \Lambda_k} \Big[ ln \ \frac{e^{-\frac{1}{2} (x_n - \mu_k)^{\top} \Lambda (x_n - \mu_k)}}{\sqrt{(2 \pi)^D det(\Lambda_k^{-1})}} \Big]
+$$
+
+$$
+= \sum_{n=1}^{N} \sum_{k=1}^{K} z_{nk} \ \mathbb{E}_{\mu_k, \Lambda_k} \Big[ -\frac{1}{2} (x_n - \mu_k)^{\top} \Lambda (x_n - \mu_k) - \frac{1}{2} ln ((2 \pi)^D det(\Lambda_k^{-1})) \Big]
+$$
+
+$$
+= \sum_{n=1}^{N} \sum_{k=1}^{K} z_{nk} \Big( -\frac{1}{2}\mathbb{E}_{\mu_k, \Lambda_k} \Big[ (x_n - \mu_k)^{\top} \Lambda (x_n - \mu_k) \Big] - \frac{D}{2} ln \ 2 \pi + \mathbb{E}_{\Lambda_k} \Big[ ln \ det(\Lambda_k) \Big] \Big)
+$$
+
+Due to simplification, let 
+
+$$
+ln \ \rho_{nk} = \mathbb{E}_{\pi} [ln \ \pi_{k}] - \frac{1}{2}\mathbb{E}_{\mu_k, \Lambda_k} \Big[ (x_n - \mu_k)^{\top} \Lambda (x_n - \mu_k) \Big] - \frac{D}{2} ln \ 2 \pi + \mathbb{E}_{\Lambda_k} \Big[ ln \ det(\Lambda_k) \Big]
+$$
+
 Thus, 
 
 $$
-ln\;q^{*}(Z) = \mathbb{E}_{\pi, \mu, \Lambda} [\text{ln}\;p(X, Z, \pi, \mu, \Lambda)]
+ln\ q(Z) \propto \sum_{n=1}^{N}\sum_{k=1}^{K} z_{nk} ln \ \rho_{nk}
 $$
 
+In order to normalize the factor of $\rho_{nk}$, we divide the $\rho_{nk}$ by $\sum_{j=1}^K \rho_{nj}$ and obtain the $r_{nk}$.
+
 $$
-= \mathbb{E}_{\pi} [ln \ p(Z | \pi)] + \mathbb{E}_{\mu, \Lambda}[ln \ p(X | Z, \mu, \Lambda)]
+ln\ q(Z) \propto \sum_{n=1}^{N}\sum_{k=1}^{K} z_{nk} ln \ r_{nk}, \text{where} \ r_{nk} = \frac{\rho_{nk}}{\sum_{j=1}^K \rho_{nj}}
+$$
+
+Note that since each data point only belongs to one cluster and $z_{nk}$ is an indicator variable(if data point $i$ belongs to cluster $k$, $z_{ik} = 1$. Otherwise, $z_{ik} = 0$), thus, $\frac{1}{K} \sum_{j=1}^K z_{nj} = \frac{1}{K}$. Therefore, $z_{nk}$ can be seen as a kind of probability that represents how possible does the $n$-th data point belongs to $k$-th cluster. We aims to optimize the expectation $\mathbb{E}[z_{nk}] = 1$, when the $n$-th data point belongs to $k$-th cluster.
+
+$$
+\mathbb{E}_{z_{nk}} [z_{nk}] = r_{nk}
+$$
+
+For convenience, we also define some useful variables.
+
+$$
+N_k = \sum_{n=1}^N r_{nk}, \quad \bar{x}_k = \frac{1}{N_k} \sum_{n=1}^N r_{nk} x_n, \quad S_k = \frac{1}{N_k} r_{nk} (x_n - \bar{x}_k) (x_n - \bar{x}_k)^{\top}
 $$
 
 ### M-Step
+
+E-Step aims to update the variational distribution on variables $\theta$
+
+$$
+ln \ q(\theta; \phi^{\theta}) \propto \mathbb{E}_{q(Z; \phi^{Z})} [log \ p(Y, Z, \theta)]
+$$
+
+Thus, we can derive
+
+$$
+ln\ q(\pi, \mu, \Lambda) \propto \mathbb{E}_{Z} [ln \ p(X, Z, \pi, \mu, \Lambda)]
+$$
+
+$$
+= \mathbb{E}_{Z} [ln \ p(X | Z, \pi, \mu, \Lambda)] + \mathbb{E}_{Z} [ln \ p(Z | \pi)] + \mathbb{E}_{Z} [ln \ p(\pi)] + \mathbb{E}_{Z} [ln \ p(\mu, \Lambda)]
+$$
+
+We assume the joint distribution of parameters follows **mean field theorem** such that the parameters of each component are independent $q(\pi, \mu, \Lambda) = q(\pi) \prod_{i=1}^N q(\mu_i, \Lambda_i)$. With it, the problem would be easier to solve.
+
+**The Posterior of Dirichlet Distribution**
+
+$$
+\mathbb{E}_{Z} [ln \ q(Z | \pi)] + \mathbb{E}_{Z} [ln \ q(\pi)]
+$$
+
+$$
+= \mathbb{E}_Z \Big[ ln \ \frac{1}{B(\alpha_0)} \prod^K_{k=1} \pi^{\alpha_0 - 1}_{k} + ln \ \prod_{n=1}^{N}\prod_{k=1}^{K}\pi_{k}^{z_{nk}} \Big]
+$$
+
+$$
+= \mathbb{E}_Z \Big[ -ln \ B(\alpha_0) + \sum^K_{k=1} (\alpha_0 - 1) ln \ \pi_{k} + \sum_{n=1}^{N}\sum_{k=1}^{K} z_{nk} ln \ \pi_{k} \Big]
+$$
+
+$$
+= -ln \ B(\alpha_0) + \sum^K_{k=1} (\alpha_0 - 1) ln \ \pi_{k} + \sum_{n=1}^{N}\sum_{k=1}^{K} \mathbb{E}_Z [z_{nk}] ln \ \pi_{k}
+$$
+
+In order to evaluate the posterior distribution with observed data points $\{ x_1, ..., x_N \}$ and the result of E-step, replace the $\mathbb{E}_Z [z_{nk}]$ with $r_{nk}$.
+
+$$
+= -ln \ B(\alpha_0) + \sum^K_{k=1} (\alpha_0 - 1) ln \ \pi_{k} + \sum_{k=1}^{K} \sum_{n=1}^{N} r_{nk} ln \ \pi_{k}
+$$
+
+$$
+= -ln \ B(\alpha_0) + \sum^K_{k=1} (\alpha_0 - 1) ln \ \pi_{k} + \sum_{k=1}^{K} \Big( ln \ (\pi_{k}) \sum_{n=1}^{N} r_{nk} \Big)
+$$
+
+$$
+= -ln \ B(\alpha_0) + \sum_{k=1}^{K} (\alpha_0 + N_k - 1) ln \ \pi_{k}
+$$
+
+Since the posterior distribution of Dirichlet is also Dirichlet, thus we can derive
+
+$$
+= ln \ \frac{1}{B(\alpha)} \prod_{k=1}^{K} \pi_{k}^{(\alpha_0 + N_k - 1)}
+$$
+
+$$
+= ln \ \mathcal{Dir}(\pi | \alpha)
+$$
+
+where $\alpha \in \mathbb{R}^K, \ \alpha = \{ \alpha_1, ..., \alpha_K \}, \ \alpha_k = \alpha_0 + N_k$ is the parameter of the Dirichlet distribution.
+
+**The Posterior of Gaussian-Wishart Distribution**
+
+The posterior distribution parametrized by $m_k, \beta_k, W_k, \nu_k$ is
+
+$$
+\mathbb{E}_{Z} [ln \ q(\mu, \Lambda)] = \mathbb{E}_{Z}\Big[ ln \ \prod^K_{k=1} \mathcal{N}(\mu_k | m_k, (\beta_k \Lambda_k)^{-1}) \mathcal{W}(\Lambda_k | W_k, \nu_k) \Big]
+$$
+
+where the parameters we've given before.
+
+$$
+\beta_k = \beta_0 + N_k
+$$
+
+$$
+m_k = \frac{\beta_0 m_0 + N_k \bar{x}_k}{\beta_k}
+$$
+
+$$
+\nu_k = \nu + N_k + 1
+$$
+
+$$
+W^{-1}_k = W^{-1}_0 + N_k S_k + \frac{N_k \beta_0}{N_k + \beta_0} (\bar{x}_k - m_0) (\bar{x}_k - m_0)^{\top}
+$$
+
+**Variational Lower Bound**
+
