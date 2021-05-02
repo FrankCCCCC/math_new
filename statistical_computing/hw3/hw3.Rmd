@@ -208,12 +208,13 @@ kmean <- function(X, K, threshold=1e-6, max_iter=10){
   }
   
   for(iter in 1:max_iter){
+    # Calculate distance between every pairs of cluster center and data point
     for(k in 1:K){
       dis_table[, k] <- sapply(X, dis, cent_cord[k])
     }
-    
+    # Assign the nearest cluster
     clustered <- apply(dis_table, 1, which.min)
-    
+    # Update the center
     for(k in 1:K){
       idxs <- which(clustered == k)
       cent_cord[k] <- mean(X[idxs])
@@ -221,7 +222,7 @@ kmean <- function(X, K, threshold=1e-6, max_iter=10){
       #print(idxs)
       #print(X[idxs])
     }
-    
+    # Calculate total distance
     temp_tot_dis <- sum(dis_table)
     if(abs(temp_tot_dis - tot_dis) < threshold){break}
     tot_dis <- temp_tot_dis
