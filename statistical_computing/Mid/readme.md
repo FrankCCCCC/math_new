@@ -497,12 +497,31 @@ $$
 **Predict Probability Density**
 
 $$
-q(x^* | X) = q(x^*| z^*, \mu, \Lambda) q(z^* | \pi) q(\pi, \mu, \Lambda | X)
+q(x^* | X) = \sum_{z^*} \int_{\pi} \int_{\mu} \int_{\Lambda} q(x^*| z^*, \mu, \Lambda) q(z^* | \pi) q(\pi, \mu, \Lambda | X)
+$$
+
+$$
+= \sum_{z^*} \int_{\pi} \int_{\mu} \int_{\Lambda} \pi_ q(z^* | \pi) q(\pi, \mu, \Lambda | X)
+$$
+
+$$
+= \frac{1}{\alpha^*} \sum_{k=1}^K \alpha_k \mathcal{St}(x^* | m_k, \frac{(\nu_k + 1 - D) \beta_k}{1 + \beta_k} W_k, \nu_k + 1 - D)
 $$
 
 ## Simulation
 
+We generate a bivariate Gaussian mixture distribution with 5 modals. We use K-means which is given 5 clusters as parameter. VB-GMM out-perform than K-means while clustering unbalanced dataset. Even though the K-mean already has correct hyperparameters. 
 
+VB-GMM not only deals with unbalanced dataset well but also self-adapts to the best number of clusters.
+
+**K-means**
+![](./simulate/kmean.jpg)
+
+**VB-GMM**
+
+![](./simulate/vbgmm.jpg)
+
+![](./simulate/gganim_plot0019.png)
 
 ## Exam on Real Dataset
 
