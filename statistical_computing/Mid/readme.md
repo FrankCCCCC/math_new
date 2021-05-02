@@ -1,3 +1,5 @@
+# A Review of Variation Bayesian Gaussian Mixture Model
+
 ## 1. Expectation Maximization
 
 EM algorithm is useful for the model containing latent variables $Z$ when the maximum likelihood is hard to derive from the observed data $Y$. We can write the maximum likelihood of $Y$ like following
@@ -491,4 +493,16 @@ $$
 $$
 ln \ \Lambda_k^* = \mathbb{E}[ln \ det(\Lambda_k)] = \sum_{d=1}^{D} \psi \Big( \frac{\nu_{k} + 1 - d}{2} \Big) + D \ ln 2 + ln \ det(W_k)
 $$
+
+**Predict Probability Density**
+
+$$
+q(x^* | X) = q(x^*| z^*, \mu, \Lambda) q(z^* | \pi) q(\pi, \mu, \Lambda | X)
+$$
+
+## Simulation
+
+
+
+## Exam on Real Dataset
 

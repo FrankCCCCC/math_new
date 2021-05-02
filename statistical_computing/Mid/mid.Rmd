@@ -45,16 +45,34 @@ gg_theme <- function(){
 # Mixture density using predictive t-distribution
 mixture_pdf_t <- function(model, data){
   mixture <- vector(mode = "numeric", length = NROW(data))
+  
   for (k in 1:length(model$nu)) {
-    L_k <- solve((((model$nu[k] + 1 - NROW(model$m)) * model$beta[k]) / 
-                    (1 + model$beta[k])) * model$W[,,k])
-    mixture <- mixture + (model$alpha[k]/sum(model$alpha)) * 
-                dmvt(x = cbind(data$x,data$y), delta = model$m[, k], 
-                     sigma = L_k, df = model$nu[k] + 1 - NROW(model$m), 
-                     log = FALSE, type = "shifted")
+    L_k <- solve((((model$nu[k] + 1 - NROW(model$m)) * model$beta[k]) / (1 + model$beta[k])) * model$W[,,k])
+    
+    mixture <- mixture + (model$alpha[k]/sum(model$alpha)) * dmvt(x = cbind(data$x,data$y), 
+                                                                  delta = model$m[, k], 
+                                                                  sigma = L_k, 
+                                                                  df = model$nu[k] + 1 - NROW(model$m), 
+                                                                  log = FALSE, type = "shifted")
   }
   return(mixture)
 }
+
+# Mixture density using predictive t-distribution
+multi_mixture_t_pdf <- function(model, data){
+  prob_mat <- matrix(0, nrow=model$N, ncol=model$K)
+  
+  for (k in 1:length(model$K)) {
+    L_k <- solve((((model$nu[k] + 1 - NROW(model$m)) * model$beta[k]) / (1 + model$beta[k])) * model$W[,,k])
+    prob_mat[, k] <- (model$alpha[k]/sum(model$alpha)) * dmvt(x=data, 
+                                                              delta=model$m[, k], 
+                                                              sigma=L_k, 
+                                                              df=model$nu[k] + 1 - NROW(model$m), 
+                                                              log=FALSE)
+  }
+  return(prob_mat)
+}
+
 # Enhance the numerical stability, compute ln(sum(e^x))
 log_sum_exp <- function(x) {
   offset <- max(x)
@@ -77,9 +95,9 @@ $$
 update_log_rho_nk <- function(X, k, m_k, log_pi, log_Lambda, D, nu_k, W_k){
   diff <- sweep(X, MARGIN = 2, STATS = m_k[, k], FUN = "-")
   log_rho_nk <- log_pi[k] + 
-                     0.5*log_Lambda[k] - 
-                     0.5*(D/log(pi)) - 
-                     0.5*nu_k[k] * diag(diff %*% W_k[,,k] %*% t(diff))
+                     0.5 * log_Lambda[k] - 
+                     0.5 * (D / log(pi)) - 
+                     0.5 * nu_k[k] * diag(diff %*% W_k[,,k] %*% t(diff))
   return(log_rho_nk)
 }
 ```
@@ -112,28 +130,28 @@ update_x_bar_k <- function(k, r_nk, X, N_k){
 }
 
 update_S_k <- function(k, X, x_bar_k, r_nk, N_k){
-  x_cen <- sweep(X, MARGIN = 2, STATS = x_bar_k[, k], FUN = "-")
+  x_cen <- sweep(X, MARGIN=2, STATS=x_bar_k[, k], FUN="-")
   return(t(x_cen) %*% (x_cen * r_nk[, k]) / N_k[k])
 }
 
-update_r_nk <- function(log_rho_nk){
-  # Responsibilities using the logSumExp for numerical stability
+update_log_r_nk <- function(log_rho_nk){
+  # Use LogSumExp to enhance numerical stability
   Z <- apply(log_rho_nk, 1, log_sum_exp)
-  log_r_nk <- log_rho_nk - Z              # log of 10.49
+  log_r_nk <- log_rho_nk - Z
   
   return(log_r_nk)
 }
 
-update_log_r_nk <- function(log_r_nk){
-  r_nk <- apply(log_r_nk, 2, exp)     # 10.49
+update_r_nk <- function(log_r_nk){
+  r_nk <- apply(log_r_nk, 2, exp)
   return(r_nk)
 }
 
 update_r_nk_both <- function(log_rho_nk){
-  # Use Lo
-  Z        <- apply(log_rho_nk, 1, log_sum_exp)
-  log_r_nk <- log_rho_nk - Z              # log of 10.49
-  r_nk     <- apply(log_r_nk, 2, exp)     # 10.49
+  # Use LogSumExp to enhance numerical stability
+  Z <- apply(log_rho_nk, 1, log_sum_exp)
+  log_r_nk <- log_rho_nk - Z 
+  r_nk <- apply(log_r_nk, 2, exp)
   
   res$Z <- Z
   res$log_r_nk <- log_r_nk
@@ -169,11 +187,11 @@ init_log_pi <- function(alpha){
 }
 
 update_log_Lambda_k <- function(k, nu_k, D, W_k){
-  return(sum(digamma((nu_k[k] + 1 - 1:D)/2)) + D*log(2) + log(det(W_k[,,k])))
+  return(sum(digamma((nu_k[k] + 1 - 1:D) / 2)) + D * log(2) + log(det(W_k[,,k])))
 }
 
 update_m_k <- function(k, beta_k, m_0, N_k, x_bar_k){
-  return((1/beta_k[k]) * (beta_0*m_0 + N_k[k]*x_bar_k[, k]))
+  return((1 / beta_k[k]) * (beta_0 * m_0 + N_k[k] * x_bar_k[, k]))
 }
 
 update_log_pi <- function(alpha){
@@ -221,7 +239,7 @@ $$
 
 ```{r}
 update_alpha <- function(alpha_0, N_k){
-  return(alpha_0 + N_k) # 10.58
+  return(alpha_0 + N_k)
 }
 ```
 
@@ -259,7 +277,7 @@ init_log_Lambda_k <- function(k, D, nu_k, W_k){
 update_W_k <- function(k, W_0_inv, N_k, S_k, beta_0, x_bar_k, m_0){
   W_k <- W_0_inv + 
          N_k[k] * S_k[,,k] + 
-         ((beta_0*N_k[k])/(beta_0 + N_k[k])) * tcrossprod((x_bar_k[, k] - m_0))
+         ((beta_0*N_k[k]) / (beta_0 + N_k[k])) * tcrossprod((x_bar_k[, k] - m_0))
   return(solve(W_k))
 }
 
@@ -276,13 +294,13 @@ update_beta_k <- function(beta_0, N_k){
 
 ```{r}
 cal_elbo <- function(D, K, GM, DIR, GW, UTIL){
-  # Compute logB function
+  # log-Beta function
   logB <- function(W, nu){
     D <- NCOL(W)
     return(-0.5*nu*log(det(W)) - 
           (0.5*nu*D*log(2) + 
           0.25*D*(D - 1) * log(pi) + 
-          sum(lgamma(0.5 * (nu + 1 - 1:NCOL(W)))) ))  #log of B.79
+          sum(lgamma(0.5 * (nu + 1 - 1:NCOL(W)))) ))
   }
   
   lb_px = lb_pml = lb_pml2 = lb_qml <- 0
@@ -336,7 +354,8 @@ init_animate <- function(X, dt_all, is_animation, GW, DIR){
                        z = numeric(), 
                        iter = numeric())
   
-  if (is_animation) { # Create animation for initial assignments
+  # Create animation for initial assignments
+  if (is_animation) {
     my_z = mixture_pdf_t(model = list(m = GW$m_k, W = GW$W_k, beta = GW$beta_k, nu = GW$nu_k, alpha = DIR$alpha), data = dt)
     dt_all <- rbind(dt_all, dt[, z := my_z] %>% .[, iter := 0])
   }
@@ -364,10 +383,8 @@ e_step <- function(K, D, epsilon, GM, GW, UTIL){
     UTIL$log_rho_nk[, k] <- update_log_rho_nk(X, k, GW$m_k, GM$log_pi, GW$log_Lambda, D, GW$nu_k, GW$W_k)
   }
   
-  both <- update_r_nk_both(UTIL$log_rho_nk)
-  UTIL$log_r_nk <- both$log_r_nk
-  UTIL$r_nk <- both$r_nk
-  
+  UTIL$log_r_nk <- update_log_r_nk(UTIL$log_rho_nk)
+  UTIL$r_nk <- update_r_nk(UTIL$log_r_nk)
   UTIL$N_k <- update_N_k(UTIL$r_nk, epsilon)
   
   for (k in 1:K) {
@@ -404,6 +421,23 @@ m_step <- function(N, D, K, GM, GW, DIR, UTIL){
   return(res)
 }
 
+get_label <- function(X, N, K, GW, DIR){
+  prob_mat <- matrix(0, nrow=N, ncol=K)
+  
+  for (k in 1:K){
+    L_k <- solve((((GW$nu_k[k] + 1 - NROW(GW$m_k)) * GW$beta_k[k]) / 
+                    (1 + GW$beta_k[k])) * GW$W_k[,,k])
+    
+    prob_mat[, k] <- (DIR$alpha[k]/sum(DIR$alpha)) * 
+                dmvt(X, delta=GW$m_k[, k], sigma=L_k, df=GW$nu_k[k] + 1 - NROW(GW$m_k), log=FALSE)
+  }
+  
+  #print(data.frame(prob_mat))
+  label <- apply(prob_mat, 1, which.max)
+  #print(label)
+  return(label)
+}
+
 vb_gmm <- function(X, 
                    K = 3, 
                    alpha_0 = 1/K, 
@@ -412,14 +446,16 @@ vb_gmm <- function(X,
                    nu_0 = NCOL(X) + 50, 
                    W_0 = diag(100, NCOL(X)), 
                    max_iter = 500, 
-                   epsilon_conv = 1e-4, 
+                   threshold = 1e-4, 
                    epsilon = 1e-10,
                    is_animation = FALSE, 
                    is_verbose = FALSE){
   
   X <- as.matrix(X)
-  D <- NCOL(X)              # Number of features
-  N <- NROW(X)              # Number of observations
+  # Dimension
+  D <- NCOL(X)
+  # Number of data points
+  N <- NROW(X)
   
   # Gaussian Mixture
   GM <- structure(list(log_pi=rep(0, K), pi_k=0), class="Gaussian-Mixture")
@@ -501,29 +537,31 @@ vb_gmm <- function(X,
     # Variational lower bound
     L[i] <- cal_elbo(D, K, GM=GM, DIR=DIR, GW=GW, UTIL=UTIL)
     
-    ##-------------------------------
+    
     # Evaluate mixture density for plotting
-    ##-------------------------------
     if (is_animation) {
       if ( (i - 1) %% 5 == 0 | i < 10) {
         my_z = mixture_pdf_t(model = list(m = GW$m_k, W = GW$W_k, beta = GW$beta_k, nu = GW$nu_k, alpha = DIR$alpha), data = dt)
         dt_all <- rbind(dt_all, dt[, z := my_z] %>% .[, iter := i - 1])
       }
     }
+    
     # Show VB difference
-    if (is_verbose) { cat("It:\t",i,"\tLB:\t",L[i],
-                          "\tLB_diff:\t",L[i] - L[i - 1],"\n")}
+    if (is_verbose) {cat("It:\t",i,"\tLB:\t",L[i], "\tLB_diff:\t",L[i] - L[i - 1],"\n")}
     # Check if lower bound decreases
-    if (L[i] < L[i - 1]) { message("Warning: Lower bound decreases!\n"); }
+    if (L[i] < L[i - 1]) {message("Warning: Lower bound decreases!\n"); }
     # Check for convergence
-    if (abs(L[i] - L[i - 1]) < epsilon_conv) { break }
+    if (abs(L[i] - L[i - 1]) < threshold) { break }
     # Check if VB converged in the given maximum iterations
     if (i == max_iter) {warning("VB did not converge!\n")}
   }
-  obj <- structure(list(K = K, N = N, D = D, pi_k = GM$pi_k, 
-                        alpha = DIR$alpha, r_nk = UTIL$r_nk,  m = GW$m_k, W = GW$W_k, 
-                        beta = GW$beta_k, nu = GW$nu_k, L = L[2:i], 
-                        dt_all = dt_all), class = "vb_gmm")
+  
+  label <- get_label(X, N, K, GW, DIR)
+    
+  obj <- structure(list(data=X, cluster=label, K=K, N=N, D=D, pi_k=GM$pi_k, 
+                        alpha=DIR$alpha, r_nk=UTIL$r_nk,  m=GW$m_k, W=GW$W_k, 
+                        beta=GW$beta_k, nu=GW$nu_k, L=L[2:i], 
+                        dt_all=dt_all), class="VB-GMM")
   return(obj)
 }
 ```
@@ -543,8 +581,12 @@ gen_mus <- function(n, d, scale=10){
 
 gen_sigmas <- function(n, d, df=20, seed=42){
   S <- toeplitz((d:1)/d)
-  set.seed(seed)
+  #set.seed(seed)
   return(rWishart(n, df, S))
+}
+
+gen_coef <- function(K){
+  return(rdirichlet(1, rep(1, K)))
 }
 
 gen_datas <- function(n, d, mus, sigmas, coef){
@@ -569,7 +611,7 @@ scale <- 10
   
 mus <- gen_mus(real_K, D, scale)
 sigmas <- gen_sigmas(real_K, D, df=df)
-coef <- rep(1, real_K)
+coef <- gen_coef(real_K)
 data <- gen_datas(N, D, mus, sigmas, coef)
 X <- data
 colnames(X) <- c('X', 'Y')
@@ -578,7 +620,7 @@ head(X)
 
 ```{r}
 # Eliminate Randomness
-set.seed(1)
+#set.seed(1)
 # Number of cluster
 K <- 20
 
@@ -617,15 +659,34 @@ draw_animate <- function(X, vb_gmm_model, aes){
   return(p)
 }
 
+
 ```
 
 ```{r}
+library(ggpubr)
+library(factoextra)
+library(cluster)
+
 draw_contour(X, vb_gmm_model, aes(X,Y))
+
+fviz_cluster(kmean_model, data = X,
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw()
+             )
+
+fviz_cluster(vb_gmm_model, data = X,
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw()
+             )
+
 ```
 
 ```{r}
 draw_animate(X, vb_gmm_model, aes(X,Y))
 ```
+
 ```{r}
 dis <- function(a, b){
   return(sum((a - b)^2))
@@ -633,21 +694,25 @@ dis <- function(a, b){
 
 cal_tot_dist <- function(X, cent_cord){
   n <- length(X)
-  d <- 2
+  d <- 1
   K <- length(cent_cord[,1])
   
-  dis_table <- matrix(0, nrow=n, ncol=K)
+  X <- data.frame(X)
+  dis_table <- data.frame(matrix(0, nrow=n, ncol=K))
+  within_dis <- data.frame(matrix(0, nrow=n, ncol=K))
   clustered <- array(0, c(n))
   
   for(k in 1:K){
-    dis_table[, k] <- apply(X, 1, dis, cent_cord[k])
+    dis_table[, k] <- apply(X, 1, dis, cent_cord[k, ])
   }
   # Assign the nearest cluster
   clustered <- apply(dis_table, 1, which.min)
   # Update the center
   for(k in 1:K){
     idxs <- which(clustered == k)
-    cent_cord[k] <- mean(X[idxs])
+    
+    within_dis <- sapply(X[idxs, ], dis, cent_cord[k, ])
+    
     
     #print(idxs)
     #print(X[idxs])
@@ -655,26 +720,82 @@ cal_tot_dist <- function(X, cent_cord){
   # Calculate total distance
   tot_dis <- sum(dis_table)
   
+  #idxs <- which(clustered == 1)
+  #cbind_sel <- data.frame(X)[idxs, ]
+  #print(idxs)
+  #print(cbind_sel)
+  
+  print(clustered)
+  print(X)
+  print(cent_cord)
+  
   print(dis_table)
-  print(tot_dis)
+  #print(tot_dis)
+  #print(within_dis)
+  
+  return(tot_dis)
 }
 
 vb_gmm_mus <- unique(as.data.frame(t(vb_gmm_model$m)))
 kmean_mus <- kmean_model$centers
 
-head(kmean_mus)
-head(X)
-cal_tot_dist(X, kmean_mus)
+#head(kmean_mus)
+#head(X)
+#cal_tot_dist(X, kmean_mus)
+#cal_tot_dist(X, vb_gmm_mus)
 ```
 
+## Real Dataset
 
 ```{r}
 library(tidyverse)  # data manipulation
+library(rattle)
 
 #data <- faithful
-#data <- iris
-#print(data)
-#data <- data[c(3, 4)]
-#print(colnames(data))
+#data <- iris[, 1:4]
+data <- wine[, -1]
+print(data)
 #X <- as.matrix(data)
+```
+
+```{r}
+#pca <- prcomp(data, scale=TRUE)
+#print(pca)
+#X <- pca$x
+X <- scale(data)
+```
+
+```{r}
+vb_gmm_model <- vb_gmm(X=X, 
+                       K=3, 
+                       alpha_0=1e-5, 
+                       max_iter=1001, 
+                       is_animation=FALSE, 
+                       is_verbose=FALSE)
+kmean_model <- kmeans(X, 3)
+```
+
+```{r}
+#draw_contour(X, vb_gmm_model, aes(eruptions, waiting))
+#draw_contour(X, vb_gmm_model, aes(eruptions, waiting))
+
+fviz_cluster(kmean_model, 
+             data=X,
+             geom="point",
+             ellipse.type="convex", 
+             ggtheme=theme_bw())
+
+fviz_cluster(vb_gmm_model, 
+             data=X,
+             geom="point",
+             ellipse.type="convex", 
+             ggtheme=theme_bw())
+
+clusplot(X, kmean_model$cluster, main='2D representation of the Cluster solution',
+         color=TRUE, shade=TRUE,
+         labels=2, lines=0)
+
+clusplot(X, vb_gmm_model$cluster, main='2D representation of the Cluster solution',
+         color=TRUE, shade=TRUE,
+         labels=2, lines=0)
 ```
