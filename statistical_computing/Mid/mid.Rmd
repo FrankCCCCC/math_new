@@ -9,46 +9,7 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
-```{r}
-gen_datas <- function(n){
-  p_1 <- 0.6
-  mu_1 <- 0
-  sigma_1 <- 1
-  mu_2 <- 3
-  sigma_2 <- 1
-  
-  p <- runif(n, 0, 1)
-  
-  switch_func <- function(p){
-    if(p < p_1){
-      # Cluster 1
-      return(rnorm(1, mu_1, sigma_1))
-    }else{
-      # Cluster 2
-      return(rnorm(1, mu_2, sigma_2))
-    }
-  }
-  x <- sapply(p, switch_func)
-  
-  return(x)
-}
-
-data <- gen_datas(200)
-```
-
-## TargetScore Package
-
-```{r}
-library(TargetScore)
-
-X <- c(rnorm(100,mean=-3), rnorm(100,mean=3))
-#tmp <- vbgmm(data, tol=1e-3)
-#names(tmp)
-#print(tmp$label)
-```
-
-## Another Implementation
+## Utility Functions
 
 ```{r}
 suppressPackageStartupMessages(require(matrixcalc))
@@ -80,19 +41,6 @@ gg_theme <- function(){
   return(p)
 }
 
-# Mixture density using approximate predictive gaussian distribution
-mixture_pdf_gaussian <- function(model, data){
-  mixture <- vector(mode = "numeric", length = NROW(data))
-  for (k in 1:length(model$nu)) {
-    tau_k <- model$W[,,k] * model$nu[k] # TODO: Is this right?
-    mu_k  <- model$m[, k]
-    mixture <- mixture + 
-      model$pi_k[k] * dmvnorm(cbind(data$x,data$y),
-                              mean = mu_k, 
-                              sigma = solve(tau_k))
-  }
-  return(mixture)
-}
 # Mixture density using predictive t-distribution
 mixture_pdf_t <- function(model, data){
   mixture <- vector(mode = "numeric", length = NROW(data))
@@ -106,9 +54,8 @@ mixture_pdf_t <- function(model, data){
   }
   return(mixture)
 }
-# Use the log sum exp trick for having numeric stability
+# Enhance the numerical stability, compute ln(sum(e^x))
 log_sum_exp <- function(x) {
-  # Computes log(sum(exp(x))
   offset <- max(x)
   s <- log(sum(exp(x - offset))) + offset
   i <- which(!is.finite(s))
@@ -182,7 +129,7 @@ update_log_r_nk <- function(log_r_nk){
 }
 
 update_r_nk_both <- function(log_rho_nk){
-  # Responsibilities using the logSumExp for numerical stability
+  # Use Lo
   Z        <- apply(log_rho_nk, 1, log_sum_exp)
   log_r_nk <- log_rho_nk - Z              # log of 10.49
   r_nk     <- apply(log_r_nk, 2, exp)     # 10.49
@@ -416,7 +363,6 @@ e_step <- function(K, D, epsilon, GM, GW, UTIL){
     UTIL$log_rho_nk[, k] <- update_log_rho_nk(X, k, GW$m_k, GM$log_pi, GW$log_Lambda, D, GW$nu_k, GW$W_k)
   }
   
-  # Responsibilities using the logSumExp for numerical stability
   both <- update_r_nk_both(UTIL$log_rho_nk)
   UTIL$log_r_nk <- both$log_r_nk
   UTIL$r_nk <- both$r_nk
@@ -438,21 +384,15 @@ e_step <- function(K, D, epsilon, GM, GW, UTIL){
 m_step <- function(N, D, K, GM, GW, DIR, UTIL){
   # Update Dirichlet parameter
   DIR$alpha <- update_alpha(DIR$alpha_0, UTIL$N_k)
-  # Compute expected value of mixing proportions
   GM$pi_k <- update_pi_k(DIR$alpha_0, UTIL$N_k, K, N)
-  # Update expectations over \pi and \Lambda
-  # 10.66
   GM$log_pi <- update_log_pi(DIR$alpha)
   
-  # Update parameters for Gaussia-nWishart distribution
+  # Update parameters for Gaussia-Wishart distribution
   GW$beta_k <- update_beta_k(GW$beta_0, UTIL$N_k)
   GW$nu_k <- update_nu_k(GW$nu_0, UTIL$N_k)
   for (k in 1:K) {
-    # 10.61
     GW$m_k[, k] <- update_m_k(k, GW$beta_k, GW$m_0, UTIL$N_k, UTIL$x_bar_k)
-    # 10.62
     GW$W_k[, , k] <- update_W_k(k, GW$W_0_inv, UTIL$N_k, UTIL$S_k, GW$beta_0, UTIL$x_bar_k, GW$m_0)
-    # 10.65
     GW$log_Lambda[k] <- update_log_Lambda_k(k, GW$nu_k, D, GW$W_k)
   }
   
@@ -590,17 +530,64 @@ vb_gmm <- function(X,
 ```{r}
 library(tidyverse)  # data manipulation
 
-#data <- faithful
-data <- iris
+data <- faithful
+#data <- iris
 print(data)
-data <- data[c(3, 4)]
+#data <- data[c(3, 4)]
 print(colnames(data))
 X <- as.matrix(data)
 ```
 
 ```{r}
+library(gtools)
+library(extraDistr)
+
+gen_mus <- function(n, d, scale=10){
+  mus <- matrix(0, nrow=n, ncol=d)
+  for(j in 1:d){
+    mus[,j] <- runif(n=n, min=-scale, max=scale)
+  }
+  return(mus)
+}
+
+gen_sigmas <- function(n, d, df=20, seed=42){
+  S <- toeplitz((d:1)/d)
+  set.seed(seed)
+  return(rWishart(n, df, S))
+}
+
+gen_datas <- function(n, d, mus, sigmas, coef){
+  data <- matrix(0, nrow=n, ncol=d)
+  norm_coef <- coef / (sum(coef) + 1e-9)
+  idxs <- rcat(n, norm_coef)
+  
+  for(i in 1:n){
+    data[i,] <- mvtnorm::rmvnorm(1, mean=mus[idxs[i], ], sigma=sigmas[,,idxs[i]])
+  }
+  
+  #sapply(1:n, function(i){})
+  
+  return(data)
+}
+
+K <- 5
+D <- 2
+N <- 500
+df <- 3
+scale <- 10
+  
+mus <- gen_mus(K, D, scale)
+sigmas <- gen_sigmas(K, D, df=df)
+coef <- rep(1, K)
+data <- gen_datas(N, D, mus, sigmas, coef)
+X <- data
+colnames(X) <- c('X', 'Y')
+head(X)
+```
+
+```{r}
 set.seed(1)  # For reproducibility
-K <- 5      # Number of clusters
+K <- 20      # Number of clusters
 # Run vb-gmm model model
 vb_gmm_model <- vb_gmm(X = X, 
                        K = K, 
@@ -617,7 +604,7 @@ data.grid <- expand.grid(x = seq(from = min(X[,1]) - 2,
                                  to = max(X[,2]) + 2, length.out = 100))
 q.samp <- cbind(data.grid, z = mixture_pdf_t(vb_gmm_model,data.grid))
 ggplot() + 
-  geom_point(data = data.frame(X), mapping = aes(Petal.Length, Petal.Width)) + 
+  geom_point(data = data.frame(X), mapping = aes(X, Y)) + 
   geom_contour(data = q.samp, mapping = aes(x = x,y = y, z = z, 
                colour = ..level..), binwidth = 0.001) + 
   gg_theme()
@@ -626,8 +613,9 @@ ggplot() +
 
 ```{r}
 suppressPackageStartupMessages(library(gganimate))
+
 dt <- vb_gmm_model$dt_all %>% .[, iter := as.factor(iter)]
-p <- ggplot() + geom_point(data = data.frame(X), aes(Petal.Length, Petal.Width)) + 
+p <- ggplot() + geom_point(data = data.frame(X), aes(X, Y)) + 
   geom_contour(data = dt, mapping = aes(x = x, y = y, z = z, 
                colour = ..level..), binwidth = 0.001) + 
   transition_manual(iter) +
