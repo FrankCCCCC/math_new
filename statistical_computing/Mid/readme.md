@@ -2,7 +2,7 @@
 
 ## 1. Introduction
 
-When we use K-Means or GMM to solve clustering problem, the most important hyperparameter is the number of the cluster. It is quite hard to decide and cause the good/bad performance significantly. In the mean time, K-Means also cannot handle unbalanced dataset well. However, the variational Bayesian Gaussian mixture model(VB-GMM) can solve these. VB-GMM is a Bayesian model that contains priors over the parameters of GMM. Thus, VB-GMM can be optimized by variational expectation maximization(VEM) and find the optimal cluster number automatically. Further, VB-GMM can also deal with the unbalanced dataset well. In this article, we will first derive the general form of the EM algorithm and prove that the EM algorithm approximates the MLE actually. In the section 2, we will introduce the variational lower bound(a.k.a evidence lower bound / VLBO / ELBO), combine EM and ELBO and, derive the variational expectation maximization(VEM). In the section 3, we will take Bayesian GMM as an example and optimize the Bayesian GMM via VEM. In the section 4 and 5, we will conduct a simple simulation to examine the performance of the VB-GMM in comparison to K-Means and apply VB-GMM to the real dataset.
+When we use K-Means or GMM to solve clustering problem, the most important hyperparameter is the number of the cluster. It is quite hard to decide and cause the good/bad performance significantly. In the mean time, K-Means also cannot handle unbalanced dataset well. However, the variational Bayesian Gaussian mixture model(VB-GMM) can solve these. VB-GMM is a Bayesian model that contains priors over the parameters of GMM. Thus, VB-GMM can be optimized by variational Bayesian expectation maximization(VBEM) and find the optimal cluster number automatically. Further, VB-GMM can also deal with the unbalanced dataset well. In this article, we will first derive the general form of the EM algorithm and prove that the EM algorithm approximates the MLE actually. In the section 2, we will introduce the variational lower bound(a.k.a evidence lower bound / VLBO / ELBO), combine EM and ELBO and, derive the variational Bayesian expectation maximization(VBEM). In the section 3, we will take Bayesian GMM as an example and optimize the Bayesian GMM via VBEM. In the section 4 and 5, we will conduct a simple simulation to examine the performance of the VB-GMM in comparison to K-Means and apply VB-GMM to the real dataset.
 
 ## 2. Expectation Maximization
 
@@ -17,7 +17,7 @@ $$
 The Expectation Maximization rewrites the question as the following
 
 $$
-\arg \max_{\theta} \ log \int_{Z} p(Y, Z; \theta) dZ
+\arg \max_{\theta} \mathcal{L}(Y; \theta) = \arg \max_{\theta} \ log \int_{Z} p(Y, Z; \theta) dZ
 $$
 
 Thus, we can derive the EM with an approximation $q(Z; \gamma)$ for $p(Z|Y)$ to avoid evaluating such complex distribution directly
@@ -49,6 +49,7 @@ Where $H_q[Z]$ is the entropy of $Z$ over distribution $q$
 So far, we can express the EM algorithm in a simpler way as
 
 ---
+
 Iterate until $\theta$ converge
 - E Step
   
@@ -56,6 +57,7 @@ Iterate until $\theta$ converge
 - M Step
   
   $\arg \max_{\theta} \ \int_Z q(Z; \gamma) log \ p(Y, Z; \theta) dZ$
+
 ---
 
 ### 2.2 EM In General Form
@@ -79,13 +81,17 @@ $$
 $$
 
 $$
-= log \ p(Y; \theta) - KL[q(Z; \gamma) || p(Z|Y)] \ \tag{5}
+= log \ p(Y; \theta) - KL[q(Z; \gamma) || p(Z|Y)]
+$$
+
+$$
+= \mathcal{L}(Y; \theta) - KL[q(Z; \gamma) || p(Z|Y)]
 $$
 
 Thus
 
 $$
-\max_{\theta} \mathcal{L}(Y; \theta) \geq \arg \max_{\theta, \gamma} \mathcal{L}(\theta, \gamma)
+\arg \max_{\theta} \mathcal{L}(Y; \theta) \geq \arg \max_{\theta, \gamma} \mathcal{L}(\theta, \gamma)
 $$
 
 With KKT, the constrained optimization problem can be solve with Lagrange multiplier
@@ -99,6 +105,7 @@ Since we've known the KL-divergence is always greater or equal to 0, when $KL[q(
 Thus, we can also represent the EM algorithm as
 
 ---
+
 Iterate until $\theta$ converge
 - E Step at k-th iteration
   
@@ -106,9 +113,10 @@ Iterate until $\theta$ converge
 - M Step at k-th iteration
   
   $\theta_{k+1} = \arg \max_{\theta} \mathcal{L}(\theta_{k}, \gamma_{k+1})$
+
 ---
 
-### 2.3 Variational  Bayesian Expectation Maximization(VEM)
+### 2.3 Variational Bayesian Expectation Maximization(VBEM)
 
 In EM, we approximate a posterior $p(Y, Z; \theta)$ without any prior over the parameters $\theta$. Variational Bayesian Expectation Maximization(VBEM) defines a prior $p(\theta; \lambda)$ over the parameters. Thus, VBEM approximates the bayesian model $p(Y, Z, \theta; \lambda) = p(Y, Z|\theta) p(\theta; \lambda)$. Then, we can define a lower bound on the log marginal likelihood 
 
@@ -182,6 +190,7 @@ $$
 **Variational Bayesian EM Algorithm**
 
 ---
+
 Iterate until $\mathcal{L}(\phi^Z, \phi^{\theta})$ converge
 - E Step: Update the variational distribution on $Z$
   
@@ -189,6 +198,7 @@ Iterate until $\mathcal{L}(\phi^Z, \phi^{\theta})$ converge
 - M Step: Update the variational distribution on $\theta$
   
   $q(\theta; \phi^{\theta}) \propto e^{(\mathbb{E}_{q(Z; \phi^{Z})} [log \ p(Y, Z, \theta)])}$
+  
 ---
 
 ## 3. Variational Bayesian Gaussian Mixture Model(VB-GMM)
@@ -540,25 +550,33 @@ E Step
 
 M Step
 
-  Update Dirichlet distribution
+  - Update Dirichlet distribution
 
-  - Compute $\alpha_k = \alpha_0 + N_k, \ for \ 1 \leq k \leq K$
+    - Compute $\alpha_k = \alpha_0 + N_k, \ for \ 1 \leq k \leq K$
 
-  Update Gaussian Mixture distribution
+  - Update Gaussian Mixture distribution
 
-  - Compute $ln \ \pi_k^* = \mathbb{E}[ln \ \pi_k] = \psi(\alpha_k) - \psi \Big(\sum_{k=1}^K \alpha_k \Big)$
+    - Compute $ln \ \pi_k^* = \mathbb{E}[ln \ \pi_k] = \psi(\alpha_k) - \psi \Big(\sum_{k=1}^K \alpha_k \Big)$
 
-  Update Gaussian-Wishart distribution
+  - Update Gaussian-Wishart distribution
 
-  - Compute $\beta_k = \beta_0 + N_k, \ for \ 1 \leq k \leq K$
+    - Compute $\beta_k = \beta_0 + N_k, \ for \ 1 \leq k \leq K$
   
-  - Compute $m_k = \frac{\beta_0 m_0 + N_k \bar{x}_k}{\beta_k}, \ for \ 1 \leq k \leq K$
+    - Compute $m_k = \frac{\beta_0 m_0 + N_k \bar{x}_k}{\beta_k}, \ for \ 1 \leq k \leq K$
   
-  - Compute $\nu_k = \nu + N_k + 1, \ for \ 1 \leq k \leq K$
+    - Compute $\nu_k = \nu + N_k + 1, \ for \ 1 \leq k \leq K$
   
-  - Compute $W^{-1}_k = W^{-1}_0 + N_k S_k + \frac{N_k \beta_0}{N_k + \beta_0} (\bar{x}_k - m_0) (\bar{x}_k - m_0)^{\top}, \ for \ 1 \leq k \leq K$
+    - Compute $W^{-1}_k = W^{-1}_0 + N_k S_k + \frac{N_k \beta_0}{N_k + \beta_0} (\bar{x}_k - m_0) (\bar{x}_k - m_0)^{\top}, \ for \ 1 \leq k \leq K$
   
-  - Compute $$
+  - Update posterior for next iteration
+
+    - Compute $ln \ \Lambda_k^* = \sum_{d=1}^{D} \psi \Big( \frac{\nu_{k} + 1 - d}{2} \Big) + D \ ln 2 + ln \ det(W_k), \ for \ 1 \leq k \leq K$
+  
+    - Compute $ln \ \pi_k^* = \psi(\alpha_k) - \psi \Big(\sum_{k=1}^K \alpha_k \Big), \ for \ 1 \leq k \leq K$
+
+ELBO
+
+  - 
 
 ---
 
