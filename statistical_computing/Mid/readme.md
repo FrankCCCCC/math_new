@@ -1,5 +1,9 @@
 # A Review of Variation Bayesian Gaussian Mixture Model
 
+資工21 106033233 周聖諺
+
+---
+
 ## 1. Introduction
 
 When we use K-Means or GMM to solve clustering problem, the most important hyperparameter is the number of the cluster. It is quite hard to decide and cause the good/bad performance significantly. In the mean time, K-Means also cannot handle unbalanced dataset well. However, the variational Bayesian Gaussian mixture model(VB-GMM) can solve these. VB-GMM is a Bayesian model that contains priors over the parameters of GMM. Thus, VB-GMM can be optimized by variational Bayesian expectation maximization(VBEM) and find the optimal cluster number automatically. Further, VB-GMM can also deal with the unbalanced dataset well. In this article, we will first derive the general form of the EM algorithm and prove that the EM algorithm approximates the MLE actually. In the section 2, we will introduce the variational lower bound(a.k.a evidence lower bound / VLBO / ELBO), combine EM and ELBO and, derive the variational Bayesian expectation maximization(VBEM). In the section 3, we will take Bayesian GMM as an example and optimize the Bayesian GMM via VBEM. In the section 4 and 5, we will conduct a simple simulation to examine the performance of the VB-GMM in comparison to K-Means and apply VB-GMM to the real dataset.
@@ -598,6 +602,8 @@ VB-GMM not only deals with unbalanced dataset well but also self-adapts to the b
 With the animation, we can see the number of clusters of VB-GMM keep reducing until it find a best fit to the dataset. Please refer to the [link](https://github.com/FrankCCCCC/math_new/blob/master/statistical_computing/Mid/simulate/animate.gif).
 
 ![](./simulate/animate.gif)
+
+**https://github.com/FrankCCCCC/math_new/blob/master/statistical_computing/Mid/simulate/animate.gif**
 
 ## 5. Examine on Real Dataset
 
