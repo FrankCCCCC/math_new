@@ -4,7 +4,9 @@
 
 When we use K-Means or GMM to solve clustering problem, the most important hyperparameter is the number of the cluster. It is quite hard to decide and cause the good/bad performance significantly. In the mean time, K-Means also cannot handle unbalanced dataset well. However, the variational Bayesian Gaussian mixture model(VB-GMM) can solve these. VB-GMM is a Bayesian model that contains priors over the parameters of GMM. Thus, VB-GMM can be optimized by variational expectation maximization(VEM) and find the optimal cluster number automatically. Further, VB-GMM can also deal with the unbalanced dataset well. In this article, we will first derive the general form of the EM algorithm and prove that the EM algorithm approximates the MLE actually. In the section 2, we will introduce the variational lower bound(a.k.a evidence lower bound / VLBO / ELBO), combine EM and ELBO and, derive the variational expectation maximization(VEM). In the section 3, we will take Bayesian GMM as an example and optimize the Bayesian GMM via VEM. In the section 4 and 5, we will conduct a simple simulation to examine the performance of the VB-GMM in comparison to K-Means and apply VB-GMM to the real dataset.
 
-## 1. Expectation Maximization
+## 2. Expectation Maximization
+
+### 2.1 Naive EM
 
 EM algorithm is useful for the model containing latent variables $Z$ when the maximum likelihood is hard to derive from the observed data $Y$. We can write the maximum likelihood of $Y$ like following
 
@@ -56,7 +58,7 @@ Iterate until $\theta$ converge
   $\arg \max_{\theta} \ \int_Z q(Z; \gamma) log \ p(Y, Z; \theta) dZ$
 ---
 
-## 2. EM In General Form
+### 2.2 EM In General Form
 
 Actually, we can represent the EM algorithm with variational lower bound $\mathcal{L}(\theta, \gamma)$
 
@@ -106,7 +108,7 @@ Iterate until $\theta$ converge
   $\theta_{k+1} = \arg \max_{\theta} \mathcal{L}(\theta_{k}, \gamma_{k+1})$
 ---
 
-## 3. Variational  Bayesian Expectation Maximization
+### 2.3 Variational  Bayesian Expectation Maximization(VEM)
 
 In EM, we approximate a posterior $p(Y, Z; \theta)$ without any prior over the parameters $\theta$. Variational Bayesian Expectation Maximization(VBEM) defines a prior $p(\theta; \lambda)$ over the parameters. Thus, VBEM approximates the bayesian model $p(Y, Z, \theta; \lambda) = p(Y, Z|\theta) p(\theta; \lambda)$. Then, we can define a lower bound on the log marginal likelihood 
 
@@ -189,9 +191,9 @@ Iterate until $\mathcal{L}(\phi^Z, \phi^{\theta})$ converge
   $q(\theta; \phi^{\theta}) \propto e^{(\mathbb{E}_{q(Z; \phi^{Z})} [log \ p(Y, Z, \theta)])}$
 ---
 
-## 3. Variational Bayesian Gaussian Mixture Model
+## 3. Variational Bayesian Gaussian Mixture Model(VB-GMM)
 
-### Graphical Model
+### 3.1 Graphical Model
 
 **Gaussian Mixture Model & Clustering**
 
@@ -207,7 +209,7 @@ $$
 
 $p(X | Z, \pi, \mu, \Lambda)$ denotes the Gaussian mixture model given on the latent variables and parameters. $p(Z | \pi)$ denotes the latent variables. As for priors, $p(\pi)$ denotes the prior distribution on the latent variables $Z$ and $p(\mu | \Lambda) p(\Lambda)$ denotes the priors distribution on the Gaussian distribution $X$. 
 
-#### Gaussian Mixture Model
+### 3.2 Gaussian Mixture Model
 
 Suppose each data point $x_n \in \mathbb{R}^D$ has dimension $D$. We define the latent variables $Z = \{ z_1, ..., z_N \}, Z \in \mathbb{R}^{N \times K}$, where $z_i =\{z_{i1}, ..., z_{iK} \}, z_i \in \mathbb{R}^K, z_{ij} \in \{ 0, 1\}$. Each $z_{i}$ is a vector containing k binary variables. $z_i$ can be seen as an one-hot encoding that indicates which cluster belongs to. As for $\pi \in \mathbb{R}^K$, $\pi$ is the weight of the Gaussian mixture model of each component.
 
@@ -223,7 +225,7 @@ $$
 
 where data $X$ contains $N$ data points and $D$ dimensions, parameter $\mu \in \mathbb{R}^K, \mu = \{ \mu_1, ..., \mu_K \}$ and $\Lambda \in \mathbb{R}^{K \times D \times D}, \Lambda_k \in \mathbb{R}^{D \times D}, \Lambda = \{ \Lambda_1, ..., \Lambda_K \}$ are the mean  and the covariance matrix of each component of Gaussian mixture model.
 
-#### Dirichlet Distribution
+### 3.3 Dirichlet Distribution
 
 Next, we introduce another prior over the parameters. We choose the symmetric Dirichlet distribution over the mixing proportions $\pi$. Support $x_1, ..., x_K$ where $x_i \in (0, 1)$ and $\sum^K_{i=1} x_i = 1, K > 2$ with parameters $\alpha_1, ..., \alpha_K > 0$
 
@@ -268,7 +270,7 @@ $$
 p(\pi) = \mathcal{Dir}(\pi | \alpha_0) = \frac{1}{B(\alpha_0)} \prod^K_{k=1} \pi^{\alpha_0 - 1}_{k} = C(\alpha_0) \prod^K_{k=1} \pi^{\alpha_0 - 1}_{k}
 $$
 
-#### Gaussian Wishart Distribution
+### 3.4 Gaussian-Wishart Distribution
 
 If a normal distribution whose parameters follow the Wishart distribution. It is called **Gaussian-Wishart distribution**. Support $\mu \in \mathbb{R}^D$ and $\Lambda \in \mathbb{R}^{D \times D}$, they are generated from Gaussian-Wishart distribution which is defined as
 
@@ -312,7 +314,9 @@ $$
 p(\mu, \Lambda) = p(\mu | \Lambda) p(\Lambda) = \prod^K_{k=1} \mathcal{N}(\mu_k | m_0, (\beta_0 \Lambda_k)^{-1}) \mathcal{W}(\Lambda_k | W_0, \nu_0)
 $$
 
-### E-Step
+### 3.5 The Algorithm
+
+**E-Step**
 
 E-Step aims to update the variational distribution on latent variables $Z$
 
@@ -396,7 +400,7 @@ $$
 N_k = \sum_{n=1}^N r_{nk}, \quad \bar{x}_k = \frac{1}{N_k} \sum_{n=1}^N r_{nk} x_n, \quad S_k = \frac{1}{N_k} r_{nk} (x_n - \bar{x}_k) (x_n - \bar{x}_k)^{\top}
 $$
 
-### M-Step
+**M-Step**
 
 E-Step aims to update the variational distribution on variables $\theta$
 
@@ -514,7 +518,7 @@ $$
 = \frac{1}{\alpha^*} \sum_{k=1}^K \alpha_k \mathcal{St}(x^* | m_k, \frac{(\nu_k + 1 - D) \beta_k}{1 + \beta_k} W_k, \nu_k + 1 - D)
 $$
 
-## Simulation
+## 4. Simulation
 
 We generate a bivariate Gaussian mixture distribution with 5 modals. We use K-means which is given 5 clusters as parameter. VB-GMM out-perform than K-means while clustering unbalanced dataset. Even though the K-mean already has correct hyperparameters. 
 
@@ -533,5 +537,5 @@ With the animation, we can see the number of clusters of VB-GMM keep reducing un
 
 ![](./simulate/animate.gif)
 
-## Exam on Real Dataset
+## 5. Examine on Real Dataset
 
