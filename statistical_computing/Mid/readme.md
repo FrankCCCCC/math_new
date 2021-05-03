@@ -157,39 +157,50 @@ $$
 Recall that we need to solve $\arg \max_{\phi^{Z}} \mathcal{L}(\phi^{Z}, \phi^{\theta})$ and $\arg \max_{\phi^{\theta}} \mathcal{L}(\phi^{Z}, \phi^{\theta})$ separately in E-step and M-step. Thus, we can derive
 
 $$
-\frac{d}{d \phi^{Z}} \mathcal{L}(\phi^{Z}, \phi^{\theta}) = 0
+\nabla_{\phi^Z} \mathcal{L}(\phi^{Z}, \phi^{\theta}) = 0
 $$
 
 $$
-\frac{d}{d \phi^{\theta}} \mathcal{L}(\phi^{Z}, \phi^{\theta}) = 0
+\nabla_{\phi^{\theta}} \mathcal{L}(\phi^{Z}, \phi^{\theta}) = 0
 $$
 
 Then, we can derive further
 
 $$
-\frac{d}{d q(Z; \phi^{Z})} \mathcal{L}(\phi^{Z}, \phi^{\theta}) 
+\nabla_{\phi^Z} \mathcal{L}(\phi^{Z}, \phi^{\theta}) = \nabla_{\phi^Z} \mathbb{E}_{q(Z; \phi^{Z}) q(\theta; \phi^{\theta})} \Big[ log \ \frac{p(Y, Z |\theta) p(\theta; \lambda)}{q(Z; \phi^{Z}) q(\theta; \phi^{\theta})} \Big]
 $$
 
 $$
-= \frac{d}{d q(Z; \phi^{Z})} \int_{Z, \theta} q(Z; \phi^{Z}) q(\theta; \phi^{\theta}) log \frac{p(Y, Z |\theta) p(\theta; \lambda)}{q(Z; \phi^{Z}) q(\theta; \phi^{\theta})} dZ d\theta 
+= \nabla_{\phi^Z} \mathbb{E}_{q(Z; \phi^{Z}) q(\theta; \phi^{\theta})} \Big[ log \ p(Y, Z |\theta) + log \ p(\theta; \lambda) - log \ q(Z; \phi^{Z}) - log \ q(\theta; \phi^{\theta}) \Big]
 $$
 
 $$
-= \int_{Z, \theta} q(\theta; \phi^{\theta}) log \ p(Y, Z |\theta) p(\theta; \lambda) dZ d\theta - \int_{Z, \theta} q(\theta; \phi^{\theta}) log \ q(\theta; \phi^{\theta}) dZ d\theta
+= \nabla_{\phi^Z} \mathbb{E}_{q(Z; \phi^{Z})} \Big[ \mathbb{E}_{q(\theta; \phi^{\theta})} [ log \ p(Y, Z | \theta) ] - log \ q(Z; \phi^{Z}) \Big] = 0
+$$
+
+Then, we can solve the equation for 0 derivative with respect to $\phi^Z$ yields the condition.
+
+$$
+\nabla_{\phi^Z} \mathbb{E}_{q(Z; \phi^{Z})} [ log \ q(Z; \phi^{Z}) ] = \nabla_{\phi^Z} \mathbb{E}_{q(Z; \phi^{Z})} \Big[ \mathbb{E}_{q(\theta; \phi^{\theta})} [ log \ p(Y, Z | \theta) ] \Big]
 $$
 
 $$
-- \int_{Z, \theta} q(\theta; \phi^{\theta}) log \ q(Z; \phi^{Z}) dZ d\theta - \int_{Z, \theta} q(Z; \phi^{Z}) q(\theta; \phi^{\theta}) \frac{1}{q(Z; \phi^{Z})} dZ d\theta
+q(Z; \phi^Z) \propto e^{\mathbb{E}_{q(Z; \phi^{Z})} [ log \ q(Z; \phi^{Z}) ]}
 $$
 
+The solution for $\phi^{\theta}$ is similar
 
 $$
-= \mathbb{E}_{q(\theta; \phi^{\theta})} [log \ p(Y, Z |\theta) + log \ p(\theta; \lambda) - log \ q(\theta; \phi^{\theta}) - \mathbb{E}_{q(Z; \phi^{Z})}[log \ q(Z; \phi^{Z})] - 1]
+\nabla_{\phi^{\theta}} \mathcal{L}(\phi^{Z}, \phi^{\theta}) = \nabla_{\phi^Z} \mathbb{E}_{q(\theta; \phi^{\theta})} \Big[ \mathbb{E}_{q(Z; \phi^{Z})} [ log \ p(Y, Z | \theta) ] + log \ p(\theta; \lambda) - log \ q(\theta; \phi^{\theta}) \Big] = 0
 $$
 
 $$
-- \frac{d}{d q(Z; \phi^{Z})} \int_{Z, \theta} q(Z; \phi^{Z}) q(\theta; \phi^{\theta}) log \ q(Z; \phi^{Z}) dZ d\theta
+q(\theta; \phi^{\theta}) \propto e^{(\mathbb{E}_{q(Z; \phi^{Z})} [log \ p(Y, Z, \theta)])}
 $$
+
+**Variational Lower Bound**
+
+I've tried my best but I cannot derive the lower bound.
 
 **Variational Bayesian EM Algorithm**
 
@@ -525,10 +536,6 @@ q(x^* | X) = \sum_{z^*} \int_{\pi} \int_{\mu} \int_{\Lambda} q(x^*| z^*, \mu, \L
 $$
 
 $$
-= \sum_{z^*} \int_{\pi} \int_{\mu} \int_{\Lambda} \pi_ q(z^* | \pi) q(\pi, \mu, \Lambda | X)
-$$
-
-$$
 = \frac{1}{\alpha^*} \sum_{k=1}^K \alpha_k \mathcal{St}(x^* | m_k, \frac{(\nu_k + 1 - D) \beta_k}{1 + \beta_k} W_k, \nu_k + 1 - D)
 $$
 
@@ -606,6 +613,8 @@ With the animation, we can see the number of clusters of VB-GMM keep reducing un
 **https://github.com/FrankCCCCC/math_new/blob/master/statistical_computing/Mid/simulate/animate.gif**
 
 ## 5. Examine on Real Dataset
+
+The result is similar to the simulation. VB-GMM usually out-perform than K-means while clustering unbalanced dataset.
 
 **Wine Dataset**
 

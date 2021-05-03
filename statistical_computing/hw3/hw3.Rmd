@@ -316,6 +316,8 @@ colnames(dt) <- c("Cluster 1", "Cluster 2")
 boxplot(dt, n=2, xlab="Clusters", ylab="Values", main="Box Plot of K-Means Clustering")
 ```
 
+K-Means seems work well. Two clusters are divided clearly.
+
 ### (2) EM-GMM
 
 ---
@@ -431,6 +433,8 @@ colnames(dt) <- c("Cluster 1", "Cluster 2")
 
 boxplot(dt, n=2, xlab="Clusters", ylab="Values", main="Box Plot of EM-GMM Clustering")
 ```
+
+EM-GMM seems work well. The estimated values are close to the truth values. 
 
 # Code
 
