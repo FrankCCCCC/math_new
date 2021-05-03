@@ -8,12 +8,11 @@ header-includes:
 title: "Statistical Computing HW3"
 author: "周聖諺"
 date: "4/23/2021"
-output: html_document
 output:
-  pdf_document: 
-   latex_engine: xelatex
   html_document:
     df_print: paged
+  pdf_document: 
+   latex_engine: xelatex
 ---
 
 ```{r setup, include=FALSE}
@@ -29,7 +28,7 @@ X_1 = \sigma_{X_1} Z_1 + \mu_{X_1}
 $$
 
 $$
-X_2 = \sigma_{X_2} (\rho Z_1 + \sqrt{1 - \rho^2} Z_2  + \mu_{X_2}
+X_2 = \sigma_{X_2} \Big(\rho Z_1 + \sqrt{1 - \rho^2} Z_2 \Big)  + \mu_{X_2}
 $$
 
 where $Z_1, Z_2 \sim \mathcal{N}(0, 1)$ and $Z_1, Z_2$ are independent
@@ -79,10 +78,21 @@ With the definition of variance, we can derive $\mathbb{E}[Z_1^2] = Var[Z_1] + E
 $$
 = \sigma_{X_1} \sigma_{X_2} \rho
 $$
+Then, conduct a simulation as pseudo code
 
-```{r }
-#print(dgamma(1,scale=0.5,shape=2))
+---
 
+$Z_1$ = \mathcal{N}(0, 1)
+$Z_2$ = \mathcal{N}(0, 1)
+
+$X_1 = \sigma_{X_1} Z_1 + \mu_{X_1}$
+$X_2 = \sigma_{X_2} (\rho Z_1 + \sqrt{1 - \rho^2} Z_2  + \mu_{X_2}$
+
+return $X_1, X_2$
+
+---
+
+```{r q1, echo=FALSE, results='markup'}
 gen_binorm <- function(n, mu_1, mu_2, sigma_1, sigma_2, rho){
   z_1 <- rnorm(n, 0, 1)
   z_2 <- rnorm(n, 0, 1)
@@ -104,6 +114,8 @@ print(cat("Covariance of (X_1, X_2): ", format(cov(x[1, ], x[2, ])), " \n"))
 
 ## Problem 2:
 
+The conditional probability of bivariate normal distribution
+
 $$
 \begin{eqnarray*} \begin{pmatrix} X\\ Y \end{pmatrix} & \sim & N\left[\left(\begin{array}{c} \mu_X\\ \mu_Y \end{array}\right),\left(\begin{array}{ccc} \sigma_X^2 & \rho \sigma_X \sigma_Y\\ \rho \sigma_X \sigma_Y & \sigma_Y^2 \end{array}\right)\right]\\ \end{eqnarray*}
 $$
@@ -116,8 +128,25 @@ $$
 = \mu_Y+\rho \frac{\sigma_Y}{\sigma_X}(X-\mu_X) + \sigma_Y \sqrt{(1-\rho^2)} \mathcal{N}(0, 1)
 $$
 
-```{r}
+**Gibbs Sampling**
+
+---
+
+For each k-th smapling
+
+- $X_{1}^{k} = \mu_{X_2}+\rho \frac{\sigma_{X_2}}{\sigma_{X_1}}(X_2^{k-1}-\mu_{X_1}) + \sigma_{X_2} \sqrt{(1-\rho^2)} \mathcal{N}(0, 1)$
+  
+- $X_2^{k} = \mu_{X_1}+\rho \frac{\sigma_{X_1}}{\sigma_{X_2}}(X_1^{k}-\mu_{X_2}) + \sigma_{X_1} \sqrt{(1-\rho^2)} \mathcal{N}(0, 1)$
+
+Return $\{ \{ X_1^1, ..., X_1^N \}, \{ X_2^1, ..., X_2^N \} \}$
+
+---
+
+```{r import, echo=FALSE, message=FALSE, results='hide', fig.keep='all'}
 library(Rlab)
+```
+
+```{r q2, echo=FALSE, results='markup'}
 
 binorm <- function(n, mus, sigmas, rho, warmup=10000){
   # Dimension
@@ -181,7 +210,9 @@ plot(dg, hang=0.1, main="Cluster Dendrogram", sub=NULL, xlab="Points", ylab="Hei
 
 ## Problem 3:
 
-```{r}
+### Generate Data
+
+```{r q3_gen_data, echo=FALSE, results='markup'}
 gen_datas <- function(n){
   p_1 <- 0.6
   mu_1 <- 0
@@ -210,9 +241,21 @@ data <- gen_datas(200)
 hist(data, breaks=50, freq = FALSE)
 ```
 
+### (1) K-Means
 
-```{r}
+---
 
+Repeat until converge
+
+- For each data point, Compute the distance between the data point and the nearest cluster center
+
+- Assign the data point to the nearest cluster
+
+- Compute the distance between each data point and each cluster center and check whether it converge or not
+
+---
+
+```{r q3_kmean, echo=FALSE, results='markup'}
 dis <- function(a, b){
   return(sum((a - b)^2))
 }
@@ -267,13 +310,37 @@ kmean_model <- kmean(data, 2)
 
 dt_1 <- data[which(kmean_model$cluster == 1)]
 dt_2 <- data[which(kmean_model$cluster == 2)]
+dt <- cbind(dt_1, dt_2)
 colnames(dt) <- c("Cluster 1", "Cluster 2")
 
 boxplot(dt, n=2, xlab="Clusters", ylab="Values", main="Box Plot of K-Means Clustering")
 ```
 
-(2) Expectation Maximization
-```{r}
+### (2) EM-GMM
+
+---
+
+Support the GMM has K components, the j-th component follows the normal distribution $\mathcal{N}(\mu_j, \sigma_j), j \leq K$ and weighted by $w_j$. We also denote the i-th data point as $x_i$
+
+Repeat until converge
+
+- E Step
+
+  - Compute the likelihood $\mathcal{L}_{ij}$ of i-th data point and j-th component
+  
+  - Compute $\gamma_{ij} = \frac{w_{j} \mathcal{L}_{ij}}{\sum_{j=1}^K w_{j} \mathcal{L}_{ij}}$
+
+- M Step
+
+  - Estimate $\mu_j = \frac{\sum_{i=1}^K \gamma_{ij} x_i}{\sum_{i=1}^K \gamma_{ij}}$
+  
+  - Estimate $\sigma_j = \frac{\sqrt{\sum_{i=1}^K \gamma_{ij} (x_i - \mu_j)^2}}{\sum_{i=1}^K \gamma_{ij}}$
+  
+  - Estimate $w_j = \frac{1}{K} \sum_{i=1}^K \gamma_{ij}$
+  
+---
+
+```{r q3_em-gmm, echo=FALSE, results='markup'}
 e_step <- function(ys, ws, mus, sigmas){
   k <- length(ws)
   n <- length(ys)
@@ -310,11 +377,10 @@ em <- function(ys, k, threshold=1e-9, max_iter=201){
   mus <- runif(k)
   sigmas <- runif(k)
   ws <- rep(1/k, k)
+  
+  old_params <- rbind(ws, mus, sigmas)
 
   for(i in 1:max_iter){
-    # Record old values
-    old_params <- params
-    
     gammas <- e_step(data, ws, mus, sigmas)
     params <- m_step(data, ws, mus, sigmas, gammas)
     #print(gammas)
@@ -329,6 +395,9 @@ em <- function(ys, k, threshold=1e-9, max_iter=201){
       break
     }
     
+    # Record old values
+    old_params <- params
+    
     #if(i %% 10 == 1){
     #  print(cat("Iter ", i))
     #  print(params)
@@ -341,12 +410,19 @@ em <- function(ys, k, threshold=1e-9, max_iter=201){
   }
   #print(dens_table)
   
+  col_names <- c(1:k)
+  col_names <- sapply(col_names, function(j){return(paste("Component ", toString(j)))})
+  
+  colnames(params) <- col_names
+  
   clustered <- apply(dens_table, 1, which.max)
-  res <- structure(list(data=ys, cluster=clustered, params=params), class= "EM-GMM_res")
+  res <- structure(list(data=ys, cluster=clustered, params=params, dens_table=dens_table), class= "EM-GMM_res")
   return(res)
 }
 
 em_gmm_model <- em(data, 2)
+
+print(em_gmm_model$params)
 
 dt_1 <- data[which(em_gmm_model$cluster == 1)]
 dt_2 <- data[which(em_gmm_model$cluster == 2)]
@@ -354,6 +430,33 @@ dt <- cbind(dt_1, dt_2)
 colnames(dt) <- c("Cluster 1", "Cluster 2")
 
 boxplot(dt, n=2, xlab="Clusters", ylab="Values", main="Box Plot of EM-GMM Clustering")
+```
+
+# Code
+
+## Problem 1
+
+```{r q1, eval=FALSE}
+```
+
+## Problem 2
+
+```{r import, eval=FALSE}
+```
+
+```{r q2, eval=FALSE}
+```
+
+## Problem 3
+
+### (a)
+
+```{r q3_kmean, eval=FALSE}
+```
+
+### (b)
+
+```{r q3_em-gmm, eval=FALSE}
 ```
 
 # Reference

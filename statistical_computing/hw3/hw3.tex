@@ -1,0 +1,623 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Statistical Computing HW3},
+  pdfauthor={周聖諺},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{xeCJK}
+\usepackage{fontspec}
+\setCJKmainfont{微軟正黑體}
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt plus 1pt
+\ifluatex
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Statistical Computing HW3}
+\author{周聖諺}
+\date{4/23/2021}
+
+\begin{document}
+\maketitle
+
+\hypertarget{problem-1}{%
+\subsection{Problem 1:}\label{problem-1}}
+
+Two random variables are defined \(X_1, X_2\) and combined as a set
+\(X = \{ X_1, X_2 \}\)
+
+\[
+X_1 = \sigma_{X_1} Z_1 + \mu_{X_1}
+\]
+
+\[
+X_2 = \sigma_{X_2} \Big(\rho Z_1 + \sqrt{1 - \rho^2} Z_2 \Big)  + \mu_{X_2}
+\]
+
+where \(Z_1, Z_2 \sim \mathcal{N}(0, 1)\) and \(Z_1, Z_2\) are
+independent
+
+The Expectation
+
+\[
+\mathbb{E}[X_1] = \mathbb{E}[\sigma_{X_1} Z_1 + \mu_{X_1}] = \sigma_{X_1} \mathbb{E}[Z_1] + \mu_{X_1} = \mu_{X_1}
+\]
+
+\[
+\mathbb{E}[X_2] = \mathbb{E}[\sigma_{X_2} (\rho Z_1 + \sqrt{1 - \rho^2} Z_2  + \mu_{X_2}]
+\]
+
+\[
+= \sigma_{X_2} \mathbb{E}[\rho Z_1 + \sqrt{1 - \rho^2} Z_2]  + \mu_{X_2}
+\]
+
+\[
+= \sigma_{X_2} (\rho \mathbb{E}[Z_1] + \sqrt{1 - \rho^2} \mathbb{E}[Z_2])  + \mu_{X_2} = \mu_{X_2}
+\]
+
+\[
+\mathbb{E}[X] = \{ \mu_{X_1}, \mu_{X_2} \}
+\]
+
+The Covariance
+
+\[
+\sigma_{X_1, X_2} = \sigma_{X_2, X_1} = \mathbb{E}[(X_1 - \mu_{X_1})(X_2 - \mu_{X_2})]
+\] \[
+= \mathbb{E}[(\sigma_{X_1} Z_1 + \mu_{X_1} - \mu_{X_1})(\sigma_{X_2} (\rho Z_1 + \sqrt{1 - \rho^2} Z_2  + \mu_{X_2} - \mu_{X_2})]
+\] \[
+= \mathbb{E}[(\sigma_{X_1} Z_1)(\sigma_{X_2} (\rho Z_1 + \sqrt{1 - \rho^2} Z_2)]
+\] \[
+= \mathbb{E}[\sigma_{X_1} \sigma_{X_2}( \rho Z_1^2 + \sqrt{1 - \rho^2} Z_1 Z_2)]
+\]
+
+\[
+= \sigma_{X_1} \sigma_{X_2} \Big( \rho \mathbb{E}[Z_1^2] + \sqrt{1 - \rho^2} \mathbb{E}[Z_1 Z_2] \Big)
+\] With the definition of variance, we can derive
+\(\mathbb{E}[Z_1^2] = Var[Z_1] + E[Z_1]^2 = 1\). Since \(Z_1, Z_2\) are
+independent,
+\(\mathbb{E}[Z_1 Z_2] = \mathbb{E}[Z_1] \mathbb{E}[Z_2] = 0\)
+
+\[
+= \sigma_{X_1} \sigma_{X_2} \rho
+\] Then, conduct a simulation as pseudo code
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\(Z_1\) = \mathcal{N}(0, 1) \(Z_2\) = \mathcal{N}(0, 1)
+
+\(X_1 = \sigma_{X_1} Z_1 + \mu_{X_1}\)
+\(X_2 = \sigma_{X_2} (\rho Z_1 + \sqrt{1 - \rho^2} Z_2 + \mu_{X_2}\)
+
+return \(X_1, X_2\)
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\begin{verbatim}
+## Mean of X_1:  0.9989595  
+## NULL
+\end{verbatim}
+
+\begin{verbatim}
+## Mean of X_2:  1.987382  
+## NULL
+\end{verbatim}
+
+\begin{verbatim}
+## Covariance of (X_1, X_2):  0.818182  
+## NULL
+\end{verbatim}
+
+\hypertarget{problem-2}{%
+\subsection{Problem 2:}\label{problem-2}}
+
+The conditional probability of bivariate normal distribution
+
+\[
+\begin{eqnarray*} \begin{pmatrix} X\\ Y \end{pmatrix} & \sim & N\left[\left(\begin{array}{c} \mu_X\\ \mu_Y \end{array}\right),\left(\begin{array}{ccc} \sigma_X^2 & \rho \sigma_X \sigma_Y\\ \rho \sigma_X \sigma_Y & \sigma_Y^2 \end{array}\right)\right]\\ \end{eqnarray*}
+\]
+
+\[
+Y|X = N\left(\mu_Y+\rho \frac{\sigma_Y}{\sigma_X}(X-\mu_X),\ \sigma^2_Y(1-\rho^2)\right)
+\]
+
+\[
+= \mu_Y+\rho \frac{\sigma_Y}{\sigma_X}(X-\mu_X) + \sigma_Y \sqrt{(1-\rho^2)} \mathcal{N}(0, 1)
+\]
+
+\textbf{Gibbs Sampling}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+For each k-th smapling
+
+\begin{itemize}
+\item
+  \(X_{1}^{k} = \mu_{X_2}+\rho \frac{\sigma_{X_2}}{\sigma_{X_1}}(X_2^{k-1}-\mu_{X_1}) + \sigma_{X_2} \sqrt{(1-\rho^2)} \mathcal{N}(0, 1)\)
+\item
+  \(X_2^{k} = \mu_{X_1}+\rho \frac{\sigma_{X_1}}{\sigma_{X_2}}(X_1^{k}-\mu_{X_2}) + \sigma_{X_1} \sqrt{(1-\rho^2)} \mathcal{N}(0, 1)\)
+\end{itemize}
+
+Return \(\{ \{ X_1^1, ..., X_1^N \}, \{ X_2^1, ..., X_2^N \} \}\)
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\begin{verbatim}
+## Mean of Y1:  1.581207NULL
+\end{verbatim}
+
+\begin{verbatim}
+## Mean of Y2:  1.540082NULL
+\end{verbatim}
+
+\begin{verbatim}
+## [1] "Covariance Matrix"
+\end{verbatim}
+
+\begin{verbatim}
+##           [,1]      [,2]
+## [1,] 2.8111990 0.7648705
+## [2,] 0.7648705 3.0533501
+\end{verbatim}
+
+\begin{verbatim}
+## Number of data point:  100NULL
+\end{verbatim}
+
+\includegraphics{hw3_files/figure-latex/q2-1.pdf}
+\includegraphics{hw3_files/figure-latex/q2-2.pdf}
+
+\hypertarget{problem-3}{%
+\subsection{Problem 3:}\label{problem-3}}
+
+\hypertarget{generate-data}{%
+\subsubsection{Generate Data}\label{generate-data}}
+
+\includegraphics{hw3_files/figure-latex/q3_gen_data-1.pdf}
+
+\hypertarget{k-means}{%
+\subsubsection{(1) K-Means}\label{k-means}}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+Repeat until converge
+
+\begin{itemize}
+\item
+  For each data point, Compute the distance between the data point and
+  the nearest cluster center
+\item
+  Assign the data point to the nearest cluster
+\item
+  Compute the distance between each data point and each cluster center
+  and check whether it converge or not
+\end{itemize}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\begin{verbatim}
+## Warning in cbind(dt_1, dt_2): number of rows of result is not a multiple of
+## vector length (arg 2)
+\end{verbatim}
+
+\includegraphics{hw3_files/figure-latex/q3_kmean-1.pdf}
+
+\hypertarget{em-gmm}{%
+\subsubsection{(2) EM-GMM}\label{em-gmm}}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+Repeat until converge
+
+\begin{itemize}
+\item
+  E Step
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Compute the likelihood \(\mathcal{L}_{ij}\) of i-th data point and
+    j-th component
+  \item
+    Multiply the likelihood \(\mathcal{L}_{ij}\) with the weight
+    \(w_{j}\) and divide the likelihood \(\mathcal{L}_{ij}\) by the sum
+    of the i-th weighted likelihood
+    \(\sum_{j=1}^K w_{j} \mathcal{L}_{ij}\). Thus, we can derive
+    \(\gamma_{ij}\).
+    \(\gamma_{ij} = \frac{w_{j} \mathcal{L}_{ij}}{\sum_{j=1}^K w_{j} \mathcal{L}_{ij}}\)
+  \end{itemize}
+\item ~
+  \hypertarget{m-step}{%
+  \subsection{M Step}\label{m-step}}
+\end{itemize}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\begin{verbatim}
+##        Component  1 Component  2
+## ws         0.954995   0.04500504
+## mus        1.027466   0.59667923
+## sigmas     1.875652   0.05761412
+\end{verbatim}
+
+\includegraphics{hw3_files/figure-latex/q3_em-gmm-1.pdf}
+
+\hypertarget{code}{%
+\section{Code}\label{code}}
+
+\hypertarget{problem-1-1}{%
+\subsection{Problem 1}\label{problem-1-1}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{gen\_binorm }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(n, mu\_1, mu\_2, sigma\_1, sigma\_2, rho)\{}
+\NormalTok{  z\_1 }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(n, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{)}
+\NormalTok{  z\_2 }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(n, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{)}
+\NormalTok{  z\_bind }\OtherTok{\textless{}{-}} \FunctionTok{rbind}\NormalTok{(z\_1, z\_2)}
+  
+\NormalTok{  x\_1 }\OtherTok{\textless{}{-}} \FunctionTok{sapply}\NormalTok{(z\_1, }\ControlFlowTok{function}\NormalTok{(z)\{}\FunctionTok{return}\NormalTok{(sigma\_1 }\SpecialCharTok{*}\NormalTok{ z }\SpecialCharTok{+}\NormalTok{ mu\_1)\})}
+\NormalTok{  x\_2 }\OtherTok{\textless{}{-}} \FunctionTok{apply}\NormalTok{(z\_bind, }\DecValTok{2}\NormalTok{, }\ControlFlowTok{function}\NormalTok{(z)\{}\FunctionTok{return}\NormalTok{(sigma\_2 }\SpecialCharTok{*}\NormalTok{ (rho }\SpecialCharTok{*}\NormalTok{ z[}\DecValTok{1}\NormalTok{] }\SpecialCharTok{+} \FunctionTok{sqrt}\NormalTok{(}\DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ rho }\SpecialCharTok{*}\NormalTok{ rho) }\SpecialCharTok{*}\NormalTok{ z[}\DecValTok{2}\NormalTok{]) }\SpecialCharTok{+}\NormalTok{ mu\_2)\})}
+  
+\NormalTok{  x\_bind }\OtherTok{\textless{}{-}} \FunctionTok{rbind}\NormalTok{(x\_1, x\_2)}
+  \FunctionTok{return}\NormalTok{(x\_bind)}
+\NormalTok{\}}
+
+\NormalTok{x }\OtherTok{\textless{}{-}} \FunctionTok{gen\_binorm}\NormalTok{(}\DecValTok{5000}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{, }\FloatTok{0.4}\NormalTok{)}
+
+\FunctionTok{print}\NormalTok{(}\FunctionTok{cat}\NormalTok{(}\StringTok{"Mean of X\_1: "}\NormalTok{, }\FunctionTok{format}\NormalTok{(}\FunctionTok{mean}\NormalTok{(x[}\DecValTok{1}\NormalTok{, ])), }\StringTok{" }\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{))}
+\FunctionTok{print}\NormalTok{(}\FunctionTok{cat}\NormalTok{(}\StringTok{"Mean of X\_2: "}\NormalTok{, }\FunctionTok{format}\NormalTok{(}\FunctionTok{mean}\NormalTok{(x[}\DecValTok{2}\NormalTok{, ])), }\StringTok{" }\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{))}
+\FunctionTok{print}\NormalTok{(}\FunctionTok{cat}\NormalTok{(}\StringTok{"Covariance of (X\_1, X\_2): "}\NormalTok{, }\FunctionTok{format}\NormalTok{(}\FunctionTok{cov}\NormalTok{(x[}\DecValTok{1}\NormalTok{, ], x[}\DecValTok{2}\NormalTok{, ])), }\StringTok{" }\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{problem-2-1}{%
+\subsection{Problem 2}\label{problem-2-1}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(Rlab)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{binorm }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(n, mus, sigmas, rho, }\AttributeTok{warmup=}\DecValTok{10000}\NormalTok{)\{}
+  \CommentTok{\# Dimension}
+\NormalTok{  d }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(mus)}
+\NormalTok{  total\_n }\OtherTok{\textless{}{-}}\NormalTok{ n}\SpecialCharTok{+}\NormalTok{warmup}
+\NormalTok{  rvs }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(}\DecValTok{0}\NormalTok{, }\AttributeTok{nrow =}\NormalTok{ total\_n, }\AttributeTok{ncol =}\NormalTok{ d)}
+  
+  \ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{2}\SpecialCharTok{:}\NormalTok{total\_n)\{}
+    \CommentTok{\# Generate X\_1}
+\NormalTok{    rvs[i, }\DecValTok{2}\NormalTok{] }\OtherTok{\textless{}{-}}\NormalTok{ mus[}\DecValTok{2}\NormalTok{] }\SpecialCharTok{+}\NormalTok{ (rho }\SpecialCharTok{*}\NormalTok{ sigmas[}\DecValTok{2}\NormalTok{] }\SpecialCharTok{/}\NormalTok{ sigmas[}\DecValTok{1}\NormalTok{] }\SpecialCharTok{*}\NormalTok{ (rvs[i}\DecValTok{{-}1}\NormalTok{, }\DecValTok{1}\NormalTok{] }\SpecialCharTok{{-}}\NormalTok{ mus[}\DecValTok{1}\NormalTok{])) }\SpecialCharTok{+}\NormalTok{ sigmas[}\DecValTok{2}\NormalTok{] }\SpecialCharTok{*} \FunctionTok{sqrt}\NormalTok{(}\DecValTok{1}\SpecialCharTok{{-}}\NormalTok{rho}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{*} \FunctionTok{rnorm}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{)}
+    
+    \CommentTok{\# Generate X\_2}
+\NormalTok{    rvs[i, }\DecValTok{1}\NormalTok{] }\OtherTok{\textless{}{-}}\NormalTok{ mus[}\DecValTok{1}\NormalTok{] }\SpecialCharTok{+}\NormalTok{ (rho }\SpecialCharTok{*}\NormalTok{ sigmas[}\DecValTok{1}\NormalTok{] }\SpecialCharTok{/}\NormalTok{ sigmas[}\DecValTok{2}\NormalTok{] }\SpecialCharTok{*}\NormalTok{ (rvs[i, }\DecValTok{2}\NormalTok{] }\SpecialCharTok{{-}}\NormalTok{ mus[}\DecValTok{2}\NormalTok{])) }\SpecialCharTok{+}\NormalTok{ sigmas[}\DecValTok{1}\NormalTok{] }\SpecialCharTok{*} \FunctionTok{sqrt}\NormalTok{(}\DecValTok{1}\SpecialCharTok{{-}}\NormalTok{rho}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{*} \FunctionTok{rnorm}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{)}
+\NormalTok{  \}}
+  
+  \FunctionTok{return}\NormalTok{(rvs[(warmup}\SpecialCharTok{+}\DecValTok{1}\NormalTok{)}\SpecialCharTok{:}\NormalTok{total\_n, ])}
+\NormalTok{\}}
+
+\NormalTok{mixture\_binorm }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(n, mus, sigmas, rhos, ws)\{}
+\NormalTok{  modals }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(mus[, }\DecValTok{1}\NormalTok{])}
+\NormalTok{  d }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(mus[}\DecValTok{1}\NormalTok{, ])}
+\NormalTok{  total\_rvs }\OtherTok{\textless{}{-}} \FunctionTok{array}\NormalTok{(}\DecValTok{0}\NormalTok{, }\FunctionTok{c}\NormalTok{(n, d, modals))}
+\NormalTok{  inds }\OtherTok{\textless{}{-}} \FunctionTok{rbern}\NormalTok{(n, ws[}\DecValTok{2}\NormalTok{])}
+  
+  \CommentTok{\#print(modals)}
+  \CommentTok{\#print(d)}
+  \CommentTok{\#print(inds)}
+  \CommentTok{\#print(total\_rvs)}
+  
+  \ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{modals)\{}
+\NormalTok{    total\_rvs[,,i] }\OtherTok{\textless{}{-}} \FunctionTok{binorm}\NormalTok{(n, mus[i, ], sigmas[i, ], rhos[i])}
+\NormalTok{  \}}
+\NormalTok{  i }\OtherTok{\textless{}{-}} \DecValTok{1}
+  \CommentTok{\#print(total\_rvs)}
+  
+\NormalTok{  rvs }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(}\DecValTok{0}\NormalTok{, }\AttributeTok{ncol=}\NormalTok{d, }\AttributeTok{nrow=}\NormalTok{n)}
+  \CommentTok{\#rvs[, 1] = rvs[, 2] \textless{}{-} c(1:n)}
+  \ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{n)\{}
+\NormalTok{    rvs[i, ] }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(total\_rvs[i,,inds[i]}\SpecialCharTok{+}\DecValTok{1}\NormalTok{])}
+\NormalTok{  \}}
+  
+  \FunctionTok{return}\NormalTok{(rvs)}
+\NormalTok{\}}
+
+\CommentTok{\#res \textless{}{-} binorm(10000, c(1, 2), c(1, 2), 0.4)}
+\NormalTok{res }\OtherTok{\textless{}{-}} \FunctionTok{mixture\_binorm}\NormalTok{(}\DecValTok{100}\NormalTok{, }\FunctionTok{matrix}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{), }\AttributeTok{ncol=}\DecValTok{2}\NormalTok{), }\FunctionTok{matrix}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{), }\AttributeTok{ncol=}\DecValTok{2}\NormalTok{), }\FunctionTok{c}\NormalTok{(}\FloatTok{0.4}\NormalTok{, }\FloatTok{0.6}\NormalTok{), }\FunctionTok{c}\NormalTok{(}\FloatTok{0.4}\NormalTok{, }\FloatTok{0.6}\NormalTok{))}
+
+\FunctionTok{print}\NormalTok{(}\FunctionTok{cat}\NormalTok{(}\StringTok{"Mean of Y1: "}\NormalTok{, }\FunctionTok{mean}\NormalTok{(res[, }\DecValTok{1}\NormalTok{])))}
+\FunctionTok{print}\NormalTok{(}\FunctionTok{cat}\NormalTok{(}\StringTok{"Mean of Y2: "}\NormalTok{, }\FunctionTok{mean}\NormalTok{(res[, }\DecValTok{2}\NormalTok{])))}
+\FunctionTok{print}\NormalTok{(}\StringTok{"Covariance Matrix"}\NormalTok{)}
+\FunctionTok{print}\NormalTok{(}\FunctionTok{cov}\NormalTok{(res))}
+\FunctionTok{print}\NormalTok{(}\FunctionTok{cat}\NormalTok{(}\StringTok{"Number of data point: "}\NormalTok{, }\FunctionTok{length}\NormalTok{(res[, }\DecValTok{1}\NormalTok{])))}
+
+\CommentTok{\# Scatter}
+\FunctionTok{plot}\NormalTok{(res[,}\DecValTok{1}\NormalTok{], res[,}\DecValTok{2}\NormalTok{], }\AttributeTok{main=}\StringTok{"Scatter Plot"}\NormalTok{, }\AttributeTok{xlab=}\StringTok{"Y1"}\NormalTok{, }\AttributeTok{ylab=}\StringTok{"Y2"}\NormalTok{)}
+
+\CommentTok{\# Dendrogram}
+\NormalTok{dg }\OtherTok{\textless{}{-}} \FunctionTok{hclust}\NormalTok{(}\FunctionTok{dist}\NormalTok{(}\FunctionTok{scale}\NormalTok{(res), }\AttributeTok{method =} \StringTok{"euclidean"}\NormalTok{), }\AttributeTok{method =} \StringTok{"ward.D2"}\NormalTok{)}
+\FunctionTok{plot}\NormalTok{(dg, }\AttributeTok{hang=}\FloatTok{0.1}\NormalTok{, }\AttributeTok{main=}\StringTok{"Cluster Dendrogram"}\NormalTok{, }\AttributeTok{sub=}\ConstantTok{NULL}\NormalTok{, }\AttributeTok{xlab=}\StringTok{"Points"}\NormalTok{, }\AttributeTok{ylab=}\StringTok{"Height"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{problem-3-1}{%
+\subsection{Problem 3}\label{problem-3-1}}
+
+\hypertarget{a}{%
+\subsubsection{(a)}\label{a}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{dis }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(a, b)\{}
+  \FunctionTok{return}\NormalTok{(}\FunctionTok{sum}\NormalTok{((a }\SpecialCharTok{{-}}\NormalTok{ b)}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{))}
+\NormalTok{\}}
+
+\NormalTok{kmean }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(X, K, }\AttributeTok{threshold=}\FloatTok{1e{-}6}\NormalTok{, }\AttributeTok{max\_iter=}\DecValTok{10}\NormalTok{)\{}
+\NormalTok{  n }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(X)}
+\NormalTok{  d }\OtherTok{\textless{}{-}} \DecValTok{1}
+\NormalTok{  cent\_idxs }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\NormalTok{n, K)}
+\NormalTok{  cent\_cord }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(}\DecValTok{0}\NormalTok{, }\AttributeTok{nrow=}\NormalTok{K, }\AttributeTok{ncol=}\NormalTok{d)}
+\NormalTok{  dis\_table }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(}\DecValTok{0}\NormalTok{, }\AttributeTok{nrow=}\NormalTok{n, }\AttributeTok{ncol=}\NormalTok{K)}
+\NormalTok{  clustered }\OtherTok{\textless{}{-}} \FunctionTok{array}\NormalTok{(}\DecValTok{0}\NormalTok{, }\FunctionTok{c}\NormalTok{(n))}
+\NormalTok{  tot\_dis }\OtherTok{\textless{}{-}} \ConstantTok{Inf}
+  
+  \ControlFlowTok{for}\NormalTok{(k }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{K)\{}
+\NormalTok{    cent\_cord[k] }\OtherTok{\textless{}{-}}\NormalTok{ X[cent\_idxs[k]]}
+\NormalTok{  \}}
+  
+  \ControlFlowTok{for}\NormalTok{(iter }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{max\_iter)\{}
+    \CommentTok{\# Calculate distance between every pairs of cluster center and data point}
+    \ControlFlowTok{for}\NormalTok{(k }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{K)\{}
+\NormalTok{      dis\_table[, k] }\OtherTok{\textless{}{-}} \FunctionTok{sapply}\NormalTok{(X, dis, cent\_cord[k])}
+\NormalTok{    \}}
+    \CommentTok{\# Assign the nearest cluster}
+\NormalTok{    clustered }\OtherTok{\textless{}{-}} \FunctionTok{apply}\NormalTok{(dis\_table, }\DecValTok{1}\NormalTok{, which.min)}
+    \CommentTok{\# Update the center}
+    \ControlFlowTok{for}\NormalTok{(k }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{K)\{}
+\NormalTok{      idxs }\OtherTok{\textless{}{-}} \FunctionTok{which}\NormalTok{(clustered }\SpecialCharTok{==}\NormalTok{ k)}
+\NormalTok{      cent\_cord[k] }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{(X[idxs])}
+      
+      \CommentTok{\#print(idxs)}
+      \CommentTok{\#print(X[idxs])}
+\NormalTok{    \}}
+    \CommentTok{\# Calculate total distance}
+\NormalTok{    temp\_tot\_dis }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{(dis\_table)}
+    \ControlFlowTok{if}\NormalTok{(}\FunctionTok{abs}\NormalTok{(temp\_tot\_dis }\SpecialCharTok{{-}}\NormalTok{ tot\_dis) }\SpecialCharTok{\textless{}}\NormalTok{ threshold)\{}\ControlFlowTok{break}\NormalTok{\}}
+\NormalTok{    tot\_dis }\OtherTok{\textless{}{-}}\NormalTok{ temp\_tot\_dis}
+    
+    \CommentTok{\#print(dis\_table)}
+    \CommentTok{\#print(clustered)}
+    \CommentTok{\#print(tot\_dis)}
+\NormalTok{  \}}
+  
+  \CommentTok{\#print(clustered)}
+  \CommentTok{\#print(tot\_dis)}
+  
+\NormalTok{  res }\OtherTok{\textless{}{-}} \FunctionTok{structure}\NormalTok{(}\FunctionTok{list}\NormalTok{(}\AttributeTok{data=}\NormalTok{X, }\AttributeTok{cluster=}\NormalTok{clustered, }\AttributeTok{total\_distance=}\NormalTok{tot\_dis, }\AttributeTok{cluster\_centers=}\NormalTok{cent\_cord), }\AttributeTok{class=} \StringTok{"KMEAN\_res"}\NormalTok{)}
+    
+  \FunctionTok{return}\NormalTok{(res)}
+\NormalTok{\}}
+
+\NormalTok{kmean\_model }\OtherTok{\textless{}{-}} \FunctionTok{kmean}\NormalTok{(data, }\DecValTok{2}\NormalTok{)}
+
+\NormalTok{dt\_1 }\OtherTok{\textless{}{-}}\NormalTok{ data[}\FunctionTok{which}\NormalTok{(kmean\_model}\SpecialCharTok{$}\NormalTok{cluster }\SpecialCharTok{==} \DecValTok{1}\NormalTok{)]}
+\NormalTok{dt\_2 }\OtherTok{\textless{}{-}}\NormalTok{ data[}\FunctionTok{which}\NormalTok{(kmean\_model}\SpecialCharTok{$}\NormalTok{cluster }\SpecialCharTok{==} \DecValTok{2}\NormalTok{)]}
+\NormalTok{dt }\OtherTok{\textless{}{-}} \FunctionTok{cbind}\NormalTok{(dt\_1, dt\_2)}
+\FunctionTok{colnames}\NormalTok{(dt) }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"Cluster 1"}\NormalTok{, }\StringTok{"Cluster 2"}\NormalTok{)}
+
+\FunctionTok{boxplot}\NormalTok{(dt, }\AttributeTok{n=}\DecValTok{2}\NormalTok{, }\AttributeTok{xlab=}\StringTok{"Clusters"}\NormalTok{, }\AttributeTok{ylab=}\StringTok{"Values"}\NormalTok{, }\AttributeTok{main=}\StringTok{"Box Plot of K{-}Means Clustering"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{b}{%
+\subsubsection{(b)}\label{b}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{e\_step }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(ys, ws, mus, sigmas)\{}
+\NormalTok{  k }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(ws)}
+\NormalTok{  n }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(ys)}
+\NormalTok{  likelihoods }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(}\FunctionTok{rep}\NormalTok{(}\DecValTok{0}\NormalTok{, k}\SpecialCharTok{*}\NormalTok{n), }\AttributeTok{nrow =}\NormalTok{ n)}
+\NormalTok{  weighted\_likelihoods }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(}\FunctionTok{rep}\NormalTok{(}\DecValTok{0}\NormalTok{, k}\SpecialCharTok{*}\NormalTok{n), }\AttributeTok{nrow =}\NormalTok{ n)}
+  
+  \CommentTok{\# Evaluate the hidden variables}
+  \ControlFlowTok{for}\NormalTok{(j }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{k)\{}
+\NormalTok{    likelihoods[, j] }\OtherTok{\textless{}{-}} \FunctionTok{sapply}\NormalTok{(ys, dnorm, mus[j], sigmas[j])}
+\NormalTok{    weighted\_likelihoods[, j] }\OtherTok{\textless{}{-}}\NormalTok{ ws[j] }\SpecialCharTok{*}\NormalTok{ likelihoods[, j]}
+\NormalTok{  \}}
+  \CommentTok{\# gamma\_i}
+\NormalTok{  weighted\_likelihoods }\OtherTok{\textless{}{-}}\NormalTok{ weighted\_likelihoods }\SpecialCharTok{/} \FunctionTok{rowSums}\NormalTok{(weighted\_likelihoods)}
+  
+  \FunctionTok{return}\NormalTok{(weighted\_likelihoods)}
+\NormalTok{\}}
+
+\NormalTok{m\_step }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(ys, ws, mus, sigmas, gammas)\{}
+\NormalTok{  k }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(ws)}
+\NormalTok{  n }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(ys)}
+  
+  \CommentTok{\#Maximize the estimate}
+  \ControlFlowTok{for}\NormalTok{(j }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{k)\{}
+\NormalTok{    sum\_gammas }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{(gammas[, j])}
+\NormalTok{    mus[j] }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{(ys }\SpecialCharTok{*}\NormalTok{ gammas[, j]) }\SpecialCharTok{/}\NormalTok{ sum\_gammas}
+\NormalTok{    sigmas[j] }\OtherTok{\textless{}{-}} \FunctionTok{sqrt}\NormalTok{(}\FunctionTok{sum}\NormalTok{(gammas[, j] }\SpecialCharTok{*}\NormalTok{ (ys }\SpecialCharTok{{-}}\NormalTok{ mus[j])}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{/}\NormalTok{ sum\_gammas)}
+\NormalTok{    ws[j] }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{(gammas[, j])}
+\NormalTok{  \}}
+  
+  \FunctionTok{return}\NormalTok{(}\FunctionTok{rbind}\NormalTok{(ws, mus, sigmas))}
+\NormalTok{\}}
+
+\NormalTok{em }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(ys, k, }\AttributeTok{threshold=}\FloatTok{1e{-}9}\NormalTok{, }\AttributeTok{max\_iter=}\DecValTok{201}\NormalTok{)\{}
+\NormalTok{  mus }\OtherTok{\textless{}{-}} \FunctionTok{runif}\NormalTok{(k)}
+\NormalTok{  sigmas }\OtherTok{\textless{}{-}} \FunctionTok{runif}\NormalTok{(k)}
+\NormalTok{  ws }\OtherTok{\textless{}{-}} \FunctionTok{rep}\NormalTok{(}\DecValTok{1}\SpecialCharTok{/}\NormalTok{k, k)}
+  
+\NormalTok{  old\_params }\OtherTok{\textless{}{-}} \FunctionTok{rbind}\NormalTok{(ws, mus, sigmas)}
+
+  \ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{max\_iter)\{}
+\NormalTok{    gammas }\OtherTok{\textless{}{-}} \FunctionTok{e\_step}\NormalTok{(data, ws, mus, sigmas)}
+\NormalTok{    params }\OtherTok{\textless{}{-}} \FunctionTok{m\_step}\NormalTok{(data, ws, mus, sigmas, gammas)}
+    \CommentTok{\#print(gammas)}
+    
+    \CommentTok{\# Update parameters}
+\NormalTok{    ws }\OtherTok{\textless{}{-}}\NormalTok{ params[}\DecValTok{1}\NormalTok{, ]}
+\NormalTok{    mus }\OtherTok{\textless{}{-}}\NormalTok{ params[}\DecValTok{2}\NormalTok{, ]}
+\NormalTok{    sigmas }\OtherTok{\textless{}{-}}\NormalTok{ params[}\DecValTok{3}\NormalTok{, ]}
+    
+    \CommentTok{\# Until converge}
+    \ControlFlowTok{if}\NormalTok{(}\FunctionTok{abs}\NormalTok{(}\FunctionTok{mean}\NormalTok{(params }\SpecialCharTok{{-}}\NormalTok{ old\_params)) }\SpecialCharTok{\textless{}}\NormalTok{ threshold)\{}
+      \ControlFlowTok{break}
+\NormalTok{    \}}
+    
+    \CommentTok{\# Record old values}
+\NormalTok{    old\_params }\OtherTok{\textless{}{-}}\NormalTok{ params}
+    
+    \CommentTok{\#if(i \%\% 10 == 1)\{}
+    \CommentTok{\#  print(cat("Iter ", i))}
+    \CommentTok{\#  print(params)}
+    \CommentTok{\#\}}
+\NormalTok{  \}}
+  
+\NormalTok{  dens\_table }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(}\DecValTok{0}\NormalTok{, }\AttributeTok{nrow=}\FunctionTok{length}\NormalTok{(ys), }\AttributeTok{ncol=}\NormalTok{k)}
+  \ControlFlowTok{for}\NormalTok{(j }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{k)\{}
+\NormalTok{    dens\_table[, j] }\OtherTok{\textless{}{-}} \FunctionTok{dnorm}\NormalTok{(ys, mus[j], sigmas[j])}
+\NormalTok{  \}}
+  \CommentTok{\#print(dens\_table)}
+  
+\NormalTok{  col\_names }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\NormalTok{k)}
+\NormalTok{  col\_names }\OtherTok{\textless{}{-}} \FunctionTok{sapply}\NormalTok{(col\_names, }\ControlFlowTok{function}\NormalTok{(j)\{}\FunctionTok{return}\NormalTok{(}\FunctionTok{paste}\NormalTok{(}\StringTok{"Component "}\NormalTok{, }\FunctionTok{toString}\NormalTok{(j)))\})}
+  
+  \FunctionTok{colnames}\NormalTok{(params) }\OtherTok{\textless{}{-}}\NormalTok{ col\_names}
+  
+\NormalTok{  clustered }\OtherTok{\textless{}{-}} \FunctionTok{apply}\NormalTok{(dens\_table, }\DecValTok{1}\NormalTok{, which.max)}
+\NormalTok{  res }\OtherTok{\textless{}{-}} \FunctionTok{structure}\NormalTok{(}\FunctionTok{list}\NormalTok{(}\AttributeTok{data=}\NormalTok{ys, }\AttributeTok{cluster=}\NormalTok{clustered, }\AttributeTok{params=}\NormalTok{params, }\AttributeTok{dens\_table=}\NormalTok{dens\_table), }\AttributeTok{class=} \StringTok{"EM{-}GMM\_res"}\NormalTok{)}
+  \FunctionTok{return}\NormalTok{(res)}
+\NormalTok{\}}
+
+\NormalTok{em\_gmm\_model }\OtherTok{\textless{}{-}} \FunctionTok{em}\NormalTok{(data, }\DecValTok{2}\NormalTok{)}
+
+\FunctionTok{print}\NormalTok{(em\_gmm\_model}\SpecialCharTok{$}\NormalTok{params)}
+
+\NormalTok{dt\_1 }\OtherTok{\textless{}{-}}\NormalTok{ data[}\FunctionTok{which}\NormalTok{(em\_gmm\_model}\SpecialCharTok{$}\NormalTok{cluster }\SpecialCharTok{==} \DecValTok{1}\NormalTok{)]}
+\NormalTok{dt\_2 }\OtherTok{\textless{}{-}}\NormalTok{ data[}\FunctionTok{which}\NormalTok{(em\_gmm\_model}\SpecialCharTok{$}\NormalTok{cluster }\SpecialCharTok{==} \DecValTok{2}\NormalTok{)]}
+\NormalTok{dt }\OtherTok{\textless{}{-}} \FunctionTok{cbind}\NormalTok{(dt\_1, dt\_2)}
+\FunctionTok{colnames}\NormalTok{(dt) }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"Cluster 1"}\NormalTok{, }\StringTok{"Cluster 2"}\NormalTok{)}
+
+\FunctionTok{boxplot}\NormalTok{(dt, }\AttributeTok{n=}\DecValTok{2}\NormalTok{, }\AttributeTok{xlab=}\StringTok{"Clusters"}\NormalTok{, }\AttributeTok{ylab=}\StringTok{"Values"}\NormalTok{, }\AttributeTok{main=}\StringTok{"Box Plot of EM{-}GMM Clustering"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{reference}{%
+\section{Reference}\label{reference}}
+
+\begin{itemize}
+\tightlist
+\item
+  \href{https://www.aptech.com/resources/tutorials/bayesian-fundamentals/gibbs-sampling-from-a-bivariate-normal-distribution/}{Gibbs
+  Sampling from a Bivariate Normal Distribution}
+\item
+  \href{https://online.stat.psu.edu/stat414/lesson/21/21.1}{21.1 -
+  Conditional Distribution of Y Given X}
+\item
+  \href{https://stats.stackexchange.com/questions/30588/deriving-the-conditional-distributions-of-a-multivariate-normal-distribution}{Cross
+  Validated - Deriving the conditional distributions of a multivariate
+  normal distribution}
+\end{itemize}
+
+\end{document}
