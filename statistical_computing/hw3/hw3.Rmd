@@ -22,6 +22,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Problem 1:
 
+Two random variables are defined $X_1, X_2$ and combined as a set $X = \{ X_1, X_2 \}$
+
 $$
 X_1 = \sigma_{X_1} Z_1 + \mu_{X_1}
 $$
@@ -30,31 +32,52 @@ $$
 X_2 = \sigma_{X_2} (\rho Z_1 + \sqrt{1 - \rho^2} Z_2  + \mu_{X_2}
 $$
 
+where $Z_1, Z_2 \sim \mathcal{N}(0, 1)$ and $Z_1, Z_2$ are independent
+
 The Expectation 
 
 $$
-E[X_1] = E[\sigma_{X_1} Z_1 + \mu_{X_1}] = \sigma_{X_1} E[Z_1] + \mu_{X_1} = \mu_{X_1}
-$$
-$$
-E[X_2] = E[\sigma_{X_2} (\rho Z_1 + \sqrt{1 - \rho^2} Z_2  + \mu_{X_2}]
+\mathbb{E}[X_1] = \mathbb{E}[\sigma_{X_1} Z_1 + \mu_{X_1}] = \sigma_{X_1} \mathbb{E}[Z_1] + \mu_{X_1} = \mu_{X_1}
 $$
 
 $$
-= \sigma_{X_2} E[\rho Z_1 + \sqrt{1 - \rho^2} Z_2]  + \mu_{X_2}
+\mathbb{E}[X_2] = \mathbb{E}[\sigma_{X_2} (\rho Z_1 + \sqrt{1 - \rho^2} Z_2  + \mu_{X_2}]
 $$
 
 $$
-= \sigma_{X_2} (\rho E[Z_1] + \sqrt{1 - \rho^2} E[Z_2])  + \mu_{X_2} = \mu_{X_2}
+= \sigma_{X_2} \mathbb{E}[\rho Z_1 + \sqrt{1 - \rho^2} Z_2]  + \mu_{X_2}
 $$
 
 $$
-X = \{ X_1, X_2 \}, \ E[X] = \{ \mu_{X_1}, \mu_{X_2} \}
+= \sigma_{X_2} (\rho \mathbb{E}[Z_1] + \sqrt{1 - \rho^2} \mathbb{E}[Z_2])  + \mu_{X_2} = \mu_{X_2}
+$$
+
+$$
+\mathbb{E}[X] = \{ \mu_{X_1}, \mu_{X_2} \}
 $$
 
 The Covariance
 
 $$
-\sigma_{X_1, X_2} = \sigma_{X_2, X_1} = E[(X_1 - \mu_{X_1})(X_2 - \mu_{X_2})]
+\sigma_{X_1, X_2} = \sigma_{X_2, X_1} = \mathbb{E}[(X_1 - \mu_{X_1})(X_2 - \mu_{X_2})]
+$$
+$$
+= \mathbb{E}[(\sigma_{X_1} Z_1 + \mu_{X_1} - \mu_{X_1})(\sigma_{X_2} (\rho Z_1 + \sqrt{1 - \rho^2} Z_2  + \mu_{X_2} - \mu_{X_2})]
+$$
+$$
+= \mathbb{E}[(\sigma_{X_1} Z_1)(\sigma_{X_2} (\rho Z_1 + \sqrt{1 - \rho^2} Z_2)]
+$$
+$$
+= \mathbb{E}[\sigma_{X_1} \sigma_{X_2}( \rho Z_1^2 + \sqrt{1 - \rho^2} Z_1 Z_2)]
+$$
+
+$$
+= \sigma_{X_1} \sigma_{X_2} \Big( \rho \mathbb{E}[Z_1^2] + \sqrt{1 - \rho^2} \mathbb{E}[Z_1 Z_2] \Big)
+$$
+With the definition of variance, we can derive $\mathbb{E}[Z_1^2] = Var[Z_1] + E[Z_1]^2 = 1$. Since $Z_1, Z_2$ are independent, $\mathbb{E}[Z_1 Z_2] = \mathbb{E}[Z_1] \mathbb{E}[Z_2] = 0$
+
+$$
+= \sigma_{X_1} \sigma_{X_2} \rho
 $$
 
 ```{r }
@@ -182,7 +205,7 @@ gen_datas <- function(n){
   return(x)
 }
 
-data <- gen_datas(2000)
+data <- gen_datas(200)
 
 hist(data, breaks=50, freq = FALSE)
 ```
@@ -235,14 +258,18 @@ kmean <- function(X, K, threshold=1e-6, max_iter=10){
   #print(clustered)
   #print(tot_dis)
   
-  res <- structure(list(label=clustered, total_distance=tot_dis, cluster_centers=cent_cord), class= "KMEAN_res")
+  res <- structure(list(data=X, cluster=clustered, total_distance=tot_dis, cluster_centers=cent_cord), class= "KMEAN_res")
     
   return(res)
 }
 
-res <- kmean(data, 2)
-print(res)
-#print(data)
+kmean_model <- kmean(data, 2)
+
+dt_1 <- data[which(kmean_model$cluster == 1)]
+dt_2 <- data[which(kmean_model$cluster == 2)]
+colnames(dt) <- c("Cluster 1", "Cluster 2")
+
+boxplot(dt, n=2, xlab="Clusters", ylab="Values", main="Box Plot of K-Means Clustering")
 ```
 
 (2) Expectation Maximization
@@ -315,15 +342,18 @@ em <- function(ys, k, threshold=1e-9, max_iter=201){
   #print(dens_table)
   
   clustered <- apply(dens_table, 1, which.max)
-  res <- structure(list(label=clustered, params=params), class= "EM-GMM_res")
+  res <- structure(list(data=ys, cluster=clustered, params=params), class= "EM-GMM_res")
   return(res)
 }
 
-res <- em(data, 2)
-print(res)
+em_gmm_model <- em(data, 2)
 
-emgmm_df <- data.frame(data=data, label=res$label)
-plot(label~data, data=emgmm_df)
+dt_1 <- data[which(em_gmm_model$cluster == 1)]
+dt_2 <- data[which(em_gmm_model$cluster == 2)]
+dt <- cbind(dt_1, dt_2)
+colnames(dt) <- c("Cluster 1", "Cluster 2")
+
+boxplot(dt, n=2, xlab="Clusters", ylab="Values", main="Box Plot of EM-GMM Clustering")
 ```
 
 # Reference
