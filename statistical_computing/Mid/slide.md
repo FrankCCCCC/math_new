@@ -190,6 +190,9 @@ $$
 
 ---
 
+# Ignore The Complex Derivation
+---
+
 ## K-means Cluster Plot
 
 **Fit On 5 Modal Simulation dataset**
@@ -204,7 +207,7 @@ $$
 
 **Fit On 5 Modal Simulation dataset**
 
-![bg right:70% width:90%](./simulate/kmean.jpg)
+![bg right:70% width:90%](./simulate/vbgmm.jpg)
 
 ---
 
@@ -218,3 +221,32 @@ $$
 
 ---
 
+## K-means Cluster Plot
+
+**Fit On Beaver1 dataset**
+
+![bg right:70% width:90%](./beaver1/kmean.jpg)
+
+---
+
+## VB-GMM Cluster Plot
+
+**Fit On Beaver1 dataset**
+
+![bg right:70% width:90%](./beaver1/vbgmm.jpg)
+
+---
+
+## K-means Cluster Plot
+
+**Fit On Beaver2 dataset**
+
+![bg right:70% width:90%](./beaver2/kmean.jpg)
+
+---
+
+## VB-GMM Cluster Plot
+
+**Fit On Beaver2 dataset**
+
+![bg right:70% width:90%](./beaver2/vbgmm.jpg)
