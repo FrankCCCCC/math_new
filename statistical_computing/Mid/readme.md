@@ -518,6 +518,32 @@ $$
 = \frac{1}{\alpha^*} \sum_{k=1}^K \alpha_k \mathcal{St}(x^* | m_k, \frac{(\nu_k + 1 - D) \beta_k}{1 + \beta_k} W_k, \nu_k + 1 - D)
 $$
 
+**VB-GMM Pseudo Code**
+
+---
+
+Repeat until ELBO converge or reach the limit of iteration
+
+E Step
+
+  - Compute $ln \ \rho_{nk} = \mathbb{E}_{\pi} [ln \ \pi_{k}] - \frac{1}{2}\mathbb{E}_{\mu_k, \Lambda_k} \Big[ (x_n - \mu_k)^{\top} \Lambda (x_n - \mu_k) \Big] - \frac{D}{2} ln \ 2 \pi + \mathbb{E}_{\Lambda_k} \Big[ ln \ det(\Lambda_k) \Big]$ where $1 \leq n \leq N$ and $1 \leq k <K$
+
+  - Compute $ln \ r_{nk} = LogSumExp(ln \ \rho_{nk})$
+   
+  - Compute $r_{nk} = e^{(ln \ \rho_{nk})}$
+
+  - Compute $N_k = \sum_{n=1}^N r_{nk}$
+
+  - Compute $\bar{x}_k = \frac{1}{N_k} \sum_{n=1}^N r_{nk} x_n$
+  
+  - Compute $S_k = \frac{1}{N_k} r_{nk} (x_n - \bar{x}_k) (x_n - \bar{x}_k)^{\top}$
+  
+  - Compute
+
+M Step
+
+---
+
 ## 4. Simulation
 
 We generate a bivariate Gaussian mixture distribution with 5 modals. We use K-means which is given 5 clusters as parameter. VB-GMM out-perform than K-means while clustering unbalanced dataset. Even though the K-mean already has correct hyperparameters. 
