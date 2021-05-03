@@ -537,10 +537,28 @@ E Step
   - Compute $\bar{x}_k = \frac{1}{N_k} \sum_{n=1}^N r_{nk} x_n$
   
   - Compute $S_k = \frac{1}{N_k} r_{nk} (x_n - \bar{x}_k) (x_n - \bar{x}_k)^{\top}$
-  
-  - Compute
 
 M Step
+
+  Update Dirichlet distribution
+
+  - Compute $\alpha_k = \alpha_0 + N_k, \ for \ 1 \leq k \leq K$
+
+  Update Gaussian Mixture distribution
+
+  - Compute $ln \ \pi_k^* = \mathbb{E}[ln \ \pi_k] = \psi(\alpha_k) - \psi \Big(\sum_{k=1}^K \alpha_k \Big)$
+
+  Update Gaussian-Wishart distribution
+
+  - Compute $\beta_k = \beta_0 + N_k, \ for \ 1 \leq k \leq K$
+  
+  - Compute $m_k = \frac{\beta_0 m_0 + N_k \bar{x}_k}{\beta_k}, \ for \ 1 \leq k \leq K$
+  
+  - Compute $\nu_k = \nu + N_k + 1, \ for \ 1 \leq k \leq K$
+  
+  - Compute $W^{-1}_k = W^{-1}_0 + N_k S_k + \frac{N_k \beta_0}{N_k + \beta_0} (\bar{x}_k - m_0) (\bar{x}_k - m_0)^{\top}, \ for \ 1 \leq k \leq K$
+  
+  - Compute $$
 
 ---
 
