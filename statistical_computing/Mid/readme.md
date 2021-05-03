@@ -198,7 +198,7 @@ Iterate until $\mathcal{L}(\phi^Z, \phi^{\theta})$ converge
 - M Step: Update the variational distribution on $\theta$
   
   $q(\theta; \phi^{\theta}) \propto e^{(\mathbb{E}_{q(Z; \phi^{Z})} [log \ p(Y, Z, \theta)])}$
-  
+
 ---
 
 ## 3. Variational Bayesian Gaussian Mixture Model(VB-GMM)
@@ -582,9 +582,9 @@ ELBO
 
 ## 4. Simulation
 
-We generate a bivariate Gaussian mixture distribution with 5 modals. We use K-means which is given 5 clusters as parameter. VB-GMM out-perform than K-means while clustering unbalanced dataset. Even though the K-mean already has correct hyperparameters. 
+We generate a bivariate Gaussian mixture distribution with 5 modals. We use K-means which is given 5 clusters as hyperparameter. VB-GMM out-perform than K-means while clustering unbalanced dataset. Even though the K-mean already has correct hyperparameters. 
 
-VB-GMM not only deals with unbalanced dataset well but also self-adapts to the best number of clusters.
+VB-GMM not only deals with unbalanced dataset well but also self-adapts to the best number of clusters which is very close to the ground truth.
 
 **K-means**
 ![](./simulate/kmean.jpg)

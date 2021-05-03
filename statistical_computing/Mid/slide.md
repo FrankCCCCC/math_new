@@ -184,9 +184,9 @@ $$
 
 - $p(Z | \pi)$ denotes the **Latent Variables**
 
-- $p(\pi)$ denotes the **Prior Distribution Over The Latent Variables $Z$** 
+- $p(\pi)$ denotes the **Dirichlet Prior Distribution Over The Latent Variables $Z$** 
 
-- $p(\mu | \Lambda) p(\Lambda)$ denotes the **Priors Distribution Over The Gaussian Distribution $X$**
+- $p(\mu | \Lambda) p(\Lambda)$ denotes the **Gaussian-Wishart Prior Distribution Over GMM $X$**
 
 ---
 

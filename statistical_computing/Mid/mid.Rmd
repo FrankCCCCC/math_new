@@ -753,7 +753,8 @@ library(rattle)
 
 #data <- faithful
 #data <- iris[, 1:4]
-data <- wine[, -1]
+data <- USArrests
+#data <- wine[, -1]
 print(data)
 #X <- as.matrix(data)
 ```
