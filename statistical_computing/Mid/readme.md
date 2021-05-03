@@ -595,9 +595,26 @@ VB-GMM not only deals with unbalanced dataset well but also self-adapts to the b
 
 ![](./simulate/gganim_plot0019.png)
 
-With the animation, we can see the number of clusters of VB-GMM keep reducing until it find a best fit to the dataset.
+With the animation, we can see the number of clusters of VB-GMM keep reducing until it find a best fit to the dataset. Please refer to the [link](https://github.com/FrankCCCCC/math_new/blob/master/statistical_computing/Mid/simulate/animate.gif).
 
 ![](./simulate/animate.gif)
 
 ## 5. Examine on Real Dataset
 
+**Wine Dataset**
+
+![](./wine/kmean.jpg)
+
+![](./wine/vbgmm.jpg)
+
+**Beaver1 Dataset**
+
+![](./beaver1/kmean.jpg)
+
+![](./beaver1/vbgmm.jpg)
+
+**Beaver2 Dataset**
+
+![](./beaver2/kmean.jpg)
+
+![](./beaver2/vbgmm.jpg)

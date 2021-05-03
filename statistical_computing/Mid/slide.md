@@ -212,7 +212,7 @@ $$
 
 **Fit On 5 Modal Simulation dataset**
 
-[Link]()
+[Link](https://github.com/FrankCCCCC/math_new/blob/master/statistical_computing/Mid/simulate/animate.gif)
 
 ![bg right:70% width:90%](./simulate/animate.gif)
 

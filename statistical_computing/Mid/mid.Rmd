@@ -608,7 +608,8 @@ D <- 2
 N <- 500
 df <- 3
 scale <- 10
-  
+
+set.seed(17231)  
 mus <- gen_mus(real_K, D, scale)
 sigmas <- gen_sigmas(real_K, D, df=df)
 coef <- gen_coef(real_K)
@@ -620,7 +621,7 @@ head(X)
 
 ```{r}
 # Eliminate Randomness
-#set.seed(1)
+set.seed(42)
 # Number of cluster
 K <- 20
 
@@ -672,13 +673,15 @@ draw_contour(X, vb_gmm_model, aes(X,Y))
 fviz_cluster(kmean_model, data = X,
              geom = "point",
              ellipse.type = "convex", 
-             ggtheme = theme_bw()
+             ggtheme = theme_bw(),
+             main="Simulation Cluster Plot of K-Means"
              )
 
 fviz_cluster(vb_gmm_model, data = X,
              geom = "point",
              ellipse.type = "convex", 
-             ggtheme = theme_bw()
+             ggtheme = theme_bw(),
+             main="Simulation Cluster Plot of VB-GMM"
              )
 
 ```
@@ -687,65 +690,9 @@ fviz_cluster(vb_gmm_model, data = X,
 draw_animate(X, vb_gmm_model, aes(X,Y))
 ```
 
-```{r}
-dis <- function(a, b){
-  return(sum((a - b)^2))
-}
-
-cal_tot_dist <- function(X, cent_cord){
-  n <- length(X)
-  d <- 1
-  K <- length(cent_cord[,1])
-  
-  X <- data.frame(X)
-  dis_table <- data.frame(matrix(0, nrow=n, ncol=K))
-  within_dis <- data.frame(matrix(0, nrow=n, ncol=K))
-  clustered <- array(0, c(n))
-  
-  for(k in 1:K){
-    dis_table[, k] <- apply(X, 1, dis, cent_cord[k, ])
-  }
-  # Assign the nearest cluster
-  clustered <- apply(dis_table, 1, which.min)
-  # Update the center
-  for(k in 1:K){
-    idxs <- which(clustered == k)
-    
-    within_dis <- sapply(X[idxs, ], dis, cent_cord[k, ])
-    
-    
-    #print(idxs)
-    #print(X[idxs])
-  }
-  # Calculate total distance
-  tot_dis <- sum(dis_table)
-  
-  #idxs <- which(clustered == 1)
-  #cbind_sel <- data.frame(X)[idxs, ]
-  #print(idxs)
-  #print(cbind_sel)
-  
-  print(clustered)
-  print(X)
-  print(cent_cord)
-  
-  print(dis_table)
-  #print(tot_dis)
-  #print(within_dis)
-  
-  return(tot_dis)
-}
-
-vb_gmm_mus <- unique(as.data.frame(t(vb_gmm_model$m)))
-kmean_mus <- kmean_model$centers
-
-#head(kmean_mus)
-#head(X)
-#cal_tot_dist(X, kmean_mus)
-#cal_tot_dist(X, vb_gmm_mus)
-```
-
 ## Real Dataset
+
+### Beaver2
 
 ```{r}
 library(tidyverse)  # data manipulation
@@ -753,8 +700,9 @@ library(rattle)
 
 #data <- faithful
 #data <- iris[, 1:4]
-data <- USArrests
-#data <- wine[, -1]
+#data <- USArrests
+data <- beaver2[, 1:3]
+
 print(data)
 #X <- as.matrix(data)
 ```
@@ -767,6 +715,7 @@ X <- scale(data)
 ```
 
 ```{r}
+set.seed(42)
 vb_gmm_model <- vb_gmm(X=X, 
                        K=3, 
                        alpha_0=1e-5, 
@@ -777,26 +726,70 @@ kmean_model <- kmeans(X, 3)
 ```
 
 ```{r}
-#draw_contour(X, vb_gmm_model, aes(eruptions, waiting))
-#draw_contour(X, vb_gmm_model, aes(eruptions, waiting))
-
 fviz_cluster(kmean_model, 
              data=X,
              geom="point",
              ellipse.type="convex", 
-             ggtheme=theme_bw())
+             ggtheme=theme_bw(),
+             main="Beaver2: Cluster Plot of K-Means"
+             )
 
 fviz_cluster(vb_gmm_model, 
              data=X,
              geom="point",
              ellipse.type="convex", 
-             ggtheme=theme_bw())
+             ggtheme=theme_bw(),
+             main="Beaver2: Cluster Plot of VB-GMM"
+             )
 
-clusplot(X, kmean_model$cluster, main='2D representation of the Cluster solution',
+clusplot(X, kmean_model$cluster, main='Beaver2: Cluster solution of K-Means',
          color=TRUE, shade=TRUE,
          labels=2, lines=0)
 
-clusplot(X, vb_gmm_model$cluster, main='2D representation of the Cluster solution',
+clusplot(X, vb_gmm_model$cluster, main='Beaver2: Cluster solution of VB-GMM',
+         color=TRUE, shade=TRUE,
+         labels=2, lines=0)
+```
+
+### Beaver1
+
+```{r}
+data <- beaver1
+print(data)
+X <- scale(data)
+```
+
+```{r}
+set.seed(5)
+vb_gmm_model <- vb_gmm(X=X, 
+                       K=3, 
+                       alpha_0=1e-5, 
+                       max_iter=1001, 
+                       is_animation=FALSE, 
+                       is_verbose=FALSE)
+kmean_model <- kmeans(X, 3)
+
+fviz_cluster(kmean_model, 
+             data=X,
+             geom="point",
+             ellipse.type="convex", 
+             ggtheme=theme_bw(),
+             main="Beaver1: Cluster Plot of K-Means"
+             )
+
+fviz_cluster(vb_gmm_model, 
+             data=X,
+             geom="point",
+             ellipse.type="convex", 
+             ggtheme=theme_bw(),
+             main="Beaver1: Cluster Plot of VB-GMM"
+             )
+
+clusplot(X, kmean_model$cluster, main='Beaver1: Cluster solution of K-Means',
+         color=TRUE, shade=TRUE,
+         labels=2, lines=0)
+
+clusplot(X, vb_gmm_model$cluster, main='Beaver1: Cluster solution of VB-GMM',
          color=TRUE, shade=TRUE,
          labels=2, lines=0)
 ```
