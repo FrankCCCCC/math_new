@@ -1,13 +1,25 @@
 ---
-title: "Mid"
+header-includes:
+- \usepackage{xeCJK} 
+- \usepackage{fontspec} 
+- \setCJKmainfont{微軟正黑體} 
+- \XeTeXlinebreaklocale "zh"
+- \XeTeXlinebreakskip = 0pt plus 1pt
+title: "Statistical Computing Mid"
 author: "周聖諺"
-date: "4/27/2021"
-output: pdf_document
+date: "4/23/2021"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: 
+   latex_engine: xelatex
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+
 
 ## Utility Functions
 
@@ -102,8 +114,6 @@ update_log_rho_nk <- function(X, k, m_k, log_pi, log_Lambda, D, nu_k, W_k){
 }
 ```
 
-## M Step
-
 ### Some Utility Variables
 
 Update $N_k, \bar{x}_k, S_k$
@@ -160,6 +170,8 @@ update_r_nk_both <- function(log_rho_nk){
   return(res)
 }
 ```
+
+## M Step
 
 ### 2. Gaussian Miture
 

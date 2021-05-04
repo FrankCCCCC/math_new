@@ -54,7 +54,7 @@ gg_theme <- function(){
   return(p)
 }
 
-# Mixture density using predictive t-distribution
+# Mixture density of predictive Student-t distribution
 mixture_pdf_t <- function(model, data){
   mixture <- vector(mode = "numeric", length = NROW(data))
   
@@ -70,12 +70,13 @@ mixture_pdf_t <- function(model, data){
   return(mixture)
 }
 
-# Mixture density using predictive t-distribution
+# Mixture density of predictive Student-t distribution
 multi_mixture_t_pdf <- function(model, data){
   prob_mat <- matrix(0, nrow=model$N, ncol=model$K)
   
   for (k in 1:length(model$K)) {
     L_k <- solve((((model$nu[k] + 1 - NROW(model$m)) * model$beta[k]) / (1 + model$beta[k])) * model$W[,,k])
+    
     prob_mat[, k] <- (model$alpha[k]/sum(model$alpha)) * dmvt(x=data, 
                                                               delta=model$m[, k], 
                                                               sigma=L_k, 
@@ -302,52 +303,6 @@ update_beta_k <- function(beta_0, N_k){
 }
 ```
 
-### Evidence Lower Bound
-
-```{r}
-cal_elbo <- function(D, K, GM, DIR, GW, UTIL){
-  # log-Beta function
-  logB <- function(W, nu){
-    D <- NCOL(W)
-    return(-0.5*nu*log(det(W)) - 
-          (0.5*nu*D*log(2) + 
-          0.25*D*(D - 1) * log(pi) + 
-          sum(lgamma(0.5 * (nu + 1 - 1:NCOL(W)))) ))
-  }
-  
-  lb_px = lb_pml = lb_pml2 = lb_qml <- 0
-    for (k in 1:K) {
-      # 10.71
-      lb_px <- lb_px + UTIL$N_k[k] * (GW$log_Lambda[k] - D/GW$beta_k[k] - GW$nu_k[k] * 
-          matrix.trace(UTIL$S_k[,,k] %*% GW$W_k[,,k]) - GW$nu_k[k]*t(UTIL$x_bar_k[,k] - 
-          GW$m_k[,k]) %*% GW$W_k[,,k] %*% (UTIL$x_bar_k[,k] - GW$m_k[,k]) - D*log(2*pi) ) 
-      # 10.74
-      lb_pml <- lb_pml + D*log(GW$beta_0/(2*pi)) + GW$log_Lambda[k] - 
-          (D*GW$beta_0)/GW$beta_k[k] - GW$beta_0*GW$nu_k[k]*t(GW$m_k[,k] - GW$m_0) %*% 
-          GW$W_k[,,k] %*% (GW$m_k[,k] - GW$m_0)    
-      # 10.74
-      lb_pml2 <- lb_pml2 + GW$nu_k[k] * matrix.trace(GW$W_0_inv %*% GW$W_k[,,k]) 
-      # 10.77
-      lb_qml <- lb_qml + 0.5*GW$log_Lambda[k] + 0.5*D*log(GW$beta_k[k]/(2*pi)) - 
-          0.5*D - (-logB(W = GW$W_k[,,k], nu = GW$nu_k[k]) - 
-          0.5*(GW$nu_k[k] - D - 1)*GW$log_Lambda[k] + 0.5*GW$nu_k[k]*D)
-    }
-    lb_px  <- 0.5 * lb_px             # 10.71
-    lb_pml <- 0.5*lb_pml + K*logB(W = GW$W_0,nu = GW$nu_0) + 0.5*(GW$nu_0 - D - 1) * 
-        sum(GW$log_Lambda) - 0.5*lb_pml2 # 10.74
-    lb_pz  <- sum(UTIL$r_nk %*% GM$log_pi)    # 10.72
-    lb_qz  <- sum(UTIL$r_nk * UTIL$log_r_nk)    # 10.75
-    lb_pp  <- sum((DIR$alpha_0 - 1)*GM$log_pi) + lgamma(sum(K*DIR$alpha_0)) -
-        K*sum(lgamma(DIR$alpha_0))        # 10.73
-    lb_qp  <- sum((DIR$alpha - 1)*GM$log_pi) + lgamma(sum(DIR$alpha)) - 
-        sum(lgamma(DIR$alpha)) # 10.76
-    # Sum all parts to compute lower bound
-    elbo <- lb_px + lb_pz + lb_pp + lb_pml - lb_qz - lb_qp - lb_qml
-    
-    return(elbo)
-}
-```
-
 ## Animation
 
 ```{r}
@@ -546,10 +501,6 @@ vb_gmm <- function(X,
     GW <- m_step_res$GW
     DIR <- m_step_res$DIR
     
-    # Variational lower bound
-    L[i] <- cal_elbo(D, K, GM=GM, DIR=DIR, GW=GW, UTIL=UTIL)
-    
-    
     # Evaluate mixture density for plotting
     if (is_animation) {
       if ( (i - 1) %% 5 == 0 | i < 10) {
@@ -557,15 +508,6 @@ vb_gmm <- function(X,
         dt_all <- rbind(dt_all, dt[, z := my_z] %>% .[, iter := i - 1])
       }
     }
-    
-    # Show VB difference
-    if (is_verbose) {cat("It:\t",i,"\tLB:\t",L[i], "\tLB_diff:\t",L[i] - L[i - 1],"\n")}
-    # Check if lower bound decreases
-    if (L[i] < L[i - 1]) {message("Warning: Lower bound decreases!\n"); }
-    # Check for convergence
-    if (abs(L[i] - L[i - 1]) < threshold) { break }
-    # Check if VB converged in the given maximum iterations
-    if (i == max_iter) {warning("VB did not converge!\n")}
   }
   
   label <- get_label(X, N, K, GW, DIR)
@@ -640,7 +582,7 @@ K <- 20
 vb_gmm_model <- vb_gmm(X = X, 
                        K = K, 
                        alpha_0 = 1e-5, 
-                       max_iter = 1001, 
+                       max_iter = 200, 
                        is_animation = TRUE, 
                        is_verbose = FALSE)
 kmean_model <- kmeans(X, real_K)

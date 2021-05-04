@@ -243,6 +243,8 @@ hist(data, breaks=50, freq = FALSE)
 
 ### (1) K-Means
 
+**Pseudo Code**
+
 ---
 
 Repeat until converge
@@ -319,6 +321,8 @@ boxplot(dt, n=2, xlab="Clusters", ylab="Values", main="Box Plot of K-Means Clust
 K-Means seems work well. Two clusters are divided clearly.
 
 ### (2) EM-GMM
+
+**Pseudo Code**
 
 ---
 

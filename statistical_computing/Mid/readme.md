@@ -585,10 +585,6 @@ M Step
   
     - Compute $ln \ \pi_k^* = \psi(\alpha_k) - \psi \Big(\sum_{k=1}^K \alpha_k \Big), \ for \ 1 \leq k \leq K$
 
-ELBO
-
-  - 
-
 ---
 
 ## 4. Simulation

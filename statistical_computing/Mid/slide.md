@@ -13,13 +13,11 @@ paginate: true
 
 ## Introduction
 
-**The disadvantage of EM**
+**The disadvantage of K-Means**
 
 - Hard to **decide the number of clusters**
   
 - **Poor** performance on **unbalanced dataset**
-  
-- **Cannot solve** complex Bayesian model
 
 
 **Variational Bayesian Expectation Maximization(VBEM)**
@@ -27,12 +25,10 @@ paginate: true
 - Only need to choose the **maximum number of clusters, self-adapt to the best**
 
 - **Better** performance on unbalanced dataset
-  
-- Solve complex **Bayesian model**
 
 ---
 
-## Naive EM
+<!-- ## Naive EM
 
 **Pseudo Code**
 
@@ -44,7 +40,7 @@ Iterate until $\theta$ converge
   
   $\arg \max_{\theta} \ \int_Z q(Z; \gamma) log \ p(Y, Z; \theta) dZ$
 
----
+--- -->
 
 ## EM In General Form
 
@@ -250,3 +246,7 @@ $$
 **Fit On Beaver2 dataset**
 
 ![bg right:70% width:90%](./beaver2/vbgmm.jpg)
+
+---
+
+# Thanks For Listening
