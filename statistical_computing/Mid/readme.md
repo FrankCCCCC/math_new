@@ -589,7 +589,7 @@ M Step
 
 ## 4. Simulation
 
-We generate a bivariate Gaussian mixture distribution with 5 modals. We use K-means which is given 5 clusters as hyperparameter. VB-GMM out-perform than K-means while clustering unbalanced dataset. Even though the K-mean already has correct hyperparameters. 
+We generate the simulation data by bivariate Gaussian mixture distribution with 5 modals. We use K-means which is given 5 clusters as hyperparameter. VB-GMM out-performs than K-means while clustering an unbalanced dataset. Even though the K-mean already has correct hyperparameters. 
 
 VB-GMM not only deals with unbalanced dataset well but also self-adapts to the best number of clusters which is very close to the ground truth.
 

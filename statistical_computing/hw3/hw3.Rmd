@@ -80,12 +80,16 @@ $$
 $$
 Then, conduct a simulation as pseudo code
 
+**Pseudo Code**
+
 ---
 
 $Z_1$ = \mathcal{N}(0, 1)
+
 $Z_2$ = \mathcal{N}(0, 1)
 
 $X_1 = \sigma_{X_1} Z_1 + \mu_{X_1}$
+
 $X_2 = \sigma_{X_2} (\rho Z_1 + \sqrt{1 - \rho^2} Z_2  + \mu_{X_2}$
 
 return $X_1, X_2$
@@ -105,7 +109,21 @@ gen_binorm <- function(n, mu_1, mu_2, sigma_1, sigma_2, rho){
   return(x_bind)
 }
 
-x <- gen_binorm(5000, 1, 2, 1, 2, 0.4)
+mu_X_1 <- 1
+mu_X_2 <- 2
+sigma_X_1 <- 1
+sigma_X_2 <- 2
+rho <- 0.4
+
+x <- gen_binorm(5000, mu_X_1, mu_X_2, sigma_X_1, sigma_X_2, rho)
+
+print("Parameters")
+print(paste("mu_X_1: ", toString(mu_X_1)))
+print(paste("mu_X_2: ", toString(mu_X_2)))
+print(paste("sigma_X_1: ", toString(sigma_X_1)))
+print(paste("sigma_X_2: ", toString(sigma_X_2)))
+print(paste("rho: ", toString(rho)))
+print("------------------")
 
 print(cat("Mean of X_1: ", format(mean(x[1, ])), " \n"))
 print(cat("Mean of X_2: ", format(mean(x[2, ])), " \n"))
@@ -128,7 +146,7 @@ $$
 = \mu_Y+\rho \frac{\sigma_Y}{\sigma_X}(X-\mu_X) + \sigma_Y \sqrt{(1-\rho^2)} \mathcal{N}(0, 1)
 $$
 
-**Gibbs Sampling**
+**Gibbs Sampling Pseudo Code**
 
 ---
 
@@ -191,9 +209,43 @@ mixture_binorm <- function(n, mus, sigmas, rhos, ws){
   return(rvs)
 }
 
-#res <- binorm(10000, c(1, 2), c(1, 2), 0.4)
-res <- mixture_binorm(100, matrix(c(1, 2, 2, 1), ncol=2), matrix(c(1, 2, 2, 1), ncol=2), c(0.4, 0.6), c(0.4, 0.6))
+mus <- matrix(c(1, 2, 
+                2, 1), ncol=2)
+colnames(mus) <- c("mu_X_1", "mu_X_2")
+rownames(mus) <- c("component_1", "component_2")
 
+sigmas <- matrix(c(1, 2, 
+                   2, 1), ncol=2)
+colnames(sigmas) <- c("sigma_X_1", "sigma_X_2")
+rownames(sigmas) <- c("component_1", "component_2")
+
+rhos <- c(0.4, 0.6)
+rhos_m <- matrix(rhos, ncol=1)
+colnames(rhos_m) <- c("rho")
+rownames(rhos_m) <- c("component_1", "component_2")
+
+ws <- c(0.4, 0.6)
+ws_m <- matrix(ws, ncol=1)
+colnames(ws_m) <- c("coefficient")
+rownames(ws_m) <- c("component_1", "component_2")
+
+print("The Prameters of The GMM")
+print(mus)
+print("---")
+print(sigmas)
+print("---")
+print(rhos_m)
+print("---")
+print(ws_m)
+print("--------------------------------")
+
+#res <- binorm(10000, mus[1,], sigmas[1,], rhos[1])
+#res <- binorm(10000, mus[2,], sigmas[2,], rhos[2])
+
+res <- mixture_binorm(100, mus, sigmas, rhos, ws)
+#res <- mixture_binorm(10000, matrix(c(1, 2, 2, 1), ncol=2), matrix(c(1, 2, 2, 1), ncol=2), c(0.4, 0.6), c(0.4, 0.6))
+
+print("Population Mean & Covariance")
 print(cat("Mean of Y1: ", mean(res[, 1])))
 print(cat("Mean of Y2: ", mean(res[, 2])))
 print("Covariance Matrix")
@@ -236,7 +288,18 @@ gen_datas <- function(n){
   return(x)
 }
 
-data <- gen_datas(200)
+n <- 100
+M <- 200
+datas <- matrix(n, ncol=n, nrow=M)
+for(i in 1:M){
+ datas[i, ] <- gen_datas(n)
+}
+
+print(length(datas[, 1]))
+print(length(datas[1, ]))
+print(mean(datas[1, ]))
+
+data <- gen_datas(n)
 
 hist(data, breaks=50, freq = FALSE)
 ```
@@ -308,7 +371,9 @@ kmean <- function(X, K, threshold=1e-6, max_iter=10){
   return(res)
 }
 
-kmean_model <- kmean(data, 2)
+kmean_sim200 <- function(data, K){return(kmean(data, K))}
+
+kmean_model <- kmean_sim200(data, 2)
 
 dt_1 <- data[which(kmean_model$cluster == 1)]
 dt_2 <- data[which(kmean_model$cluster == 2)]
@@ -347,6 +412,7 @@ Repeat until converge
 ---
 
 ```{r q3_em-gmm, echo=FALSE, results='markup'}
+
 e_step <- function(ys, ws, mus, sigmas){
   k <- length(ws)
   n <- length(ys)
@@ -426,7 +492,13 @@ em <- function(ys, k, threshold=1e-9, max_iter=201){
   return(res)
 }
 
-em_gmm_model <- em(data, 2)
+em_sim200 <- function(data, K){return(em(data, K))}
+
+K <- 2
+
+em_gmm_model <- em_sim200(data, K)
+
+print("------------------")
 
 print(em_gmm_model$params)
 
@@ -436,6 +508,32 @@ dt <- cbind(dt_1, dt_2)
 colnames(dt) <- c("Cluster 1", "Cluster 2")
 
 boxplot(dt, n=2, xlab="Clusters", ylab="Values", main="Box Plot of EM-GMM Clustering")
+```
+
+```{r back, echo=FALSE, message=FALSE, results='hide', fig.keep='all'}
+mu_1 <- rep(0, M)
+mu_2 <- rep(0, M)
+sigma_1 <- rep(0, M)
+sigma_2 <- rep(0, M)
+ws_1 <- rep(0, M)
+ws_2 <- rep(0, M)
+
+for(i in 1:M){
+  
+  
+  # weights
+  ws_1[i] <- em_gmm_model$params[1, 1]
+  ws_2[i] <- em_gmm_model$params[1, 2]
+  
+  # mus
+  mu_1[i] <- em_gmm_model$params[2, 1]
+  mu_2[i] <- em_gmm_model$params[2, 2]
+}
+
+
+#pram_mean <- matrix(c(mean(ws_1), mean(ws_2)))
+#print("Est Mean")
+#print(pram_mean)
 ```
 
 EM-GMM seems work well. The estimated values are close to the truth values. 
@@ -456,6 +554,11 @@ EM-GMM seems work well. The estimated values are close to the truth values.
 ```
 
 ## Problem 3
+
+### Generate Data
+
+```{r q3_gen_data, eval=FALSE}
+```
 
 ### (a)
 
