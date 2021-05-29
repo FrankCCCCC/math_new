@@ -294,6 +294,7 @@ datas <- matrix(n, ncol=n, nrow=M)
 for(i in 1:M){
  datas[i, ] <- gen_datas(n)
 }
+print(datas[, 1])
 
 print(length(datas[, 1]))
 print(length(datas[1, ]))
@@ -302,6 +303,8 @@ print(mean(datas[1, ]))
 data <- gen_datas(n)
 
 hist(data, breaks=50, freq = FALSE)
+hist(datas[, 1], breaks=50, freq = FALSE)
+hist(datas[, 2], breaks=50, freq = FALSE)
 ```
 
 ### (1) K-Means
@@ -445,9 +448,15 @@ m_step <- function(ys, ws, mus, sigmas, gammas){
   return(rbind(ws, mus, sigmas))
 }
 
-em <- function(ys, k, threshold=1e-9, max_iter=201){
-  mus <- runif(k)
-  sigmas <- runif(k)
+em <- function(ys, k, threshold=1e-4, max_iter=500){
+  #mus <- runif(k)
+  #sigmas <- runif(k)
+  #mus <- rnorm(k, 0, 0.1)
+  #sigmas <- rep(1, k)
+  mus <- c(0, 3)
+  sigmas <- c(1, 1)
+  #mus <- rgamma(k, 2, 2)
+  #sigmas <- rgamma(k, 2, 2)
   ws <- rep(1/k, k)
   
   old_params <- rbind(ws, mus, sigmas)
@@ -463,12 +472,12 @@ em <- function(ys, k, threshold=1e-9, max_iter=201){
     sigmas <- params[3, ]
     
     # Until converge
-    if(abs(mean(params - old_params)) < threshold){
-      break
-    }
+    cond <- abs(mean(params - old_params)) < threshold
+    if(!is.na(cond) && cond){break}
     
     # Record old values
     old_params <- params
+    if(i >= max_iter){print("Didn't converge")}
     
     #if(i %% 10 == 1){
     #  print(cat("Iter ", i))
@@ -488,7 +497,7 @@ em <- function(ys, k, threshold=1e-9, max_iter=201){
   colnames(params) <- col_names
   
   clustered <- apply(dens_table, 1, which.max)
-  res <- structure(list(data=ys, cluster=clustered, params=params, dens_table=dens_table), class= "EM-GMM_res")
+  res <- structure(list(cluster=clustered, params=params), class= "EM-GMM_res")
   return(res)
 }
 
@@ -496,10 +505,15 @@ em_sim200 <- function(data, K){return(em(data, K))}
 
 K <- 2
 
-em_gmm_model <- em_sim200(data, K)
+em_gmm_model <- em(datas[1, ], K)
+print(em_gmm_model$params)
+em_gmm_model <- em(datas[2, ], K)
+print(em_gmm_model$params)
 
 print("------------------")
 
+
+em_gmm_model <- em(data, K)
 print(em_gmm_model$params)
 
 dt_1 <- data[which(em_gmm_model$cluster == 1)]
@@ -511,6 +525,7 @@ boxplot(dt, n=2, xlab="Clusters", ylab="Values", main="Box Plot of EM-GMM Cluste
 ```
 
 ```{r back, echo=FALSE, message=FALSE, results='hide', fig.keep='all'}
+M <- 200
 mu_1 <- rep(0, M)
 mu_2 <- rep(0, M)
 sigma_1 <- rep(0, M)
@@ -518,22 +533,62 @@ sigma_2 <- rep(0, M)
 ws_1 <- rep(0, M)
 ws_2 <- rep(0, M)
 
+cache <- matrix(n, ncol=n, nrow=M)
+
 for(i in 1:M){
+  #if(datas[i, ] == cache[1, ]){print("Same")}
+  #cache[1, ] <- datas[i, ]
   
+  em_gmm_model <- em(datas[i, ], K)
+  
+  #print(em_gmm_model$params)
+  #print((em_gmm_model$params)[1, ])
+  #print((em_gmm_model$params)[1, 2])
   
   # weights
-  ws_1[i] <- em_gmm_model$params[1, 1]
-  ws_2[i] <- em_gmm_model$params[1, 2]
+  ws_1[i] <- max((em_gmm_model$params)[1, ])
+  ws_2[i] <- min((em_gmm_model$params)[1, ])
   
   # mus
-  mu_1[i] <- em_gmm_model$params[2, 1]
-  mu_2[i] <- em_gmm_model$params[2, 2]
+  mu_1[i] <- min((em_gmm_model$params)[2, ])
+  mu_2[i] <- max((em_gmm_model$params)[2, ])
+  
+  # sigmas
+  sigma_1[i] <- (em_gmm_model$params)[3, 1]
+  sigma_2[i] <- (em_gmm_model$params)[3, 2]
+  
+  param_mean <- matrix(c(mean(ws_1), mean(ws_2),
+                       mean(mu_1), mean(mu_2),
+                       mean(sigma_1), mean(sigma_2)), nrow=3, ncol=2)
+  #print(param_mean)
 }
 
+param_mean <- matrix(0, nrow=3, ncol=2)
+param_mean[1, 1] <- mean(ws_1)
+param_mean[1, 2] <- mean(ws_2)
+param_mean[2, 1] <- mean(mu_1)
+param_mean[2, 2] <- mean(mu_2)
+param_mean[3, 1] <- mean(sigma_1)
+param_mean[3, 2] <- mean(sigma_2)
 
-#pram_mean <- matrix(c(mean(ws_1), mean(ws_2)))
-#print("Est Mean")
-#print(pram_mean)
+colnames(param_mean) <- c("Component 1", "Component 2")
+rownames(param_mean) <- c("Mean coefficient", "Mean mu", "Mean sigma")
+
+print(param_mean)
+
+param_var <- matrix(0, nrow=3, ncol=2)
+param_var[1, 1] <- var(ws_1)
+param_var[1, 2] <- var(ws_2)
+param_var[2, 1] <- var(mu_1)
+param_var[2, 2] <- var(mu_2)
+param_var[3, 1] <- var(sigma_1)
+param_var[3, 2] <- var(sigma_2)
+colnames(param_var) <- c("Component 1", "Component 2")
+rownames(param_var) <- c("Var coefficient", "Var mu", "Var sigma")
+
+print(param_var)
+
+boxplot(ws_1)
 ```
 
 EM-GMM seems work well. The estimated values are close to the truth values. 
