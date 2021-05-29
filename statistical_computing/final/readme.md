@@ -1,0 +1,39 @@
+# From SVM to SMO and Random Feature Kernel Approximation
+
+106033233 資工21 周聖諺
+---
+
+## Abstract
+
+
+## Lagrange Multiplier
+
+## Karush, Kuhn, Tucker(KKT) Condition
+
+## Hard-Margin SVM
+
+## Soft-Margin SVM
+
+## Kernel Trick
+
+## Sequential Minimal Optimization(SMO)
+
+Based on the paper **Sequential Minimal Optimization: A Fast Algorithm for Training Support Vector Machines**.
+
+## Random Feature For Kernel Approximation
+
+Based on the paper **Random Features for Large-Scale Kernel Machines** on NIPS'07.
+
+## Experiments
+
+
+
+## Reference
+
+- [Sequential Minimal Optimization: A Fast Algorithm for Training Support Vector Machines](https://www.microsoft.com/en-us/research/publication/sequential-minimal-optimization-a-fast-algorithm-for-training-support-vector-machines/)
+- [NIPS'07 - Random Features for Large-Scale Kernel Machines](https://dl.acm.org/doi/10.5555/2981562.2981710)
+- [現代啟示錄 - Karush-Kuhn-Tucker (KKT) 條件](https://ccjou.wordpress.com/2017/02/07/karush-kuhn-tucker-kkt-%E6%A2%9D%E4%BB%B6/)
+- [現代啟示錄 - Lagrange 乘數法](https://ccjou.wordpress.com/2012/05/30/lagrange-%E4%B9%98%E6%95%B8%E6%B3%95/)
+- [之乎 - 机器学习算法实践-SVM中的SMO算法](https://zhuanlan.zhihu.com/p/29212107)
+- [之乎 - Python · SVM（四）· SMO 算法](https://zhuanlan.zhihu.com/p/27662928)
+- [Machine Learning Techniques (機器學習技法)](https://www.youtube.com/playlist?list=PLXVfgk9fNX2IQOYPmqjqWsNUFl2kpk1U2)
