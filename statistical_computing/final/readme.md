@@ -85,7 +85,11 @@ $$
 = 1 - \alpha_2  K_{2,2} - \alpha_1 y_1 y_2 K_{1, 2} - y_2 \sum_{i=3}^{N} \alpha_i y_i K_{i,2}
 $$
 
-Replace $\alpha_1$ with $\alpha_2$
+$$
+= 1 - \alpha_2  K_{2,2} - \alpha_1 y_1 y_2 K_{1, 2} - y_2 (f(x_2) - \alpha_1 y_1 K_{1, 2} - \alpha_2 y_2 K_{2, 2} - b)
+$$
+
+The constraint can be represented as
 
 $$
 \sum_{i=1}^{N} \alpha_i y_i = \alpha_1 y_1 + \alpha_2 y_2 + \sum_{i=3}^{N} \alpha_i y_i = 0
@@ -103,6 +107,12 @@ Since $y_1$ is either 1 or -1, thus
 
 $$
 \alpha_1 = \zeta y_1  - \alpha_2 y_1 y_2
+$$
+
+The updated variables should also satisfy the constraint.
+
+$$
+\alpha_1^{new} y_1 + \alpha_2^{new} y_2 = \zeta
 $$
 
 We also denote $v_1, v_2$ as
