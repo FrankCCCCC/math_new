@@ -65,6 +65,13 @@ $$
 - \alpha_1 y_1 \sum_{i=3}^{N} \alpha_i y_i K_{i,1} - \alpha_2 y_2 \sum_{i=3}^{N} \alpha_i y_i K_{i,2} + \mathcal{Const}
 $$
 
+$$
+= \alpha_1 + \alpha_2 - 
+\frac{1}{2} \alpha_1^2 K_{1,1} - \frac{1}{2} \alpha_2^2 K_{2,2} - \alpha_1 \alpha_2 y_1 y_2 K_{1, 2}\\
+
+- \alpha_1 y_1 \sum_{i=3}^{N} \alpha_i y_i K_{i,1} - \alpha_2 y_2 \sum_{i=3}^{N} \alpha_i y_i K_{i,2} + \mathcal{Const}
+$$
+
 where $\mathcal{Const} = \sum_{i=3}^{N} \alpha_i - \frac{1}{2} \sum_{i=3}^{N} \sum_{j=3}^{N} \alpha_i \alpha_j y_i y_j k(x_i, x_j)$. We see it as a constant because it is regardless to $\alpha_1, \alpha_2$.
 
 **Derive Gradient of $\alpha_2$**
@@ -72,6 +79,71 @@ where $\mathcal{Const} = \sum_{i=3}^{N} \alpha_i - \frac{1}{2} \sum_{i=3}^{N} \s
 $$
 \frac{\partial \mathcal{L}_d(\alpha)}{\partial \alpha_2} = 
 1 - \alpha_2 y_2^2 K_{2,2} - \alpha_1 y_1 y_2 K_{1, 2} - y_2 \sum_{i=3}^{N} \alpha_i y_i K_{i,2}
+$$
+
+$$
+= 1 - \alpha_2  K_{2,2} - \alpha_1 y_1 y_2 K_{1, 2} - y_2 \sum_{i=3}^{N} \alpha_i y_i K_{i,2}
+$$
+
+Replace $\alpha_1$ with $\alpha_2$
+
+$$
+\sum_{i=1}^{N} \alpha_i y_i = \alpha_1 y_1 + \alpha_2 y_2 + \sum_{i=3}^{N} \alpha_i y_i = 0
+$$
+
+$$
+\alpha_1 y_1 + \alpha_2 y_2 = - \sum_{i=3}^{N} \alpha_i y_i = \zeta
+$$
+
+$$
+\alpha_1 = \frac{\zeta - \alpha_2 y_2}{y_1}
+$$
+
+Since $y_1$ is either 1 or -1, thus
+
+$$
+\alpha_1 = \zeta y_1  - \alpha_2 y_1 y_2
+$$
+
+We also denote $v_1, v_2$ as
+
+$$
+v_1 = \sum_{i=3}^{N} \alpha_i y_i K_{i,1}, \quad v_2 = \sum_{i=3}^{N} \alpha_i y_i K_{i,2}
+$$
+
+Replace the symbol $\alpha_1, v_1, v_2$
+
+$$
+\mathcal{L}_d(\alpha) = 
+(\zeta y_1  - \alpha_2 y_1 y_2) + \alpha_2\\
+
+- \frac{1}{2} (\zeta y_1  - \alpha_2 y_1 y_2)^2 K_{1,1} - \frac{1}{2} \alpha_2^2 K_{2,2} - (\zeta y_1  - \alpha_2 y_1 y_2) \alpha_2 y_1 y_2 K_{1, 2}\\
+
+- (\zeta y_1  - \alpha_2 y_1 y_2) y_1 v_1 - \alpha_2 y_2 v_2
+$$
+
+$$
+= (\zeta y_1  - \alpha_2 y_1 y_2) + \alpha_2\\
+
+- \frac{1}{2} (\zeta^2 + \alpha_2^2 - 2 \zeta \alpha_2 y_2) K_{1,1} - \frac{1}{2} \alpha_2^2 K_{2,2} - (\zeta \alpha_2 y_2  - \alpha_2^2) K_{1, 2}\\
+
+- (\zeta - \alpha_2 y_2) v_1 - \alpha_2 y_2 v_2
+$$
+
+Derive the gradient
+
+$$
+\frac{\partial \mathcal{L}_d(\alpha)}{\partial \alpha_2} = 
+
+- y_1 y_2 - \frac{1}{2} (2 \alpha_2 - 2 \zeta y_2) K_{1,1} - \alpha_2 K_{2, 2} - (\zeta y_2 - 2 \alpha_2) K_{1, 2} - (- y_2) v_1 - y_2 v_2
+$$
+
+$$
+= (- \alpha_2 K_{1, 1} - \alpha_2 K_{2, 2} + 2 \alpha_2 K_{1, 2}) + \zeta y_2 K_{1, 1}- \zeta y_2 K_{1, 2} - y_1 y_2 + y_2 v_1 - y_2 v_2
+$$
+
+$$
+= -\alpha_2 (K_{1, 1} + K_{2, 2} - 2 K_{1, 2}) + \zeta y_2 K_{1, 1}- \zeta y_2 K_{1, 2} - y_1 y_2 + y_2(v_1 - v_2)
 $$
 
 ### Step 2. Clip with Constraint
