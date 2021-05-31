@@ -28,6 +28,14 @@ $$
 \text{subject to} \  0 \leq \alpha_i \leq C, \sum_{i=1}^{N} \alpha_i y_i= 0
 $$
 
+We also define the kernel.
+
+$$
+k(x_i, x_j) = \langle \phi(x_i), \phi(x_j) \rangle
+$$
+
+where $\phi$ is an embedding function projecting the data points to a high dimensional space.
+
 However, it's very hard to solve because we need to optimize $N$ variables. 
 
 ### Notation
@@ -74,20 +82,49 @@ $$
 
 where $\mathcal{Const} = \sum_{i=3}^{N} \alpha_i - \frac{1}{2} \sum_{i=3}^{N} \sum_{j=3}^{N} \alpha_i \alpha_j y_i y_j k(x_i, x_j)$. We see it as a constant because it is regardless to $\alpha_1, \alpha_2$.
 
-**Derive Gradient of $\alpha_2$**
+**The Relation Between The Updated Values And The Original Values**
+
+We've derive the partial derivative of the dual problem.
 
 $$
-\frac{\partial \mathcal{L}_d(\alpha)}{\partial \alpha_2} = 
-1 - \alpha_2 y_2^2 K_{2,2} - \alpha_1 y_1 y_2 K_{1, 2} - y_2 \sum_{i=3}^{N} \alpha_i y_i K_{i,2}
+\frac{\partial L(w, b, \xi, \alpha, \mu)}{\partial w} = w - \sum_{i=1}^N \alpha_i y_i x_i = 0
+$$
+
+We can get 
+
+$$
+w  = \sum_{i=1}^N \alpha_i y_i x_i
+$$
+
+Thus, we can rewrite the hyperplane $f_{\phi}(x)$ with kernel.
+
+$$
+f_{\phi}(x) = w^{\top} \phi(x) + b = \sum_{i=1}^N \alpha_i y_i k(x_i, x) + b
+$$
+
+We also denote $v_1, v_2$ as
+
+$$
+v_1 = \sum_{i=3}^{N} \alpha_i y_i K_{i,1} = \sum_{i=1}^{N} \alpha_i y_i k(x_i, x_1) - \alpha_1^{old} y_1 k(x_1, x_1) - \alpha_2^{old} y_2 k(x_2, x_1)
 $$
 
 $$
-= 1 - \alpha_2  K_{2,2} - \alpha_1 y_1 y_2 K_{1, 2} - y_2 \sum_{i=3}^{N} \alpha_i y_i K_{i,2}
+= f_{\phi}(x_1) - b -  \alpha_1^{old} y_1 K_{1, 1} - \alpha_2^{old} y_2 K_{2, 1}
+$$
+
+and $v_2$ is similar.
+
+$$
+v_2 = \sum_{i=3}^{N} \alpha_i y_i K_{i,2} = \sum_{i=1}^{N} \alpha_i y_i k(x_i, x_2) - \alpha_1^{old} y_1 k(x_1, x_2) - \alpha_2^{old} y_2 k(x_2, x_2)
 $$
 
 $$
-= 1 - \alpha_2  K_{2,2} - \alpha_1 y_1 y_2 K_{1, 2} - y_2 (f(x_2) - \alpha_1 y_1 K_{1, 2} - \alpha_2 y_2 K_{2, 2} - b)
+= f_{\phi}(x_2) - b -  \alpha_1^{old} y_1 K_{1, 2} - \alpha_2^{old} y_2 K_{2, 2}
 $$
+
+where $\alpha_1^{old}$ and $\alpha_2^{old}$ are $\alpha_1$ and $\alpha_2$ of the previous iteration. Since we see $\alpha_i, i \geq 3$ as constant, $\alpha_i$ shouldn't depends on update variables $\alpha_1, \alpha_2$.
+
+**Rewrite The Complementary Slackness**
 
 The constraint can be represented as
 
@@ -109,16 +146,10 @@ $$
 \alpha_1 = \zeta y_1  - \alpha_2 y_1 y_2
 $$
 
-The updated variables should also satisfy the constraint.
+The old ones are the same.
 
 $$
-\alpha_1^{new} y_1 + \alpha_2^{new} y_2 = \zeta
-$$
-
-We also denote $v_1, v_2$ as
-
-$$
-v_1 = \sum_{i=3}^{N} \alpha_i y_i K_{i,1}, \quad v_2 = \sum_{i=3}^{N} \alpha_i y_i K_{i,2}
+\alpha_1^{old} = \zeta y_1  - \alpha_2^{old} y_1 y_2
 $$
 
 Replace the symbol $\alpha_1, v_1, v_2$
@@ -140,25 +171,140 @@ $$
 - (\zeta - \alpha_2 y_2) v_1 - \alpha_2 y_2 v_2
 $$
 
-Derive the gradient
+**Combine the $v_1$, $v_2$ and $\zeta$**
+
+$$
+v_1 - v_2 = [ \ f_{\phi}(x_1) - b -  \alpha_1^{old} y_1 K_{1, 1} - \alpha_2^{old} y_2 K_{2, 1} \ ] - [ \ f_{\phi}(x_2) - b -  \alpha_1^{old} y_1 K_{1, 2} - \alpha_2^{old} y_2 K_{2, 2} \ ]
+$$
+
+$$
+= [ \ f_{\phi}(x_1) - b -  ( \zeta y_1  - \alpha_2^{old} y_1 y_2) y_1 K_{1, 1} - \alpha_2^{old} y_2 K_{2, 1} \ ] - [ \ f_{\phi}(x_2) - b -  ( \zeta y_1  - \alpha_2^{old} y_1 y_2) y_1 K_{1, 2} - \alpha_2^{old} y_2 K_{2, 2} \ ]
+$$
+
+$$
+= [ \ f_{\phi}(x_1) - f_{\phi}(x_2) \ ] + [ \ - ( \zeta - \alpha_2^{old} y_2) K_{1, 1} - \alpha_2^{old} y_2 K_{2, 1} \ ] - [ \ - ( \zeta  - \alpha_2^{old} y_2) K_{1, 2} - \alpha_2^{old} y_2 K_{2, 2} \ ]
+$$
+
+$$
+= [ \ f_{\phi}(x_1) - f_{\phi}(x_2) \ ] + [ \ - \zeta  K_{1, 1} + \alpha_2^{old} y_2 K_{1, 1} - \alpha_2^{old} y_2 K_{2, 1} \ ] - [ \ - \zeta K_{1, 2} + \alpha_2^{old} y_2 K_{1, 2} - \alpha_2^{old} y_2 K_{2, 2} \ ]
+$$
+
+$$
+= f_{\phi}(x_1) - f_{\phi}(x_2) - \zeta  K_{1, 1} + \zeta K_{1, 2} + ( K_{1, 1} + K_{2, 2} -  2 K_{1, 2} ) \alpha_2^{old} y_2
+$$
+
+**Derive Gradient of $\alpha_2$**
 
 $$
 \frac{\partial \mathcal{L}_d(\alpha)}{\partial \alpha_2} = 
 
-- y_1 y_2 - \frac{1}{2} (2 \alpha_2 - 2 \zeta y_2) K_{1,1} - \alpha_2 K_{2, 2} - (\zeta y_2 - 2 \alpha_2) K_{1, 2} - (- y_2) v_1 - y_2 v_2
+- y_1 y_2 + 1 - \frac{1}{2} (2 \alpha_2 - 2 \zeta y_2) K_{1,1} - \alpha_2 K_{2, 2} - (\zeta y_2 - 2 \alpha_2) K_{1, 2} - (- y_2) v_1 - y_2 v_2
 $$
 
 $$
-= (- \alpha_2 K_{1, 1} - \alpha_2 K_{2, 2} + 2 \alpha_2 K_{1, 2}) + \zeta y_2 K_{1, 1}- \zeta y_2 K_{1, 2} - y_1 y_2 + y_2 v_1 - y_2 v_2
+= (- \alpha_2 K_{1, 1} - \alpha_2 K_{2, 2} + 2 \alpha_2 K_{1, 2}) + \zeta y_2 K_{1, 1}- \zeta y_2 K_{1, 2} - y_1 y_2 + y_2 v_1 - y_2 v_2 + 1
 $$
 
 $$
-= -\alpha_2 (K_{1, 1} + K_{2, 2} - 2 K_{1, 2}) + \zeta y_2 K_{1, 1}- \zeta y_2 K_{1, 2} - y_1 y_2 + y_2(v_1 - v_2)
+= -\alpha_2 (K_{1, 1} + K_{2, 2} - 2 K_{1, 2}) + \zeta y_2 K_{1, 1}- \zeta y_2 K_{1, 2} - y_1 y_2 + y_2(v_1 - v_2) + 1
+$$
+
+Replace with old $\alpha$
+
+$$
+= -\alpha_2 (K_{1, 1} + K_{2, 2} - 2 K_{1, 2}) + \zeta y_2 K_{1, 1}- \zeta y_2 K_{1, 2} - y_1 y_2 + y_2 [ \ f_{\phi}(x_1) - f_{\phi}(x_2) - \zeta  K_{1, 1} + \zeta K_{1, 2} + ( K_{1, 1} + K_{2, 2} -  2 K_{1, 2}) \alpha_2^{old} y_2 \ ] + 1
+$$
+
+$$
+= -(K_{1, 1} + K_{2, 2} - 2 K_{1, 2}) \alpha_2 + ( K_{1, 1} + K_{2, 2} -  2 K_{1, 2} ) \alpha_2^{old} + y_2 (f_{\phi}(x_1) - f_{\phi}(x_2) + y_2 - y_1)
+$$
+
+Let $\eta$ and $E_i$ be
+
+$$
+\eta = K_{1, 1} + K_{2, 2} -  2 K_{1, 2}, \quad E_i = f_{\phi}(x_i) - y_i
+$$
+
+$$
+\frac{\partial \mathcal{L}_d(\alpha)}{\partial \alpha_2} = - \eta \alpha_2 + \eta \alpha_2^{old} + y_2 (E_1 - E_2)
+$$
+
+Since we want to minimize the gradient, let the gradient be 0.
+
+$$
+- \eta \alpha_2 + \eta \alpha_2^{old} + y_2 (E_1 - E_2) = 0
+$$
+
+Then we can update $\alpha_2$ as following
+
+$$
+\alpha_2 = \alpha_2^{old} + \frac{y_2 (E_1 - E_2)}{\eta}
 $$
 
 ### Step 2. Clip with Constraint
 
+$$
+\alpha_1 y_1 + \alpha_2 y_2  = \zeta, \quad 0 \leq \alpha_i \leq C
+$$
+
+**Case 1: Inequality**
+
+When $y_1 \neq y_2$, the equation is either $\alpha_1 - \alpha_2 = k$ or $\alpha_1 - \alpha_2 = -k$ where $k$ is a positive constant.
+
+The upper bound can be written as
+
+$$
+B_U = \min(C, C + \alpha_2^{old} - \alpha_1^{old})
+$$
+
+and the lower bound is
+
+$$
+B_L = \max(0, \alpha_2^{old} - \alpha_1^{old})
+$$
+
+**Case 2: Equality**
+
+When $y_1 = y_2$, the equation is either $\alpha_1 + \alpha_2 = k$ or $\alpha_1 + \alpha_2 = -k$ where $k$ is a positive constant.
+
+The upper bound can be written as
+
+$$
+B_U = \min(C, \alpha_2^{old} + \alpha_1^{old})
+$$
+
+and the lower bound is
+
+$$
+B_L = \max(0, \alpha_2^{old} - \alpha_1^{old} - C)
+$$
+
+**Clip**
+
+According the bound we've derived, we need **clip** the updated variable $\alpha_2$ to satisfy the constraint.
+
+$$
+\alpha_2^* = CLIP(\alpha_2^{new}, B_L, B_U)
+$$
+
+**Update $\alpha_1$**
+
+$$
+\alpha_1^* y_1 + \alpha_2^* y_2 = \alpha_1^{old} y_1 + \alpha_2^{old} y_2 = \zeta
+$$
+
+$$
+\alpha_1^* = \frac{\alpha_1^{old} y_1 + \alpha_2^{old} y_2 - \alpha_2^* y_2}{y_1}
+$$
+
+$$
+\alpha_1^* = \alpha_1^{old} + y_1 y_2(\alpha_2^{old} - \alpha_2^*)
+$$
+
 ### Step 3. Update Bias
+
+
+
 ## Random Feature For Kernel Approximation
 
 Based on the paper **Random Features for Large-Scale Kernel Machines** on NIPS'07.
