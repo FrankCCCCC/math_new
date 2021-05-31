@@ -330,11 +330,11 @@ $$
 ### Pseudo Code
 
 ---
-Given $C$, otherwise the default value $C = 5$
+Given $C$, otherwise the default value is $C = 5$
 
-Given $\epsilon$, otherwise the default value $\epsilon = 10^{-6}$
+Given $\epsilon$, otherwise the default value is $\epsilon = 10^{-6}$
 
-Given $\text{max-iter}$, otherwise the default value $\text{max-iter} = 10^{3}$
+Given $\text{max-iter}$, otherwise the default value is $\text{max-iter} = 10^{3}$
 
 For all $\alpha_i = 0, 1 \leq i \leq N$
 
