@@ -1,0 +1,206 @@
+---
+title: "<center>Support Vector Machine<center>"
+header-includes:
+- \usepackage{fontspec} 
+- \usepackage{xeCJK}   
+- \setCJKmainfont{標楷體}
+- \usepackage{geometry}
+- \linespread{1}\selectfont        
+- \usepackage{indentfirst}
+- \setlength{\parindent}{0pt}
+- \setlength\parskip{3pt}
+output: 
+  pdf_document: 
+    keep_tex: no 
+    latex_engine: xelatex
+    toc: false
+    number_sections: false
+geometry: [left=1.5cm, right=1.5cm, top=1.5cm, bottom=1.5cm]
+indent: true
+fontsize: 10pt
+---
+
+<!--若同學無法跑這份檔案，請自行開一份Rmd練習-->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(e1071)
+```
+
+## Support Vector Classifier (\textit{soft margin classifier})
+
+\begin{description}
+    \item[\textbf{A two-dimensional example}]\hfill
+\end{description}
+\vspace{-.2cm}
+
+We first generate the observations, which belongs to two classes, and checking whether the two classes are linearly separable.
+
+```{r, fig.align='center', fig.height=3, fig.width=6}
+set.seed(1)
+x <- matrix(rnorm (20*2), ncol=2)
+y <- c(rep(-1,10), rep(1,10))
+x[y==1, ] <- x[y==1, ] + 1
+par(mfrow=c(1, 1), mar=c(2.3, 2.1, 1.5, 0) + .5, mgp=c(1.6, .6, 0))
+plot(x, col=(3 - y), main='Observations from two classes')
+```
+
+The observations generated are not linear separable. Next, we fit the support vector classifier.
+
+```{r, }
+dat <- data.frame(x=x, y=as.factor(y))
+svmfit <- svm(y ~ ., data=dat , kernel ="linear", cost=10, scale=FALSE)
+```
+
+\textit{Note.} The argument $\tt{scale=FALSE}$ tells the $\tt{svm()}$ function not to scale each feature to have mean zero or standard deviation one.
+
+Now, we plot the support vector classifier obtained below.
+
+```{r, fig.align='center', fig.height=3, fig.width=6}
+par(mfrow=c(1, 1), mar=c(2, 2, 1.5, 0) + .5, mgp=c(1.6, .6, 0))
+plot(svmfit, dat)
+```
+
+The separate regions of feature space are assigned to the $+1$ and $-1$, respectively. 
+
+The decision boundary between the two classes is linear (because we used the argument $\tt{kernel="linear"}$), though due to the way in which the
+plotting function is implemented in this library the decision boundary looks somewhat jagged in the plot.
+
+The support vectors are plotted as crosses and the remaining observations are plotted as circles; we see here that there are seven support vectors, which lie directly on the margin, or on the wrong side of the margin for their class.
+
+One can determine their identities as follows.
+```{r, }
+svmfit$index
+```
+Moreover, one can obtain some basic information about the support vector classifier fit using the $\tt{summary}$ command.
+```{r, }
+summary(svmfit)
+```
+The summary above tell us, for instance, that a linear kernel was used with $\tt{cost=10}$, and that there were seven support vectors, four in one class and three in the other.
+
+\newpage
+
+\begin{description}
+    \item[\textbf{What if a smaller value of the cost parameter is used instead?}]\hfill
+\end{description}
+\vspace{-.2cm}
+
+Here, a linear kernel was used with $\tt{cost=0.1}$.
+
+```{r, fig.align='center', fig.height=3, fig.width=6}
+svmfit <- svm(y ~ ., data=dat , kernel ="linear", cost =0.1, scale=FALSE)
+par(mfrow=c(1, 1), mar=c(2, 2, 1.5, 0) + .5, mgp=c(1.6, .6, 0))
+plot(svmfit, dat)
+```
+
+With a smaller value of the cost parameter being used, we obtain a larger number of support vector, because the margin is now wider compared to the previous one.
+
+\begin{description}
+    \item[\textbf{Cross Validation}]\hfill
+\end{description}
+\vspace{-.2cm}
+
+Here, we use the built-in function, $\tt{tune()}$, to perform cross-validation using a range of values of the $\tt{cost}$ parameters.
+
+```{r, }
+set.seed(1)
+tune.out <- tune(svm, y ~ ., data=dat ,kernel ="linear",
+                 ranges=list(cost=c(0.001, 0.01, 0.1, 1, 5, 10, 100)))
+summary (tune.out)
+```
+
+The model with $\tt{cost=0.1}$ results in the lowest cross-validation error rate, which can be accessed as follows.
+
+```{r, }
+bestmod <- tune.out$best.model
+summary(bestmod)
+```
+
+\begin{description}
+    \item[\textbf{Prediction}]\hfill
+\end{description}
+\vspace{-.2cm}
+
+Here we use the function $\tt{predict()}$ to predict the class label on a set of test observations. We first generate a test data set.
+
+```{r, }
+set.seed(1)
+xtest <- matrix(rnorm(20 * 2), ncol=2)
+ytest <- sample(c(-1, 1), 20, rep=TRUE)
+xtest[ytest==1, ] <-  xtest[ytest==1, ] + 1
+testdat <- data.frame(x=xtest, y=as.factor(ytest))
+```
+
+Here we use the best model obtained through cross-validation in order to make predictions.
+
+```{r, }
+ypred <- predict(bestmod ,testdat)
+table(predict=ypred, truth=testdat$y)
+```
+
+Thus, with $\tt{cost=0.1}$, 19 of the test observations are correctly classified. What if we had instead used $\tt{cost=0.01}$?
+
+```{r, }
+svmfit <- svm(y ~ ., data=dat, kernel="linear", cost =.01, scale=FALSE)
+ypred <- predict(svmfit, testdat)
+table(predict=ypred, truth=testdat$y)
+```
+
+In this case, one addition observation from $\tt{class=-1}$ is correctly classified and one additional observation from $\tt{class=1}$ is mis-classified.
+
+\newpage
+
+## Support Vector Machine (\textit{non-linear classifier})
+
+The linear classifier is a natural approach for classification if the boundary between the two classes is linear. However, in practice we are often faced with non-linear class boundaries.
+
+![Left: The observations fall into two classes, with a non-linear boundary between them. Right: The support vector classifier seeks a linear boundary, and consequently performs very poorly.](D:/Desktop/講義/統算TA/fig1.png)
+
+We may want to enlarge our feature space in order to accommodate a non-linear boundary between the classes.
+
+![Left: An SVM with a polynomial kernel of degree 3 is applied, resulting in a far more appropriate decision rule. Right: An SVM with a radial kernel is applied. In this example, either kernel is capable of capturing the decision boundary.](D:/Desktop/講義/統算TA/fig2.png)
+
+We first generate some data with a non-linear class boundary.
+```{r fig.align='center', fig.height=4, fig.width=5.5}
+set.seed(2)
+x = matrix(rnorm(200*2), ncol=2)
+x[1:100,] = x[1:100,]+2
+x[101:150,] = x[101:150,]-2
+y = c(rep(1,150) ,rep(2,50))
+dat = data.frame(x = x, y = as.factor(y))
+plot(x, col = y, xlab = "x1", ylab = "x2")
+```
+
+The data is randomly split into training and testing groups. To fit an SVM with a polynomial kernel we use `kernel = "polynomial"`, and to fit an SVM with a radial kernel we use `kernel = "radial"`. In the former case we also use the `degree` argument to specify a degree for the polynomial kernel, and in the latter case we use `gamma` to specify a value of $\gamma$ for the radial basis kernel. We then fit the training data using the `svm()` function with a radial kernel and $\gamma = 1$:
+```{r fig.align='center', fig.height=4, fig.width=5.5}
+train = sample(200,100)
+svmfit = svm(y ~ ., data = dat[train ,], kernel = "radial", gamma = 1, cost = 1)
+plot(svmfit, dat[train ,])
+```
+
+The `summary()` function can be used to obtain some information about the SVM fit:
+```{r}
+summary(svmfit)
+```
+
+We can see from the figure that there are a fair number of training errors in this SVM fit. If we increase the value of cost, we can reduce the number of training errors. However, this comes at the price of a more irregular decision boundary that seems to be at risk of overfitting the data.
+
+```{r fig.align='center'}
+svmfit = svm(y ~ ., data = dat[train ,], kernel = "radial",gamma = 1, cost = 100)
+plot(svmfit, dat[train ,])
+```
+
+We can perform cross-validation using `tune()` to select the best choice of $\gamma$ and cost for an SVM with a radial kernel:
+```{r}
+set.seed(1)
+tune.out = tune(svm, y ~ ., data = dat[train ,], kernel ="radial", 
+                ranges = list(cost=c(0.01, 0.1, 1, 10, 100), gamma = c(0.5,1,2,3)))
+summary(tune.out)
+```
+
+Therefore, the best choice of parameters involves `cost = 1` and `gamma = 2`. We can view the test set predictions for this model by applying the `predict()` function to the data.
+```{r}
+table(true = dat[-train, "y"], pred = predict(tune.out$best.model, newdata = dat[-train ,]))
+```
+
+
