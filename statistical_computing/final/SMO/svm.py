@@ -78,7 +78,13 @@ class SVM():
         return random.choice(seq)
 
     def __f(self, i):
-        return np.sum(self.alpha * self.y * self.K[i, :]) + self.b
+        # print("Alpha: ", self.alpha.shape)
+        # print("Y: ",self.y.shape)
+        # print("K[i, :]: ",self.K[i, :].shape)
+        # prod = np.multiply(np.multiply(self.alpha,  self.y), self.K[i, :])
+        # print((self.alpha * self.y * self.K[i, :]).shape)
+        # print("Prod: ", prod.shape)
+        return sum(self.alpha * self.y * self.K[i, :]) + self.b
     
     def __E(self, i):
         return self.__f(i) - self.y[i]
@@ -87,19 +93,20 @@ class SVM():
         return self.K[i, i] + self.K[j, j] - 2 * self.K[i, j]
 
     def __alpha_j_new(self, i, j):
-        return self.alpha[j] + (self.y[j] * (self.__E(i) - self.__E(j) / self.__eta(i, j))), self.__E(i), self.__E(j)
+        E_i = self.__E(i)
+        E_j = self.__E(j)
+        return self.alpha[j] + (self.y[j] * (E_i - E_j) / self.__eta(i, j)), E_i, E_j
 
     def __bound(self, i, j, C):
         # print("i: ", i, " | j: ", j, " | alpha_i: ", self.alpha[i], " | alpha_j: ", self.alpha[j], " | C: ", C)
         # print("C + alpha[j] - alpha[i]", C + self.alpha[j] - self.alpha[i])
         if self.y[i] == self.y[j]:
             B_U = min(C, self.alpha[j] + self.alpha[i])
-            B_L = max(0, self.alpha[j] - self.alpha[i] - C)
-            return B_U, B_L
+            B_L = max(0, self.alpha[j] + self.alpha[i] - C)
         else:
             B_U = min(C, C + self.alpha[j] - self.alpha[i])
             B_L = max(0, self.alpha[j] - self.alpha[i])
-            return B_U, B_L
+        return B_U, B_L
 
     def __update_alpha_j(self, i, j, C):
         B_U, B_L = self.__bound(i, j, C)
@@ -136,10 +143,9 @@ class SVM():
         return K
 
     def fit(self, X, y, C=5, epsilon=1e-6, max_iter=1000):
-        C = float(C)
         self.n, self.dim = np.array(X).shape
         self.X = np.array(X)
-        self.y = np.array(y)
+        self.y = np.reshape(np.array(y), (-1, ))
         self.K = self.cal_kernel(X)
 
         self.alpha = np.zeros(self.n)
@@ -150,14 +156,24 @@ class SVM():
 
         while iter < max_iter and loss > epsilon:
             loss = 0
+            skip = False
 
             for i in range(self.n):
                 j = self.__choose_j(i)
 
                 alpha_j_star, E_i, E_j = self.__update_alpha_j(i, j, C)
                 # print("alpha_j_star: ", alpha_j_star, " | E_i: ", E_i, " | E_j: ", E_j)
+                # if self.K[i, i] + self.K[j, j] - 2*self.K[i, j] <= 0:
+                    # print('WARNING  eta <= 0')
+                    # continue
+
                 alpha_i_star = self.__update_alpha_i(i, j, alpha_j_star)
                 # print("alpha_i_star: ", alpha_i_star)
+                # if abs(alpha_j_star - self.alpha[j]) < 0.00001:
+                    # print('WARNING   alpha_j not moving enough')
+                    # skip = True
+                    # continue
+
                 b_star = self.__update_b(i, j, alpha_i_star, alpha_j_star, E_i, E_j, C)
 
                 # Calculate loss
@@ -168,8 +184,9 @@ class SVM():
                 self.alpha[j] = alpha_j_star
                 self.b = b_star
             
-            iter += 1
-            print("Iter: ", iter, " | Loss: ", loss)
+            if not skip:
+                iter += 1
+                print("Iter: ", iter, " | Loss: ", loss)
 
     def test(self):
         print(self.__f(0))
@@ -190,7 +207,7 @@ if __name__ == "__main__":
     # svm.test()
     # display(svm.cal_kernel(X_df.to_numpy()[:5, :]))
 
-    svm.fit(X, y)
+    svm.fit(X, y, max_iter=1000)
 
     draw_boundary(X, y, svm.alpha, svm.b)
 

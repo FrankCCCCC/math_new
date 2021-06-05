@@ -241,7 +241,7 @@ $$
 \alpha_2 = \alpha_2^{old} + \frac{y_2 (E_1 - E_2)}{\eta}
 $$
 
-### Step 2. Clip with Constraint
+### Step 2. Clip with Bosk Constraint
 
 $$
 \alpha_1 y_1 + \alpha_2 y_2  = \zeta, \quad 0 \leq \alpha_i \leq C
@@ -276,7 +276,7 @@ $$
 and the lower bound is
 
 $$
-B_L = \max(0, \alpha_2^{old} - \alpha_1^{old} - C)
+B_L = \max(0, \alpha_2^{old} + \alpha_1^{old} - C)
 $$
 
 **Clip The Value**
@@ -305,20 +305,32 @@ $$
 
 The only equation that we can find out the bias $b$ is the function $f_{\phi}(x) = b + \sum_{i=1}^N \alpha_i y_i k(x_i, x)$. When $0 \lt \alpha_i \lt C$, it means that the data point $x_i$ is right on the margin and the bias $b_1^*, b_2^*$ can be derived directly like following.
 
+The bias derived from $\alpha_1$ is
+
 $$
 b_1^* = y_1 - \sum_{i=3}^N \alpha_i y_i K_{i, 1} - \alpha_1^* y_1 K_{1, 1} - \alpha_2^* y_2 K_{2, 1}
 $$
 
 $$
-b_1^* = - E_1 - y_1 K_{1, 1} (\alpha_1^* - \alpha_1^{old}) - y_2 K_{2, 1} (\alpha_2^* - \alpha_2^{old}) + b^{old}
+= (y_1 - f_{\phi}(x_1) + \alpha_1 y_1 K_{1, 1} + \alpha_2 y_2 K_{2, 1} + b) - \alpha_1^* y_1 K_{1, 1} - \alpha_2^* y_2 K_{2, 1}
 $$
+
+$$
+= - E_1 - y_1 K_{1, 1} (\alpha_1^* - \alpha_1) - y_2 K_{2, 1} (\alpha_2^* - \alpha_2) + b
+$$
+
+In addition, the bias derived from $\alpha_2$ is
 
 $$
 b_2^* = y_2 - \sum_{i=3}^N \alpha_i y_i K_{i, 2} - \alpha_1^* y_1 K_{1, 2} - \alpha_2^* y_2 K_{2, 2}
 $$
 
 $$
-b_2^* = - E_2 - y_1 K_{1, 2} (\alpha_1^* - \alpha_1^{old}) - y_2 K_{2, 2} (\alpha_2^* - \alpha_2^{old}) + b^{old}
+= (y_2 - f_{\phi}(x_2) + \alpha_1 y_1 K_{1, 2} + \alpha_2 y_2 K_{2, 2} + b) - \alpha_1^* y_1 K_{1, 2} - \alpha_2^* y_2 K_{2, 2}
+$$
+
+$$
+= - E_2 - y_1 K_{1, 2} (\alpha_1^* - \alpha_1) - y_2 K_{2, 2} (\alpha_2^* - \alpha_2) + b
 $$
 
 When the data point $x_i, x_j$ are both not on the margin, the bias can be 
@@ -353,11 +365,13 @@ while($loss > \epsilon$ and $iter \leq \text{max-iter}$):
    - $E_j = f(x_j) - y_j$
    - $\eta = K_{i, i} + K_{j, j} -  2 K_{i, j}$
    - $\alpha_j^{new} = \alpha_j + \frac{y_j (E_i - E_j)}{\eta}$
+  
+     **Bosk Constraint**
 
    - if($y_i = y_j$):
     
      - $B_U = \min(C, \alpha_j + \alpha_i)$
-     - $B_L = \max(0, \alpha_j - \alpha_i - C)$
+     - $B_L = \max(0, \alpha_j + \alpha_i - C)$
    - else:
     
      - $B_U = \min(C, C + \alpha_j - \alpha_i)$
@@ -366,6 +380,7 @@ while($loss > \epsilon$ and $iter \leq \text{max-iter}$):
    - $\alpha_j^* = CLIP(\alpha_j^{new}, B_L, B_U)$
    - $\alpha_i^* = \alpha_i + y_i y_j(\alpha_j - \alpha_j^*)$
 
+     **Update Bias**
 
   - $b_i^* = - E_i - y_i K_{i, i} (\alpha_i^* - \alpha_i) - y_j K_{j, i} (\alpha_j^* - \alpha_j) + b$  
   - $b_j^* = - E_j - y_i K_{i, j} (\alpha_i^* - \alpha_i) - y_j K_{j, j} (\alpha_j^* - \alpha_j) + b$

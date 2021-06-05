@@ -58,6 +58,7 @@ def simple_smo(dataset, labels, C, max_iter):
     alphas = np.zeros(m)
     b = 0
     it = 0
+    K = np.dot(dataset, dataset.T)
 
     def f(x):
         "SVM分类器函数 y = w^Tx + b"
@@ -66,11 +67,26 @@ def simple_smo(dataset, labels, C, max_iter):
         data = np.matrix(dataset)
         ks = data*x
 
+        print(data.shape)
+        print(ks.shape)
+
         # Predictive value.
         wx = np.matrix(alphas*labels)*ks
         fx = wx + b
+        print(wx.shape)
 
         return fx[0, 0]
+    
+    # def f(i):
+    #     "SVM分类器函数 y = w^Tx + b"
+    #     # Kernel function vector.
+    #     ks = K[i,]
+
+    #     # Predictive value.
+    #     wx = np.matrix(alphas*labels)*ks
+    #     fx = wx + b
+
+    #     return fx[0, 0]
 
     all_alphas, all_bs = [], []
 
@@ -79,14 +95,17 @@ def simple_smo(dataset, labels, C, max_iter):
         for i in range(m):
             a_i, x_i, y_i = alphas[i], dataset[i], labels[i]
             fx_i = f(x_i)
+            # fx_i = f(i)
             E_i = fx_i - y_i
 
             j = select_j(i, m)
             a_j, x_j, y_j = alphas[j], dataset[j], labels[j]
             fx_j = f(x_j)
+            # fx_j = f(j)
             E_j = fx_j - y_j
 
-            K_ii, K_jj, K_ij = np.dot(x_i, x_i), np.dot(x_j, x_j), np.dot(x_i, x_j)
+            # K_ii, K_jj, K_ij = np.dot(x_i, x_i), np.dot(x_j, x_j), np.dot(x_i, x_j)
+            K_ii, K_jj, K_ij = K[i, i], K[j, j], K[i, j]
             eta = K_ii + K_jj - 2*K_ij
             if eta <= 0:
                 print('WARNING  eta <= 0')
