@@ -6,7 +6,10 @@ from scipy.spatial.distance import pdist, squareform
 import pandas as pd
 import matplotlib.pyplot as plt
 from IPython.display import display
+from numpy.random import multivariate_normal as mvn
 
+from sklearn.model_selection import train_test_split
+from sklearn.datasets import load_breast_cancer
 #%%
 def load_data(filename):
     dataset, labels = [], []
@@ -81,9 +84,7 @@ class SVM():
         # print("Alpha: ", self.alpha.shape)
         # print("Y: ",self.y.shape)
         # print("K[i, :]: ",self.K[i, :].shape)
-        # prod = np.multiply(np.multiply(self.alpha,  self.y), self.K[i, :])
         # print((self.alpha * self.y * self.K[i, :]).shape)
-        # print("Prod: ", prod.shape)
         return sum(self.alpha * self.y * self.K[i, :]) + self.b
     
     def __E(self, i):
@@ -95,7 +96,8 @@ class SVM():
     def __alpha_j_new(self, i, j):
         E_i = self.__E(i)
         E_j = self.__E(j)
-        return self.alpha[j] + (self.y[j] * (E_i - E_j) / self.__eta(i, j)), E_i, E_j
+        eta = self.__eta(i, j)
+        return self.alpha[j] + (self.y[j] * (E_i - E_j) / eta), E_i, E_j, eta
 
     def __bound(self, i, j, C):
         # print("i: ", i, " | j: ", j, " | alpha_i: ", self.alpha[i], " | alpha_j: ", self.alpha[j], " | C: ", C)
@@ -110,8 +112,8 @@ class SVM():
 
     def __update_alpha_j(self, i, j, C):
         B_U, B_L = self.__bound(i, j, C)
-        alpha_j_star, E_i, E_j = self.__alpha_j_new(i, j)
-        return np.clip(alpha_j_star, B_L, B_U), E_i, E_j
+        alpha_j_star, E_i, E_j, eta = self.__alpha_j_new(i, j)
+        return np.clip(alpha_j_star, B_L, B_U), E_i, E_j, eta
 
     def __update_alpha_i(self, i, j, alpha_j_star):
         return self.alpha[i] + self.y[i] * self.y[j] * (self.alpha[j] - alpha_j_star)
@@ -161,18 +163,19 @@ class SVM():
             for i in range(self.n):
                 j = self.__choose_j(i)
 
-                alpha_j_star, E_i, E_j = self.__update_alpha_j(i, j, C)
+                alpha_j_star, E_i, E_j, eta = self.__update_alpha_j(i, j, C)
                 # print("alpha_j_star: ", alpha_j_star, " | E_i: ", E_i, " | E_j: ", E_j)
-                # if self.K[i, i] + self.K[j, j] - 2*self.K[i, j] <= 0:
-                    # print('WARNING  eta <= 0')
-                    # continue
+                if eta <= 0:
+                    # print('WARNING: Eta <= 0')
+                    skip = True
+                    continue
 
                 alpha_i_star = self.__update_alpha_i(i, j, alpha_j_star)
                 # print("alpha_i_star: ", alpha_i_star)
-                # if abs(alpha_j_star - self.alpha[j]) < 0.00001:
-                    # print('WARNING   alpha_j not moving enough')
-                    # skip = True
-                    # continue
+                if abs(alpha_j_star - self.alpha[j]) < 0.00001:
+                    # print('WARNING: alpha_j not moving enough')
+                    skip = True
+                    continue
 
                 b_star = self.__update_b(i, j, alpha_i_star, alpha_j_star, E_i, E_j, C)
 
@@ -184,33 +187,67 @@ class SVM():
                 self.alpha[j] = alpha_j_star
                 self.b = b_star
             
-            if not skip:
-                iter += 1
-                print("Iter: ", iter, " | Loss: ", loss)
+            # if not skip:
+            iter += 1
+            print("Iter: ", iter, " | Loss: ", loss)
+
+    def predict(self, X):
+        X_c = np.concatenate((self.X, X))
+        K_c = self.cal_kernel(X_c)
+        K_train_test = K_c[0:self.n, self.n:]
+        print(K_train_test.shape)
+        pred = np.dot((self.alpha * self.y), K_train_test) + self.b
+        return pred
 
     def test(self):
         print(self.__f(0))
 
+def gen_dataset():
+    size = 50
+    mean = [2, 2]
+    cov = [[1, 0], [0, 1]]
+    X1 = mvn(mean, cov, size)
+    y1 = np.full(size, -1)
+
+    mean = [-2, -2]
+    cov = [[1, 0], [0, 1]]
+    X2 = mvn(mean, cov, size)
+    y2 = np.full(size, 1)
+
+    return np.concatenate((X1, X2)), np.concatenate((y1, y2))
+
+def acc_rate(y_pred, y_test):
+    y_pred, y_test = np.array(y_pred).ravel(), np.array(y_test).ravel()
+    n = y_test.shape[0]
+    acc = sum((y_pred * y_test) > 0) / n
+
+    print("Acc: ", acc)
+    return acc
+
+def load_bc():
+    dataset, labels = load_breast_cancer(return_X_y=True)
+    labels[labels == 0] = -1
+
+    return dataset, labels
 #%%
 if __name__ == "__main__":
-    dataset, labels = load_data('testSet.txt')
-    X_df = pd.DataFrame(dataset)
-    y_df = pd.DataFrame(labels)
+    # dataset, labels = load_data('testSet.txt')
+    dataset, labels = load_bc()
+    # dataset, labels = gen_dataset()
 
-    X = X_df.to_numpy()
-    y = y_df.to_numpy()
+    X_train, X_test, y_train, y_test = train_test_split(dataset, labels, test_size=0.33, random_state=42)
+    X_train, X_test, y_train, y_test = np.array(X_train), np.array(X_test), np.array(y_train), np.array(y_test)
 
-    display(X_df.head())
-    display(y_df.head())
+    print("X_Train: ", X_train.shape)
+    display(pd.DataFrame(X_train).head())
+    print("Y_Train: ", y_train.shape)
+    display(pd.DataFrame(y_train).head())
 
     svm = SVM()
-    # svm.test()
-    # display(svm.cal_kernel(X_df.to_numpy()[:5, :]))
 
-    svm.fit(X, y, max_iter=1000)
+    svm.fit(X_train, y_train, C=0.6, max_iter=1000)
+    y_pred = svm.predict(X_test)
+    acc_rate(y_pred, y_test)
+    display(y_pred[:10])
 
-    draw_boundary(X, y, svm.alpha, svm.b)
-
-# %%
-
-# %%
+    # draw_boundary(X, y, svm.alpha, svm.b)
