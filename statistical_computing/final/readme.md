@@ -433,3 +433,4 @@ Based on the paper **Random Features for Large-Scale Kernel Machines** on NIPS'0
 - [Movie Review Data (Binary Sentimental Analytics)](https://www.cs.cornell.edu/people/pabo/movie-review-data/)
 - [Kaggle - Text Classification using SpaCy (with Amazon fine food reviews dataset: Binary Sentimental Analytics)](https://www.kaggle.com/poonaml/text-classification-using-spacy)
 - [Examples of Data Sets for Text Analysis](https://www.ics.uci.edu/~smyth/courses/cs175/text_data_sets.html)
+- [Kaggle - Text Classification Dataset](https://www.kaggle.com/datasets?search=text+classification)

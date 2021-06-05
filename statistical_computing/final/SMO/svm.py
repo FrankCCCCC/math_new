@@ -74,6 +74,8 @@ class SVM():
         self.y = np.zeros(self.n)
         self.K = np.zeros((self.n, self.n))
         self.embed = np.zeros((self.n, self.dim))
+        self.debug_mode = False
+        self.acc_history = []
 
     def __choose_j(self, i):
         l = list(range(self.n))
@@ -85,7 +87,9 @@ class SVM():
         # print("Y: ",self.y.shape)
         # print("K[i, :]: ",self.K[i, :].shape)
         # print((self.alpha * self.y * self.K[i, :]).shape)
-        return sum(self.alpha * self.y * self.K[i, :]) + self.b
+
+        # return sum(self.alpha * self.y * self.K[i, :]) + self.b
+        return np.dot((self.alpha * self.y), self.K[i, :]) + self.b
     
     def __E(self, i):
         return self.__f(i) - self.y[i]
@@ -144,7 +148,8 @@ class SVM():
         K = np.dot(X, X.T)
         return K
 
-    def fit(self, X, y, C=5, epsilon=1e-6, max_iter=1000):
+    def fit(self, X, y, C=5, epsilon=1e-6, max_iter=1000, debug_mode=False):
+        self.debug_mode = debug_mode
         self.n, self.dim = np.array(X).shape
         self.X = np.array(X)
         self.y = np.reshape(np.array(y), (-1, ))
@@ -155,52 +160,68 @@ class SVM():
 
         iter = 0
         loss = np.inf
+        move = np.inf
 
-        while iter < max_iter and loss > epsilon:
-            loss = 0
-            skip = False
+        while iter < max_iter and move > epsilon:
+            loss = move = 0
+            # skip = False
 
             for i in range(self.n):
                 j = self.__choose_j(i)
 
                 alpha_j_star, E_i, E_j, eta = self.__update_alpha_j(i, j, C)
-                # print("alpha_j_star: ", alpha_j_star, " | E_i: ", E_i, " | E_j: ", E_j)
                 if eta <= 0:
-                    # print('WARNING: Eta <= 0')
-                    skip = True
+                    self.log('WARNING: Eta <= 0')
+                    # skip = True
                     continue
 
                 alpha_i_star = self.__update_alpha_i(i, j, alpha_j_star)
-                # print("alpha_i_star: ", alpha_i_star)
                 if abs(alpha_j_star - self.alpha[j]) < 0.00001:
-                    # print('WARNING: alpha_j not moving enough')
-                    skip = True
+                    self.log('WARNING: alpha_j not moving enough')
+                    # skip = True
                     continue
 
                 b_star = self.__update_b(i, j, alpha_i_star, alpha_j_star, E_i, E_j, C)
 
-                # Calculate loss
-                loss = loss + abs(alpha_i_star - self.alpha[i]) + abs(alpha_j_star - self.alpha[j]) + abs(b_star - self.b)
+                # Calculate the movement of alpha and b
+                move = move + abs(alpha_i_star - self.alpha[i]) + abs(alpha_j_star - self.alpha[j]) + abs(b_star - self.b)
 
                 # Update variables
                 self.alpha[i] = alpha_i_star
                 self.alpha[j] = alpha_j_star
                 self.b = b_star
             
+            # Calculate the loss
+            loss = sum(map(lambda x: abs(self.__E(x)), np.arange(self.n)))
+            # Calculate the accuracy
+            acc = self.acc()
+            self.acc_history.append(acc)
+
             # if not skip:
             iter += 1
-            print("Iter: ", iter, " | Loss: ", loss)
+            print("Iter: ", iter, " | Loss: ", loss, " | Move: ", move, " | Acc: ", acc)
 
     def predict(self, X):
         X_c = np.concatenate((self.X, X))
         K_c = self.cal_kernel(X_c)
         K_train_test = K_c[0:self.n, self.n:]
-        print(K_train_test.shape)
         pred = np.dot((self.alpha * self.y), K_train_test) + self.b
         return pred
 
+    def acc(self):
+        idxs = np.arange(self.n)
+        accs = self.y[idxs] * self.__f(idxs)
+        acc = sum(accs > 0) / self.n
+
+        return acc
+
     def test(self):
         print(self.__f(0))
+
+    def log(self, *args, **kwargs):
+        if self.debug_mode:
+            print(args, kwargs)
+
 
 def gen_dataset():
     size = 50
@@ -221,8 +242,16 @@ def acc_rate(y_pred, y_test):
     n = y_test.shape[0]
     acc = sum((y_pred * y_test) > 0) / n
 
-    print("Acc: ", acc)
     return acc
+
+def acc(X_train, X_test, y_train, y_test):
+    train_pred = svm.predict(X_train)
+    train_acc = acc_rate(train_pred, y_train)
+    test_pred = svm.predict(X_test)
+    test_acc = acc_rate(test_pred, y_test)
+
+    print("Train Acc: ", train_acc, " | Test Acc: ", test_acc)
+    return train_pred, test_pred, train_acc, test_acc
 
 def load_bc():
     dataset, labels = load_breast_cancer(return_X_y=True)
@@ -232,10 +261,11 @@ def load_bc():
 #%%
 if __name__ == "__main__":
     # dataset, labels = load_data('testSet.txt')
-    dataset, labels = load_bc()
-    # dataset, labels = gen_dataset()
+    # dataset, labels = load_bc()
+    dataset, labels = gen_dataset()
 
-    X_train, X_test, y_train, y_test = train_test_split(dataset, labels, test_size=0.33, random_state=42)
+    X, y = np.array(dataset), np.array(labels)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
     X_train, X_test, y_train, y_test = np.array(X_train), np.array(X_test), np.array(y_train), np.array(y_test)
 
     print("X_Train: ", X_train.shape)
@@ -246,8 +276,9 @@ if __name__ == "__main__":
     svm = SVM()
 
     svm.fit(X_train, y_train, C=0.6, max_iter=1000)
-    y_pred = svm.predict(X_test)
-    acc_rate(y_pred, y_test)
-    display(y_pred[:10])
 
-    # draw_boundary(X, y, svm.alpha, svm.b)
+    train_pred, test_pred, train_acc, test_acc = acc(X_train, X_test, y_train, y_test)
+
+    display(test_pred[:10])
+
+    # draw_boundary(X_train, y_train, svm.alpha, svm.b)
