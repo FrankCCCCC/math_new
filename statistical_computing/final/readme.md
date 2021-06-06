@@ -82,7 +82,7 @@ $$
 
 where $\mathcal{Const} = \sum_{i=3}^{N} \alpha_i - \frac{1}{2} \sum_{i=3}^{N} \sum_{j=3}^{N} \alpha_i \alpha_j y_i y_j k(x_i, x_j)$. We see it as a constant because it is regardless to $\alpha_1, \alpha_2$.
 
-**The Relation Between The Updated Values and The Hyperplane**
+**The Relation Between The Update Values and The Hyperplane**
 
 We've derive the partial derivative of the dual problem.
 
@@ -235,10 +235,16 @@ $$
 - \eta \alpha_2 + \eta \alpha_2^{old} + y_2 (E_1 - E_2) = 0
 $$
 
-Then we can update $\alpha_2$ as following
+Then we can find the relation between new and old $\alpha_2$ as following
 
 $$
 \alpha_2 = \alpha_2^{old} + \frac{y_2 (E_1 - E_2)}{\eta}
+$$
+
+To make the notation more clear to identify, we denote $\alpha_2^{new}$ as the new value of the update.
+
+$$
+\alpha_2^{new} = \alpha_2^{old} + \frac{y_2 (E_1 - E_2)}{\eta}
 $$
 
 ### Step 2. Clip with Bosk Constraint
@@ -281,7 +287,7 @@ $$
 
 **Clip The Value**
 
-According the bound we've derived, we need **clip** the updated variable $\alpha_2^{new}$ to satisfy the constraint.
+According the bound we've derived, we need **clip** the updated variable $\alpha_2^{new}$ to satisfy the constraint. In addition, we denote the new value after clipping as $\alpha_2^*$.
 
 $$
 \alpha_2^* = CLIP(\alpha_2^{new}, B_L, B_U)
@@ -303,34 +309,34 @@ $$
 
 ### Step 3. Update Bias
 
-The only equation that we can find out the bias $b$ is the function $f_{\phi}(x) = b + \sum_{i=1}^N \alpha_i y_i k(x_i, x)$. When $0 \lt \alpha_i \lt C$, it means that the data point $x_i$ is right on the margin and the bias $b_1^*, b_2^*$ can be derived directly like following.
+The only equation that we can find out the bias $b$ is the function $f_{\phi}(x) = b + \sum_{i=1}^N \alpha_i y_i k(x_i, x)$. When $0 \lt \alpha_i \lt C$, it means that the data point $x_i$ is right on the margin that $f_{\phi}(x_i) = y_i$ and the bias $b_1^*, b_2^*$ can be derived directly. For convenience, denote $f_{\phi}^*$ as the hyperplane that contains the new variables $\alpha_1^*, \alpha_2^*$.
 
-The bias derived from $\alpha_1$ is
-
-$$
-b_1^* = y_1 - \sum_{i=3}^N \alpha_i y_i K_{i, 1} - \alpha_1^* y_1 K_{1, 1} - \alpha_2^* y_2 K_{2, 1}
-$$
+The bias derived from $\alpha_1$
 
 $$
-= (y_1 - f_{\phi}(x_1) + \alpha_1 y_1 K_{1, 1} + \alpha_2 y_2 K_{2, 1} + b) - \alpha_1^* y_1 K_{1, 1} - \alpha_2^* y_2 K_{2, 1}
+b_1^* = y_1 - f_{\phi}^*(x_1) = y_1 - \sum_{i=3}^N \alpha_i y_i K_{i, 1} - \alpha_1^* y_1 K_{1, 1} - \alpha_2^* y_2 K_{2, 1}
 $$
 
 $$
-= - E_1 - y_1 K_{1, 1} (\alpha_1^* - \alpha_1) - y_2 K_{2, 1} (\alpha_2^* - \alpha_2) + b
-$$
-
-In addition, the bias derived from $\alpha_2$ is
-
-$$
-b_2^* = y_2 - \sum_{i=3}^N \alpha_i y_i K_{i, 2} - \alpha_1^* y_1 K_{1, 2} - \alpha_2^* y_2 K_{2, 2}
+= (y_1 - f_{\phi}(x_1) + \alpha_1^{old} y_1 K_{1, 1} + \alpha_2^{old} y_2 K_{2, 1} + b) - \alpha_1^* y_1 K_{1, 1} - \alpha_2^* y_2 K_{2, 1}
 $$
 
 $$
-= (y_2 - f_{\phi}(x_2) + \alpha_1 y_1 K_{1, 2} + \alpha_2 y_2 K_{2, 2} + b) - \alpha_1^* y_1 K_{1, 2} - \alpha_2^* y_2 K_{2, 2}
+= - E_1 - y_1 K_{1, 1} (\alpha_1^* - \alpha_1^{old}) - y_2 K_{2, 1} (\alpha_2^* - \alpha_2^{old}) + b
+$$
+
+In addition, the bias derived from $\alpha_2$
+
+$$
+b_2^* = y_2 - f_{\phi}^*(x_2) = y_2 - \sum_{i=3}^N \alpha_i y_i K_{i, 2} - \alpha_1^* y_1 K_{1, 2} - \alpha_2^* y_2 K_{2, 2}
 $$
 
 $$
-= - E_2 - y_1 K_{1, 2} (\alpha_1^* - \alpha_1) - y_2 K_{2, 2} (\alpha_2^* - \alpha_2) + b
+= (y_2 - f_{\phi}(x_2) + \alpha_1^{old} y_1 K_{1, 2} + \alpha_2^{old} y_2 K_{2, 2} + b) - \alpha_1^* y_1 K_{1, 2} - \alpha_2^* y_2 K_{2, 2}
+$$
+
+$$
+= - E_2 - y_1 K_{1, 2} (\alpha_1^* - \alpha_1^{old}) - y_2 K_{2, 2} (\alpha_2^* - \alpha_2^{old}) + b
 $$
 
 When the data point $x_i, x_j$ are both not on the margin, the bias can be 
@@ -338,6 +344,8 @@ When the data point $x_i, x_j$ are both not on the margin, the bias can be
 $$
 b^* = \frac{b_1^* + b_2^*}{2}
 $$
+
+For more detail, please see the pseudo code.
 
 ### Pseudo Code
 
