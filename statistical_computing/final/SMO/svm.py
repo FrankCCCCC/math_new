@@ -1,4 +1,5 @@
 #%%
+from math import gamma
 import random
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
@@ -9,8 +10,11 @@ from IPython.display import display
 from numpy.random import multivariate_normal as mvn
 
 from sklearn.model_selection import train_test_split
-from sklearn.datasets import load_breast_cancer
+from sklearn.datasets import load_breast_cancer, make_moons, make_circles
 #%%
+from matplotlib.colors import ListedColormap
+from sklearn.preprocessing import StandardScaler
+
 def load_data(filename):
     dataset, labels = [], []
     with open(filename, 'r') as f:
@@ -20,47 +24,80 @@ def load_data(filename):
             labels.append(label)
     return dataset, labels
 
-def get_w(alphas, dataset, labels):
-    ''' 通过已知数据点和拉格朗日乘子获得分割超平面参数w
-    '''
-    alphas, dataset, labels = np.array(alphas), np.array(dataset), np.array(labels)
-    yx = labels.reshape(1, -1).T*np.array([1, 1])*dataset
-    w = np.dot(yx.T, alphas)
+def draw_boundary(datasets, classifiers, names):
+    h = .02  # step size in the mesh
+    figure = plt.figure(figsize=((len(classifiers) + 1)*3, len(datasets)*3))
+    i = 1
+    # iterate over datasets
+    for ds_cnt, ds in enumerate(datasets):
+        # preprocess dataset, split into training and test part
+        X, y = ds
+        X = StandardScaler().fit_transform(X)
+        X_train, X_test, y_train, y_test = \
+            train_test_split(X, y, test_size=.4, random_state=42)
 
-    return w.tolist()
+        x_min, x_max = X[:, 0].min() - .5, X[:, 0].max() + .5
+        y_min, y_max = X[:, 1].min() - .5, X[:, 1].max() + .5
+        xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
+                            np.arange(y_min, y_max, h))
 
-def draw_boundary(dataset, labels, alphas, b):
-    # 分类数据点
-    classified_pts = {'+1': [], '-1': []}
-    for point, label in zip(dataset, labels):
-        if label == 1.0:
-            classified_pts['+1'].append(point)
-        else:
-            classified_pts['-1'].append(point)
+        # just plot the dataset first
+        cm = plt.cm.RdBu
+        cm_bright = ListedColormap(['#FF0000', '#0000FF'])
+        ax = plt.subplot(len(datasets), len(classifiers) + 1, i)
+        if ds_cnt == 0:
+            ax.set_title("Input data")
+        # Plot the training points
+        ax.scatter(X_train[:, 0], X_train[:, 1], c=y_train, cmap=cm_bright,
+                edgecolors='k')
+        # Plot the testing points
+        ax.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright, alpha=0.6,
+                edgecolors='k')
+        ax.set_xlim(xx.min(), xx.max())
+        ax.set_ylim(yy.min(), yy.max())
+        ax.set_xticks(())
+        ax.set_yticks(())
+        i += 1
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
+        # iterate over classifiers
+        for name, clf in zip(names, classifiers):
+            ax = plt.subplot(len(datasets), len(classifiers) + 1, i)
+            # clf.fit(X_train, y_train)
+            score = clf.score(X_test, y_test)
 
-    # 绘制数据点
-    for label, pts in classified_pts.items():
-        pts = np.array(pts)
-        ax.scatter(pts[:, 0], pts[:, 1], label=label)
+            # Plot the decision boundary. For that, we will assign a color to each
+            # point in the mesh [x_min, x_max]x[y_min, y_max].
+            concat = np.c_[xx.ravel(), yy.ravel()]
+            print(concat.shape)
+            if hasattr(clf, "decision_function"):
+                Z = clf.decision_function(concat)
+            elif hasattr(clf, "predict_proba"):
+                Z = clf.predict_proba(concat)[:, 1]
+            else:
+                Z = clf.predict(concat)
 
-    # 绘制分割线
-    w = get_w(alphas, dataset, labels)
-    x1, _ = max(dataset, key=lambda x: x[0])
-    x2, _ = min(dataset, key=lambda x: x[0])
-    a1, a2 = w
-    y1, y2 = (-b - a1*x1)/a2, (-b - a1*x2)/a2
-    ax.plot([x1, x2], [y1, y2])
+            # Put the result into a color plot
+            Z = Z.reshape(xx.shape)
+            ax.contourf(xx, yy, Z, cmap=cm, alpha=.8)
 
-    # 绘制支持向量
-    for i, alpha in enumerate(alphas):
-        if abs(alpha) > 1e-3:
-            x, y = dataset[i]
-            ax.scatter([x], [y], s=150, c='none', alpha=0.7,
-                       linewidth=1.5, edgecolor='#AB3319')
+            # Plot the training points
+            ax.scatter(X_train[:, 0], X_train[:, 1], c=y_train, cmap=cm_bright,
+                    edgecolors='k')
+            # Plot the testing points
+            ax.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright,
+                    edgecolors='k', alpha=0.6)
 
+            ax.set_xlim(xx.min(), xx.max())
+            ax.set_ylim(yy.min(), yy.max())
+            ax.set_xticks(())
+            ax.set_yticks(())
+            if ds_cnt == 0:
+                ax.set_title(name)
+            ax.text(xx.max() - .3, yy.min() + .3, ('%.2f' % score).lstrip('0'),
+                    size=15, horizontalalignment='right')
+            i += 1
+
+    plt.tight_layout()
     plt.show()
 
 #%%
@@ -73,9 +110,14 @@ class SVM():
         self.X = np.zeros((self.n, self.dim))
         self.y = np.zeros(self.n)
         self.K = np.zeros((self.n, self.n))
-        self.embed = np.zeros((self.n, self.dim))
+        # self.embed = np.zeros((self.n, self.dim))
+
+        self.kernel_type="linear"
+        self.gamma=0.6
+
         self.debug_mode = False
         self.acc_history = []
+        self.inference_batch = 200
 
     def __choose_j(self, i):
         l = list(range(self.n))
@@ -139,20 +181,25 @@ class SVM():
     def kernel(self, x_i, x_j, name="rbf", gamma=10):
         return np.exp(-gamma * (x_i - x_j)^2)
 
-    def cal_kernel(self, X, gamma=10):
-        # RBF Kernel
-        # pairwise_dists = squareform(pdist(X, 'euclidean'))
-        # K = np.exp(-gamma * (pairwise_dists ** 2))
+    def cal_kernel(self, X):
+        if self.kernel_type == "rbf":
+            # RBF Kernel
+            pairwise_dists = squareform(pdist(X, 'euclidean'))
+            K = np.exp(-self.gamma * (pairwise_dists ** 2))
+            return K
+        else:
+            # Linear Kernel
+            K = np.dot(X, X.T)
+            return K
 
-        # Linear Kernel
-        K = np.dot(X, X.T)
-        return K
-
-    def fit(self, X, y, C=5, epsilon=1e-6, max_iter=1000, debug_mode=False):
+    def fit(self, X, y, C=5, epsilon=1e-6, max_iter=1000, debug_mode=False, kernel_type="linear", gamma=0.6):
         self.debug_mode = debug_mode
         self.n, self.dim = np.array(X).shape
         self.X = np.array(X)
         self.y = np.reshape(np.array(y), (-1, ))
+        
+        self.kernel_type = kernel_type
+        self.gamma = gamma
         self.K = self.cal_kernel(X)
 
         self.alpha = np.zeros(self.n)
@@ -201,17 +248,40 @@ class SVM():
             iter += 1
             print("Iter: ", iter, " | Loss: ", loss, " | Move: ", move, " | Acc: ", acc)
 
+    def decision_function(self, X):
+        def make_decision(X):
+            X_c = np.concatenate((self.X, X))
+            K_c = self.cal_kernel(X_c)
+            K_train_test = K_c[0:self.n, self.n:]
+            decision = np.dot((self.alpha * self.y), K_train_test) + self.b
+            return list(decision)
+        
+        # Split the input data into several batches
+        m = np.array(X).shape[0]
+        X_batch = np.array_split(X, m/self.inference_batch + 1)
+        decisions = list(map(make_decision, X_batch))
+        decisions = np.reshape(np.hstack(decisions), (-1, ))
+        return decisions
+
     def predict(self, X):
-        X_c = np.concatenate((self.X, X))
-        K_c = self.cal_kernel(X_c)
-        K_train_test = K_c[0:self.n, self.n:]
-        pred = np.dot((self.alpha * self.y), K_train_test) + self.b
+        pred = self.decision_function(X)
+        pred[pred > 0] = 1
+        pred[pred < 0] = -1
+
         return pred
 
     def acc(self):
         idxs = np.arange(self.n)
         accs = self.y[idxs] * self.__f(idxs)
         acc = sum(accs > 0) / self.n
+
+        return acc
+    
+    def score(self, X_test, y_test):
+        y_pred = self.predict(X_test)
+        y_pred, y_test = np.array(y_pred).ravel(), np.array(y_test).ravel()
+        n = y_test.shape[0]
+        acc = sum((y_pred * y_test) > 0) / n
 
         return acc
 
@@ -258,11 +328,25 @@ def load_bc():
     labels[labels == 0] = -1
 
     return dataset, labels
+
+def load_moon():
+    dataset, labels = make_moons(n_samples=150)
+    labels[labels == 0] = -1
+
+    return dataset, labels
+
+def load_circle():
+    dataset, labels = make_circles(noise=0.2, factor=0.5, random_state=1)
+    labels[labels == 0] = -1
+
+    return dataset, labels
 #%%
 if __name__ == "__main__":
     # dataset, labels = load_data('testSet.txt')
     # dataset, labels = load_bc()
-    dataset, labels = gen_dataset()
+    # dataset, labels = gen_dataset()
+    # dataset, labels = load_moon()
+    dataset, labels = load_circle()
 
     X, y = np.array(dataset), np.array(labels)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
@@ -275,10 +359,15 @@ if __name__ == "__main__":
 
     svm = SVM()
 
-    svm.fit(X_train, y_train, C=0.6, max_iter=1000)
+    svm.fit(X_train, y_train, C=1, max_iter=1000, kernel_type="rbf", gamma=2)
 
     train_pred, test_pred, train_acc, test_acc = acc(X_train, X_test, y_train, y_test)
 
     display(test_pred[:10])
 
     # draw_boundary(X_train, y_train, svm.alpha, svm.b)
+    draw_boundary([(dataset, labels)], [svm], ["RBF SVM"])
+
+# %%
+
+# %%
