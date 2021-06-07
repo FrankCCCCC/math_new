@@ -1,6 +1,9 @@
 # %%
+from operator import index
 import numpy as np
+from numpy.core import numeric
 import pandas as pd
+from IPython.display import display
 
 import re
 from bs4 import BeautifulSoup
@@ -8,6 +11,7 @@ import nltk
 from nltk.stem.porter import PorterStemmer
 from nltk.corpus import stopwords
 
+from wordcloud import WordCloud
 # %%
 def remove_tags(text):
     # remove HTML tags
@@ -54,44 +58,26 @@ def prep_save():
     df.to_pickle("clean.pkl")
 
     return df
-
 # %%
-is_read_original = False
-if is_read_original:
-    df = prep_save()
-else:
-    df = pd.read_pickle("clean.pkl")
-    df_original = pd.read_pickle("no_null.pkl")
-# %%
-# df = df[df["Recommended IND"] == 1]
-# df = df[df["Rating"] == 1]
-
-# df = df[df["Department Name"] == "Intimate"]
-
-# df = df[df["Class Name"] == "Blouses"]
-# df = df[df["Class Name"] == "Bottoms"]
-
-# df = df[df["Age"] >= 60]
-# df = df[df["Age"] < 60]
-
-df.head()
-
-# %%
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
-from sklearn.pipeline import Pipeline
+# from sklearn.pipeline import Pipeline
 
-def tfidf_lda(review_text, n_comp):
+def vec_lda(review_text, n_comp):
     # n_comp = 5
     tfidf = TfidfVectorizer(strip_accents=None, lowercase=False, preprocessor=None, norm='l2')
+    count = CountVectorizer(strip_accents=None, lowercase=False, preprocessor=None)
     lda = LatentDirichletAllocation(n_components = n_comp, random_state = 0)
 
-    lda_pipe = Pipeline([('tfidf', tfidf), ('lda', lda)])
-    clustered_text = lda_pipe.fit_transform(review_text)
+    # lda_pipe = Pipeline([('tfidf', tfidf), ('lda', lda)])
+    # clustered_text = lda_pipe.fit_transform(review_text)
+    # vec_text = count.fit_transform(review_text)
+    vec_text = tfidf.fit_transform(review_text)
+    clustered_text = lda.fit_transform(vec_text)
 
     pd.DataFrame(clustered_text).head()
 
-    return clustered_text, tfidf, lda
+    return clustered_text, vec_text, tfidf, lda
 # %%
 import matplotlib.pyplot as plt
 from matplotlib.ticker import PercentFormatter
@@ -116,18 +102,6 @@ def plot_top_words(model, tfidf, n_top_words, title):
 
     plt.subplots_adjust(top=0.90, bottom=0.05, wspace=0.90, hspace=0.3)
     plt.show()
-
-# %%
-
-clustered_text, tfidf, lda = tfidf_lda(df['Review Text'], n_comp=5)
-
-# n_top_words = 10
-# plot_top_words(lda, tfidf, n_top_words, 'Topics in LDA model')
-# %%
-from wordcloud import WordCloud
-
-# cloud = WordCloud().generate(" ".join(list(df['Review Text'])))
-# cloud.to_file('output.png')
 # %%
 import seaborn as sns
 def plot_dist(df):
@@ -145,8 +119,57 @@ def plot_dist(df):
     plt.xlabel('Rating')
     plt.show()
 # %%
+# Read Dataset
+is_read_original = False
+if is_read_original:
+    df = prep_save()
+else:
+    df = pd.read_pickle("clean.pkl")
+    df_original = pd.read_pickle("no_null.pkl")
+# %%
+# df = df[df["Recommended IND"] == 1]
+# df = df[df["Rating"] == 1]
 
+# df = df[df["Department Name"] == "Intimate"]
+
+# df = df[df["Class Name"] == "Blouses"]
+# df = df[df["Class Name"] == "Bottoms"]
+
+# df = df[df["Age"] >= 60]
+# df = df[df["Age"] < 60]
+
+df.head()
+
+# %%
+# Vectorization-LDA
+clustered_text, vec_text, vectorizer, lda = vec_lda(df['Review Text'], n_comp=5)
+
+# %%
+
+# Plot distribution of properties
 # plot_dist(df)
+
+groups = ['Division Name', 'Department Name', 'Class Name']
+fields = ['Age', 'Rating']
+
+for group in groups:
+    for field in fields:
+        print("Group By: ", group)
+        display(pd.DataFrame(df[[group, field]]).groupby(group).mean())
+
+# %%
+# Vectorizer features
+summary_text = np.sum(np.array(vec_text.toarray()), axis=0)
+vectorizer._validate_vocabulary()
+display(pd.DataFrame(summary_text, index=vectorizer.get_feature_names()).nlargest(10, columns=[0]))
+
+# Top words of LDA topics
+# n_top_words = 10
+# plot_top_words(lda, tfidf, n_top_words, 'Topics in LDA model')
+
+# Word cloud
+# cloud = WordCloud().generate(" ".join(list(df['Review Text'])))
+# cloud.to_file('output.png')
 
 # %%
 

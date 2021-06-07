@@ -442,9 +442,13 @@ The dataset is called Women’s Clothing E-Commerce which contains reviews writt
 
 As we can see, the peak of the age distribution is about 40. The population below 40 years old is a half of total users. 
 
+The average age of the customers buying "casual bottoms" is 26 which is much lower the average age of total customers 42.
+
 **Rating Distribution**
 
 According to the graph, most of the users(more than 50%) gives 5 points in their comments. 
+
+The average rating of all goods is 4.2 but the class "Trend" has only 3.8.
 
 **Topics**
 
@@ -452,14 +456,75 @@ The graph is the result of LDA with 5 topics. The most interest topics are 3 and
 
 ### Rating
 
-**Rating 5**
+**Rating Score 5**
+
+![](SMO/rating5/rating5.png)
+
+![](SMO/rating5/rating5_lda.png)
+
+There are many positive words in the word cloud like perfect, comfort, style...
+
+**Rating Score 1**
+
+![](SMO/rating1/rating1.png)
+
+![](SMO/rating1/rating1_lda.png)
+
+
+
+An interesting thing is that "cute" seems neutral since it appears in both side. It may be caused by cultural difference between western and eastern societies.
 
 ### Recommend Indicator
 
 ### Ages
 
+LDA
+
+Love and cute are everywhere.
+
 **Less Than 30**
+
 ![](SMO/age_lt30/age_lt30_lda.png)
+
+An interesting thing is that the topic 4 contains broke, cheeky, obsess and, forever. It seems that topic 4 is about the relationship. In addition topic 4 only appears under 30 years old.
+
+**30s**
+
+![](SMO/age_30s/age_30s_lda.png)
+
+**40s**
+
+![](SMO/age_40s/age_40s_lda.png)
+
+**50s**
+
+![](SMO/age_50s/age_50s_lda.png)
+
+**More Than 60**
+
+![](SMO/age_gt60/age_gt60_lda.png)
+
+Word Cloud
+
+**Less Than 30**
+
+![](SMO/age_lt30/age_lt30.png)
+
+**30s**
+
+![](SMO/age_30s/age_30s.png)
+
+**40s**
+
+![](SMO/age_40s/age_40s.png)
+
+**50s**
+
+![](SMO/age_50s/age_50s.png)
+
+**More Than 60**
+
+![](SMO/age_gt60/age_gt60.png)
 ## Reference
 
 ### SMO
