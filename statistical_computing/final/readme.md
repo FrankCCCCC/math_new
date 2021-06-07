@@ -440,11 +440,15 @@ The dataset is called Women’s Clothing E-Commerce which contains reviews writt
 
 **Age Distribution**
 
+![](SMO/all/all_age.png)
+
 As we can see, the peak of the age distribution is about 40. The population below 40 years old is a half of total users. 
 
 The average age of the customers buying "casual bottoms" is 26 which is much lower the average age of total customers 42.
 
 **Rating Distribution**
+
+![](SMO/all/all_rating.png)
 
 According to the graph, most of the users(more than 50%) gives 5 points in their comments. 
 
@@ -452,7 +456,9 @@ The average rating of all goods is 4.2 but the class "Trend" has only 3.8.
 
 **Topics**
 
-The graph is the result of LDA with 5 topics. The most interest topics are 3 and 4. The topic 3 seems related to boys and their girlfriend, since words like girlfriend, gift and, birthday appear in the top 10 words. We can infer that most of purchases in this topic are the gifts for girlfriends by the boyfriends. The topic 4 seems also related to gift but not between lovers. The comment are mainly about receivers' compliment.
+![](SMO/all/all_lda.png)
+
+The graph is the result of LDA with 5 topics. Ttopics are 3 and 4 seems interesting. The topic 3 seems related to boys and their girlfriend, since words like girlfriend, gift and, birthday appear in the top 10 words. We can infer that most of purchases in this topic are the gifts for girlfriends by the boyfriends. The topic 4 seems also related to gift but not between lovers. The comment are mainly about receivers' compliment.
 
 ### Rating
 
@@ -480,7 +486,7 @@ An interesting thing is that "cute" seems neutral since it appears in both side.
 
 LDA
 
-Love and cute are everywhere.
+Love and cute are everywhere. Also, some positive words and common nouns appear in every ages. It's boring for me to focus on that common phenomenon. Here I just mention something interesting from the data.
 
 **Less Than 30**
 
@@ -492,13 +498,19 @@ An interesting thing is that the topic 4 contains broke, cheeky, obsess and, for
 
 ![](SMO/age_30s/age_30s_lda.png)
 
+The topic 4 perhaps is about wedding. 
+
 **40s**
 
 ![](SMO/age_40s/age_40s_lda.png)
 
+It's a little bit weird that one topic is about the "bikini" and the other one is about "tankini" which is a kind of swimsuit covering the whole body. 
+
 **50s**
 
 ![](SMO/age_50s/age_50s_lda.png)
+
+I don't know why there is a topic about "bralett" which means "sexy intimates". Does it mean the shirley valentine for the customers?
 
 **More Than 60**
 
