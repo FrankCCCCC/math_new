@@ -418,8 +418,48 @@ Based on the paper **Random Features for Large-Scale Kernel Machines** on NIPS'0
 
 ## Experiments
 
+## Data Analysis
+
+### Overview
+
+The dataset is called Women’s Clothing E-Commerce which contains reviews written by customers for a online clothing shop. It has 9 features and each feature represents the meaning as the following table.
+
+**Features**                  | **Description**
+------------------------------|:-----------
+**Clothing ID**               | Integer Categorical variable that refers to the specific piece being reviewed.
+**Age**                       | Positive Integer variable of the reviewers age.
+**Title**                     | String variable for the title of the review.
+**Review**                    | String variable for the review body.
+**Rating**                    | Positive Ordinal Integer variable for the product score granted by the customer from 1 Worst, to 5 Best.
+**Recommended IND**           | Binary variable stating where the customer recommends the product where 1 is recommended, 0 is not recommended.
+**Positive Feedback Count**   | Positive Integer documenting the number of other customers who found this review positive.
+**Division Name**             | Categorical name of the product high level division.
+**Department Name**           | Categorical name of the product department name.
+**Class Name**                | Categorical name of the product class name.
 
 
+**Age Distribution**
+
+As we can see, the peak of the age distribution is about 40. The population below 40 years old is a half of total users. 
+
+**Rating Distribution**
+
+According to the graph, most of the users(more than 50%) gives 5 points in their comments. 
+
+**Topics**
+
+The graph is the result of LDA with 5 topics. The most interest topics are 3 and 4. The topic 3 seems related to boys and their girlfriend, since words like girlfriend, gift and, birthday appear in the top 10 words. We can infer that most of purchases in this topic are the gifts for girlfriends by the boyfriends. The topic 4 seems also related to gift but not between lovers. The comment are mainly about receivers' compliment.
+
+### Rating
+
+**Rating 5**
+
+### Recommend Indicator
+
+### Ages
+
+**Less Than 30**
+![](SMO/age_lt30/age_lt30_lda.png)
 ## Reference
 
 ### SMO
