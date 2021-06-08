@@ -8,6 +8,7 @@ except:
 
 import numpy as np
 
+import pickle
 import sys
 from enum import Enum
 import random
@@ -138,9 +139,10 @@ class SVM():
         self.K = np.zeros((self.n, self.n))
 
         # Some utility 
+        self.loss_history = []
+        self.move_history = []
         self.acc_history = []
         self.inference_batch = 200
-        self.info_level = LOG.Info.value
         self.use_jax = 'jax.numpy' in sys.modules
         self.info_level = info_level
 
@@ -283,6 +285,8 @@ class SVM():
             loss = sum(map(lambda x: abs(self.__E(x)), np.arange(self.n)))
             # Calculate the accuracy
             acc = self.acc()
+            self.loss_history.append(loss)
+            self.move_history.append(move)
             self.acc_history.append(acc)
 
             # if not skip:
@@ -329,6 +333,7 @@ class SVM():
     def test(self):
         print(self.__f(0))
 
+    # Logging
     def info(self, *args):
         if self.info_level >= LOG.Info.value:
             print("INFO: ", *args)
@@ -340,6 +345,16 @@ class SVM():
     def error(self, *args):
         if self.info_level >= LOG.Error.value:
             print("ERROR: ", *args)
+    
+    # Save pickle
+    def save(self, name, protocol=pickle.HIGHEST_PROTOCOL):
+        with open(name, 'wb') as handle:
+            pickle.dump(self, handle, protocol=protocol)
+
+    def load(self, name):
+        with open(name, 'rb') as handle:
+            b = pickle.load(handle)
+            return b
 
 
 def gen_dataset():

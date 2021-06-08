@@ -433,12 +433,25 @@ The SMO and kernel seem work properly even under noise and nonlinear dataset.
 ### Real Dataset
 
 
+**PCA Preprocess**
+
+Apply SVM on the "Women’s Clothing E-Commerce Review Dataset" with C = 0.6 and $\gamma$ of RBF kernel = 2, the training accuracy is 82.03% and the testing accuracy is 81.54%. The accuracy, loss and, the movement of variables are showed in the following graph. 
+
+![](SMO/SVM/pca5_train.png)
+
+As we can see, the movement of variable gets smaller during training and converge around 50 and the accuracy remains about 82%.
+
+**LDA Preprocess**
+
+![](SMO/SVM/lda5_train.png)
+
+The training accuracy is also 82.03% and the testing accuracy is 81.54%, but the curve is smoother than the ones of PCA. 
 
 ## Data Analysis
 
 ### Overview
 
-The dataset is called Women’s Clothing E-Commerce which contains reviews written by customers for a online clothing shop. It has 9 features and each feature represents the meaning as the following table.
+The dataset is called "Women’s Clothing E-Commerce Review" which contains reviews written by customers for a online clothing shop. It has 9 features and each feature represents the meaning as the following table.
 
 **Features**                  | **Description**
 ------------------------------|:-----------

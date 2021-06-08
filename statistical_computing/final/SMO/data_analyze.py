@@ -60,7 +60,7 @@ def prep_save():
     return df
 # %%
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.decomposition import LatentDirichletAllocation
+from sklearn.decomposition import LatentDirichletAllocation, PCA
 
 def vec(review_text):
     tfidf = TfidfVectorizer(strip_accents=None, lowercase=False, preprocessor=None, norm='l2')
@@ -73,31 +73,25 @@ def vec(review_text):
 
 def lda(vec_text, n_comp):
     lda = LatentDirichletAllocation(n_components = n_comp, random_state = 0)
+    decom_text = lda.fit_transform(vec_text)
 
-    clustered_text = lda.fit_transform(vec_text)
+    pd.DataFrame(decom_text).head()
 
-    pd.DataFrame(clustered_text).head()
+    return decom_text, lda
 
-    return clustered_text, lda
+def pca(vec_text, n_comp):
+    pca = PCA(n_components=n_comp)
+    pca.fit(vec_text)
+    decom_text = pca.transform(vec_text)
 
-def vec_lda(review_text, n_comp):
-    # n_comp = 5
-    tfidf = TfidfVectorizer(strip_accents=None, lowercase=False, preprocessor=None, norm='l2')
-    count = CountVectorizer(strip_accents=None, lowercase=False, preprocessor=None)
-    lda = LatentDirichletAllocation(n_components = n_comp, random_state = 0)
+    pd.DataFrame(decom_text).head()
 
-    # vec_text = np.array(count.fit_transform(review_text).toarray())
-    vec_text = np.array(tfidf.fit_transform(review_text).toarray())
-    clustered_text = np.array(lda.fit_transform(vec_text))
-
-    pd.DataFrame(clustered_text).head()
-
-    return clustered_text, vec_text, tfidf, lda
+    return decom_text, pca
 # %%
 import matplotlib.pyplot as plt
 from matplotlib.ticker import PercentFormatter
-def plot_top_words(model, tfidf, n_top_words, title):
-    feature_names = tfidf.get_feature_names()
+def plot_top_words(model, vectorizer, n_top_words, title):
+    feature_names = vectorizer.get_feature_names()
     fig, axes = plt.subplots(2, 5, figsize=(30, 15), sharex=True)
     axes = axes.flatten()
     for topic_idx, topic in enumerate(model.components_):
@@ -157,10 +151,12 @@ else:
 df.head()
 
 # %%
-# Vectorization-LDA
+# Vectorization
 vec_text, vectorizer = vec(df['Review Text'])
-# clustered_text, lda = vec_lda(vec_text, n_comp=5)
-# clustered_text, vec_text, vectorizer, lda = vec_lda(df['Review Text'], n_comp=5)
+
+# Dimension Reduction
+decom_text, lda = lda(vec_text, n_comp=5)
+# decom_text, pca = pca(vec_text, n_comp=5)
 
 # %%
 # Plot distribution of properties
@@ -183,47 +179,70 @@ vec_text, vectorizer = vec(df['Review Text'])
 
 # Top words of LDA topics
 # n_top_words = 10
-# plot_top_words(lda, tfidf, n_top_words, 'Topics in LDA model')
+# plot_top_words(lda, vectorizer, n_top_words, 'Topics in LDA model')
 
-# Word cloud
+# Word Cloud
 # cloud = WordCloud().generate(" ".join(list(df['Review Text'])))
 # cloud.to_file('output.png')
 
 # %%
-
-# df_lda = pd.DataFrame(clustered_text)
+# Select review text of specific topic
+# df_lda = pd.DataFrame(decom_text)
 # display(df_lda)
-# df_txt = pd.DataFrame(df_original['Review Text'].iloc[np.argmax(clustered_text, axis=1)== 1])
+# df_txt = pd.DataFrame(df_original['Review Text'].iloc[np.argmax(decom_text, axis=1)== 1])
 # df_txt.to_csv("topic2_reviews.csv")
 # display(df_txt)
-
-# %%
-# Dimension Reduction
-from sklearn.decomposition import PCA
-n_comp = 5
-pca = PCA(n_components=n_comp)
-pca.fit(vec_text)
-X_pca = pca.transform(vec_text)
-# %%
-def label_proc(labels):
-    labels[labels == 0] = -1
-    return labels
 # %%
 from sklearn.model_selection import train_test_split
 from svm import SVM as SVM, acc, draw_boundary
 
-svm = SVM(C=0.6, max_iter=1000, kernel_type="rbf", gamma=2, epsilon=15)
-X, y = X_pca, label_proc(df["Recommended IND"].to_numpy())
+def label_proc(labels):
+    labels[labels == 0] = -1
+    return labels
+
+svm = SVM(C=0.6, max_iter=1000, kernel_type="rbf", gamma=2, epsilon=50)
+X, y = decom_text, label_proc(df["Recommended IND"].to_numpy())
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 X_train, X_test, y_train, y_test = np.array(X_train), np.array(X_test), np.array(y_train), np.array(y_test)
 
 svm.fit(X_train, y_train)
 
-train_pred, test_pred, train_acc, test_acc = acc(X_train, X_test, y_train, y_test)
+train_pred, test_pred, train_acc, test_acc = acc(svm, X_train, X_test, y_train, y_test)
 
 display(test_pred[:10])
 
-# draw_boundary(X_train, y_train, svm.alpha, svm.b)
-draw_boundary([(X, y)], [svm], ["RBF SVM"])
+# draw_boundary([(X, y)], [svm], ["RBF SVM"])
 
+# %%
+# svm.save("svm_pca5.pickle")
+# svm.save("svm_lda5.pickle")
+
+svm2 = svm.load("svm_pca5.pickle")
+
+def plot_training(svm, text=''):
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(12,4))
+    fig.suptitle('SVM During Training'+text)
+
+    ax1.plot(svm.acc_history)
+    ax1.title.set_text("Training Accuracy")
+    ax1.set_xlabel('Iteration')
+    ax1.set_ylabel('Accuracy')
+    ax1.grid(True)
+
+    ax2.plot(svm.loss_history)
+    ax2.title.set_text("Loss")
+    ax2.set_xlabel('Iteration')
+    ax2.set_ylabel('Loss')
+    ax2.grid(True)
+
+    ax3.plot(svm.move_history)
+    ax3.title.set_text("Movement of Variables")
+    ax3.set_xlabel('Iteration')
+    ax3.set_ylabel('change of variables')
+    ax3.grid(True)
+
+    fig.tight_layout()
+
+# plot_training(svm, text=' With LDA Preprocess')
+plot_training(svm2, text=' With PCA Preprocess')
 # %%
