@@ -61,7 +61,24 @@ def prep_save():
 # %%
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
-# from sklearn.pipeline import Pipeline
+
+def vec(review_text):
+    tfidf = TfidfVectorizer(strip_accents=None, lowercase=False, preprocessor=None, norm='l2')
+    count = CountVectorizer(strip_accents=None, lowercase=False, preprocessor=None)
+
+    # vec_text = count.fit_transform(review_text)
+    vec_text = np.array(tfidf.fit_transform(review_text).toarray())
+
+    return vec_text, tfidf
+
+def lda(vec_text, n_comp):
+    lda = LatentDirichletAllocation(n_components = n_comp, random_state = 0)
+
+    clustered_text = lda.fit_transform(vec_text)
+
+    pd.DataFrame(clustered_text).head()
+
+    return clustered_text, lda
 
 def vec_lda(review_text, n_comp):
     # n_comp = 5
@@ -69,11 +86,9 @@ def vec_lda(review_text, n_comp):
     count = CountVectorizer(strip_accents=None, lowercase=False, preprocessor=None)
     lda = LatentDirichletAllocation(n_components = n_comp, random_state = 0)
 
-    # lda_pipe = Pipeline([('tfidf', tfidf), ('lda', lda)])
-    # clustered_text = lda_pipe.fit_transform(review_text)
-    # vec_text = count.fit_transform(review_text)
-    vec_text = tfidf.fit_transform(review_text)
-    clustered_text = lda.fit_transform(vec_text)
+    # vec_text = np.array(count.fit_transform(review_text).toarray())
+    vec_text = np.array(tfidf.fit_transform(review_text).toarray())
+    clustered_text = np.array(lda.fit_transform(vec_text))
 
     pd.DataFrame(clustered_text).head()
 
@@ -127,6 +142,7 @@ else:
     df = pd.read_pickle("clean.pkl")
     df_original = pd.read_pickle("no_null.pkl")
 # %%
+# Condition slicing
 # df = df[df["Recommended IND"] == 1]
 # df = df[df["Rating"] == 1]
 
@@ -142,26 +158,28 @@ df.head()
 
 # %%
 # Vectorization-LDA
-clustered_text, vec_text, vectorizer, lda = vec_lda(df['Review Text'], n_comp=5)
+vec_text, vectorizer = vec(df['Review Text'])
+# clustered_text, lda = vec_lda(vec_text, n_comp=5)
+# clustered_text, vec_text, vectorizer, lda = vec_lda(df['Review Text'], n_comp=5)
 
 # %%
-
 # Plot distribution of properties
 # plot_dist(df)
 
-groups = ['Division Name', 'Department Name', 'Class Name']
-fields = ['Age', 'Rating']
+# Average age & rating of each group
+# groups = ['Division Name', 'Department Name', 'Class Name']
+# fields = ['Age', 'Rating']
 
-for group in groups:
-    for field in fields:
-        print("Group By: ", group)
-        display(pd.DataFrame(df[[group, field]]).groupby(group).mean())
+# for group in groups:
+#     for field in fields:
+#         print("Group By: ", group)
+#         display(pd.DataFrame(df[[group, field]]).groupby(group).mean())
 
 # %%
 # Vectorizer features
-summary_text = np.sum(np.array(vec_text.toarray()), axis=0)
-vectorizer._validate_vocabulary()
-display(pd.DataFrame(summary_text, index=vectorizer.get_feature_names()).nlargest(10, columns=[0]))
+# summary_text = np.sum(vec_text, axis=0)
+# vectorizer._validate_vocabulary()
+# display(pd.DataFrame(summary_text, index=vectorizer.get_feature_names()).nlargest(10, columns=[0]))
 
 # Top words of LDA topics
 # n_top_words = 10
@@ -173,9 +191,39 @@ display(pd.DataFrame(summary_text, index=vectorizer.get_feature_names()).nlarges
 
 # %%
 
-df_lda = pd.DataFrame(clustered_text)
-display(df_lda)
-df_txt = pd.DataFrame(df_original['Review Text'].iloc[np.argmax(clustered_text, axis=1)== 1])
-df_txt.to_csv("topic2_reviews.csv")
-display(df_txt)
+# df_lda = pd.DataFrame(clustered_text)
+# display(df_lda)
+# df_txt = pd.DataFrame(df_original['Review Text'].iloc[np.argmax(clustered_text, axis=1)== 1])
+# df_txt.to_csv("topic2_reviews.csv")
+# display(df_txt)
+
+# %%
+# Dimension Reduction
+from sklearn.decomposition import PCA
+n_comp = 5
+pca = PCA(n_components=n_comp)
+pca.fit(vec_text)
+X_pca = pca.transform(vec_text)
+# %%
+def label_proc(labels):
+    labels[labels == 0] = -1
+    return labels
+# %%
+from sklearn.model_selection import train_test_split
+from svm import SVM as SVM, acc, draw_boundary
+
+svm = SVM(C=0.6, max_iter=1000, kernel_type="rbf", gamma=2, epsilon=15)
+X, y = X_pca, label_proc(df["Recommended IND"].to_numpy())
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+X_train, X_test, y_train, y_test = np.array(X_train), np.array(X_test), np.array(y_train), np.array(y_test)
+
+svm.fit(X_train, y_train)
+
+train_pred, test_pred, train_acc, test_acc = acc(X_train, X_test, y_train, y_test)
+
+display(test_pred[:10])
+
+# draw_boundary(X_train, y_train, svm.alpha, svm.b)
+draw_boundary([(X, y)], [svm], ["RBF SVM"])
+
 # %%

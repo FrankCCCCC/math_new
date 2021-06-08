@@ -1,7 +1,16 @@
 #%%
-from math import gamma
-import random
+try:
+    import jax.numpy as snp
+    print("Use Jax.numpy module")
+except:
+    import numpy as snp
+    print("Didn't find out Jax module, use numpy instead")
+
 import numpy as np
+
+import sys
+from enum import Enum
+import random
 from scipy.spatial.distance import pdist, squareform
 
 import pandas as pd
@@ -24,9 +33,9 @@ def load_data(filename):
             labels.append(label)
     return dataset, labels
 
-def draw_boundary(datasets, classifiers, names):
+def draw_boundary(datasets, classifiers, names, is_trained=True):
     h = .02  # step size in the mesh
-    figure = plt.figure(figsize=((len(classifiers) + 1)*3, len(datasets)*3))
+    figure = plt.figure(figsize=((len(classifiers))*3, len(datasets)*3))
     i = 1
     # iterate over datasets
     for ds_cnt, ds in enumerate(datasets):
@@ -44,7 +53,7 @@ def draw_boundary(datasets, classifiers, names):
         # just plot the dataset first
         cm = plt.cm.RdBu
         cm_bright = ListedColormap(['#FF0000', '#0000FF'])
-        ax = plt.subplot(len(datasets), len(classifiers) + 1, i)
+        ax = plt.subplot(len(datasets), len(classifiers)+1, i)
         if ds_cnt == 0:
             ax.set_title("Input data")
         # Plot the training points
@@ -62,7 +71,8 @@ def draw_boundary(datasets, classifiers, names):
         # iterate over classifiers
         for name, clf in zip(names, classifiers):
             ax = plt.subplot(len(datasets), len(classifiers) + 1, i)
-            # clf.fit(X_train, y_train)
+            if not is_trained:
+                clf.fit(X_train, y_train)
             score = clf.score(X_test, y_test)
 
             # Plot the decision boundary. For that, we will assign a color to each
@@ -101,23 +111,38 @@ def draw_boundary(datasets, classifiers, names):
     plt.show()
 
 #%%
+class LOG(Enum):
+    Nope = 0
+    Info = 1
+    Warning = 2
+    Error = 3
 class SVM():
-    def __init__(self):
+    def __init__(self, C=5, epsilon=1e-6, max_iter=1000, info_level=LOG.Info.value, kernel_type="linear", gamma=0.6):
         self.dim = 3
         self.n = 5
-        self.alpha = np.zeros(self.n)
-        self.b = 0
         self.X = np.zeros((self.n, self.dim))
         self.y = np.zeros(self.n)
+
+        # Soft-margin 
+        self.C = C
+
+        # SMO
+        self.alpha = np.zeros(self.n)
+        self.b = 0
+        self.epsilon = epsilon
+        self.max_iter = max_iter
+
+        # Kernel
+        self.kernel_type=kernel_type
+        self.gamma=gamma
         self.K = np.zeros((self.n, self.n))
-        # self.embed = np.zeros((self.n, self.dim))
 
-        self.kernel_type="linear"
-        self.gamma=0.6
-
-        self.debug_mode = False
+        # Some utility 
         self.acc_history = []
         self.inference_batch = 200
+        self.info_level = LOG.Info.value
+        self.use_jax = 'jax.numpy' in sys.modules
+        self.info_level = info_level
 
     def __choose_j(self, i):
         l = list(range(self.n))
@@ -131,7 +156,7 @@ class SVM():
         # print((self.alpha * self.y * self.K[i, :]).shape)
 
         # return sum(self.alpha * self.y * self.K[i, :]) + self.b
-        return np.dot((self.alpha * self.y), self.K[i, :]) + self.b
+        return snp.dot((self.alpha * self.y), self.K[i, :]) + self.b
     
     def __E(self, i):
         return self.__f(i) - self.y[i]
@@ -145,38 +170,44 @@ class SVM():
         eta = self.__eta(i, j)
         return self.alpha[j] + (self.y[j] * (E_i - E_j) / eta), E_i, E_j, eta
 
-    def __bound(self, i, j, C):
+    def __bound(self, i, j):
         # print("i: ", i, " | j: ", j, " | alpha_i: ", self.alpha[i], " | alpha_j: ", self.alpha[j], " | C: ", C)
         # print("C + alpha[j] - alpha[i]", C + self.alpha[j] - self.alpha[i])
         if self.y[i] == self.y[j]:
-            B_U = min(C, self.alpha[j] + self.alpha[i])
-            B_L = max(0, self.alpha[j] + self.alpha[i] - C)
+            B_U = min(self.C, self.alpha[j] + self.alpha[i])
+            B_L = max(0, self.alpha[j] + self.alpha[i] - self.C)
         else:
-            B_U = min(C, C + self.alpha[j] - self.alpha[i])
+            B_U = min(self.C, self.C + self.alpha[j] - self.alpha[i])
             B_L = max(0, self.alpha[j] - self.alpha[i])
         return B_U, B_L
 
-    def __update_alpha_j(self, i, j, C):
-        B_U, B_L = self.__bound(i, j, C)
+    def __update_alpha_j(self, i, j):
+        B_U, B_L = self.__bound(i, j)
         alpha_j_star, E_i, E_j, eta = self.__alpha_j_new(i, j)
         return np.clip(alpha_j_star, B_L, B_U), E_i, E_j, eta
 
     def __update_alpha_i(self, i, j, alpha_j_star):
         return self.alpha[i] + self.y[i] * self.y[j] * (self.alpha[j] - alpha_j_star)
 
-    def __update_b(self, i, j, alpha_i_star, alpha_j_star, E_i, E_j, C):
+    def __update_b(self, i, j, alpha_i_star, alpha_j_star, E_i, E_j):
         b_star = 0
         b_i_star = -E_i - self.y[i] * self.K[i, i] * (alpha_i_star - self.alpha[i]) - self.y[j] * self.K[j, i] * (alpha_j_star - self.alpha[j]) + self.b
         b_j_star = -E_j - self.y[i] * self.K[i, j] * (alpha_i_star - self.alpha[i]) - self.y[j] * self.K[j, j] * (alpha_j_star - self.alpha[j]) + self.b
 
-        if alpha_i_star <= C and alpha_i_star >= 0:
+        if alpha_i_star <= self.C and alpha_i_star >= 0:
             b_star = b_i_star
-        elif alpha_j_star <= C and alpha_j_star >= 0:
+        elif alpha_j_star <= self.C and alpha_j_star >= 0:
             b_star = b_j_star
         else:
             b_star = (b_i_star + b_j_star) / 2
         
         return b_star
+
+    def __set_alpha(self, i, val):
+        if self.use_jax:
+            self.alpha.at[i].set(val)
+        else:
+            self.alpha[i] = val
 
     def kernel(self, x_i, x_j, name="rbf", gamma=10):
         return np.exp(-gamma * (x_i - x_j)^2)
@@ -184,23 +215,34 @@ class SVM():
     def cal_kernel(self, X):
         if self.kernel_type == "rbf":
             # RBF Kernel
+            # Scipy, compute exact kernel
             pairwise_dists = squareform(pdist(X, 'euclidean'))
-            K = np.exp(-self.gamma * (pairwise_dists ** 2))
+            K = snp.exp(-self.gamma * (pairwise_dists ** 2))
+
+            # Kernel Approx
+            # n = snp.array(X).shape[0]
+            # sample_n = n
+            # W = np.random.normal(loc=0, scale=1, size=(sample_n, self.dim))
+            # b = np.random.uniform(0, 2*np.pi, size=sample_n)
+            # B = np.repeat(b[:, snp.newaxis], n, axis=1)
+            # norm = 1./ snp.sqrt(sample_n)
+            # Z = norm * snp.sqrt(2) * snp.cos(snp.dot(W, X.T) + B)
+            # K = np.array(snp.dot(Z.T, Z))
             return K
         else:
             # Linear Kernel
-            K = np.dot(X, X.T)
+            K = snp.dot(X, X.T)
             return K
 
-    def fit(self, X, y, C=5, epsilon=1e-6, max_iter=1000, debug_mode=False, kernel_type="linear", gamma=0.6):
-        self.debug_mode = debug_mode
-        self.n, self.dim = np.array(X).shape
+    def fit(self, X, y):
+        # self.info_level = info_level
         self.X = np.array(X)
         self.y = np.reshape(np.array(y), (-1, ))
+        self.n, self.dim = self.X.shape
         
-        self.kernel_type = kernel_type
-        self.gamma = gamma
-        self.K = self.cal_kernel(X)
+        # self.kernel_type = kernel_type
+        # self.gamma = gamma
+        self.K = self.cal_kernel(self.X)
 
         self.alpha = np.zeros(self.n)
         self.b = 0
@@ -209,26 +251,23 @@ class SVM():
         loss = np.inf
         move = np.inf
 
-        while iter < max_iter and move > epsilon:
+        while iter < self.max_iter and move > self.epsilon:
             loss = move = 0
-            # skip = False
 
             for i in range(self.n):
                 j = self.__choose_j(i)
 
-                alpha_j_star, E_i, E_j, eta = self.__update_alpha_j(i, j, C)
+                alpha_j_star, E_i, E_j, eta = self.__update_alpha_j(i, j)
                 if eta <= 0:
-                    self.log('WARNING: Eta <= 0')
-                    # skip = True
+                    self.warning('Eta <= 0')
                     continue
 
                 alpha_i_star = self.__update_alpha_i(i, j, alpha_j_star)
                 if abs(alpha_j_star - self.alpha[j]) < 0.00001:
-                    self.log('WARNING: alpha_j not moving enough')
-                    # skip = True
+                    self.warning('alpha_j not moving enough')
                     continue
 
-                b_star = self.__update_b(i, j, alpha_i_star, alpha_j_star, E_i, E_j, C)
+                b_star = self.__update_b(i, j, alpha_i_star, alpha_j_star, E_i, E_j)
 
                 # Calculate the movement of alpha and b
                 move = move + abs(alpha_i_star - self.alpha[i]) + abs(alpha_j_star - self.alpha[j]) + abs(b_star - self.b)
@@ -236,6 +275,8 @@ class SVM():
                 # Update variables
                 self.alpha[i] = alpha_i_star
                 self.alpha[j] = alpha_j_star
+                # self.__set_alpha(i, alpha_i_star)
+                # self.__set_alpha(j, alpha_j_star)
                 self.b = b_star
             
             # Calculate the loss
@@ -246,7 +287,7 @@ class SVM():
 
             # if not skip:
             iter += 1
-            print("Iter: ", iter, " | Loss: ", loss, " | Move: ", move, " | Acc: ", acc)
+            self.info("Iter: ", iter, " | Loss: ", loss, " | Move: ", move, " | Acc: ", acc)
 
     def decision_function(self, X):
         def make_decision(X):
@@ -288,9 +329,17 @@ class SVM():
     def test(self):
         print(self.__f(0))
 
-    def log(self, *args, **kwargs):
-        if self.debug_mode:
-            print(args, kwargs)
+    def info(self, *args):
+        if self.info_level >= LOG.Info.value:
+            print("INFO: ", *args)
+
+    def warning(self, *args):
+        if self.info_level >= LOG.Warning.value:
+            print("WARNING: ", *args)
+
+    def error(self, *args):
+        if self.info_level >= LOG.Error.value:
+            print("ERROR: ", *args)
 
 
 def gen_dataset():
@@ -314,11 +363,16 @@ def acc_rate(y_pred, y_test):
 
     return acc
 
-def acc(X_train, X_test, y_train, y_test):
+def acc(svm, X_train, X_test, y_train, y_test):
     train_pred = svm.predict(X_train)
-    train_acc = acc_rate(train_pred, y_train)
+    train_acc = svm.score(X_train, y_train)
     test_pred = svm.predict(X_test)
-    test_acc = acc_rate(test_pred, y_test)
+    test_acc = svm.score(X_test, y_test)
+
+    # train_pred = svm.predict(X_train)
+    # train_acc = acc_rate(train_pred, y_train)
+    # test_pred = svm.predict(X_test)
+    # test_acc = acc_rate(test_pred, y_test)
 
     print("Train Acc: ", train_acc, " | Test Acc: ", test_acc)
     return train_pred, test_pred, train_acc, test_acc
@@ -346,27 +400,31 @@ if __name__ == "__main__":
     # dataset, labels = load_bc()
     # dataset, labels = gen_dataset()
     # dataset, labels = load_moon()
-    dataset, labels = load_circle()
+    # dataset, labels = load_circle()
 
-    X, y = np.array(dataset), np.array(labels)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
-    X_train, X_test, y_train, y_test = np.array(X_train), np.array(X_test), np.array(y_train), np.array(y_test)
+    datasets = [gen_dataset(), load_moon(), load_circle()]
 
-    print("X_Train: ", X_train.shape)
-    display(pd.DataFrame(X_train).head())
-    print("Y_Train: ", y_train.shape)
-    display(pd.DataFrame(y_train).head())
+    # X, y = np.array(dataset), np.array(labels)
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+    # X_train, X_test, y_train, y_test = np.array(X_train), np.array(X_test), np.array(y_train), np.array(y_test)
 
-    svm = SVM()
+    # print("X_Train: ", X_train.shape)
+    # display(pd.DataFrame(X_train).head())
+    # print("Y_Train: ", y_train.shape)
+    # display(pd.DataFrame(y_train).head())
 
-    svm.fit(X_train, y_train, C=1, max_iter=1000, kernel_type="rbf", gamma=2)
+    svm = SVM(C=0.6, max_iter=1000, kernel_type="rbf", gamma=2)
 
-    train_pred, test_pred, train_acc, test_acc = acc(X_train, X_test, y_train, y_test)
+    # svm.fit(X_train, y_train, C=0.6, max_iter=1000, kernel_type="rbf", gamma=2)
 
-    display(test_pred[:10])
+    # train_pred, test_pred, train_acc, test_acc = acc(svm, X_train, X_test, y_train, y_test)
 
-    # draw_boundary(X_train, y_train, svm.alpha, svm.b)
-    draw_boundary([(dataset, labels)], [svm], ["RBF SVM"])
+    # display(test_pred[:10])
+
+    # draw_boundary([(dataset, labels)], [svm], ["RBF SVM"], is_trained=True)
+    draw_boundary(datasets, [SVM(C=0.6, max_iter=1000, kernel_type="rbf", gamma=2), SVM(C=0.6, max_iter=1000, kernel_type="linear")], ["RBF SVM", "Linear SVM"], is_trained=False)
+
+# %%
 
 # %%
 

@@ -13,6 +13,8 @@ X, t = make_s_curve(N, noise=0.1)
 X    = X[t.argsort()]
 # The RBF kernel is the Gaussian kernel if we let \gamma = 1 / (2 \sigma^2).
 K    = rbf_kernel(X, gamma=1/2.)
+print(X.shape)
+print(K.shape)
 
 axes[0].imshow(K, cmap=plt.cm.Blues)
 axes[0].set_title('Exact RBF kernel', **font)
