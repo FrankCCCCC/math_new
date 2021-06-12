@@ -218,18 +218,19 @@ class SVM():
         if self.kernel_type == "rbf":
             # RBF Kernel
             # Scipy, compute exact kernel
-            pairwise_dists = squareform(pdist(X, 'euclidean'))
-            K = snp.exp(-self.gamma * (pairwise_dists ** 2))
+            # pairwise_dists = squareform(pdist(X, 'euclidean'))
+            # K = snp.exp(-self.gamma * (pairwise_dists ** 2))
 
             # Kernel Approx
-            # n = snp.array(X).shape[0]
-            # sample_n = n
-            # W = np.random.normal(loc=0, scale=1, size=(sample_n, self.dim))
-            # b = np.random.uniform(0, 2*np.pi, size=sample_n)
-            # B = np.repeat(b[:, snp.newaxis], n, axis=1)
-            # norm = 1./ snp.sqrt(sample_n)
-            # Z = norm * snp.sqrt(2) * snp.cos(snp.dot(W, X.T) + B)
-            # K = np.array(snp.dot(Z.T, Z))
+            n = snp.array(X).shape[0]
+            d = snp.array(X).shape[1]
+            sample_n = 100*d
+            W = np.random.normal(loc=0, scale=1, size=(sample_n, self.dim))
+            b = np.random.uniform(0, 2*np.pi, size=sample_n)
+            B = np.repeat(b[:, snp.newaxis], n, axis=1)
+            norm = 1./ snp.sqrt(sample_n)
+            Z = norm * snp.sqrt(2) * snp.cos(snp.dot(W, X.T) + B)
+            K = np.array(snp.dot(Z.T, Z))
             return K
         else:
             # Linear Kernel
@@ -417,7 +418,7 @@ if __name__ == "__main__":
     # dataset, labels = load_moon()
     # dataset, labels = load_circle()
 
-    datasets = [gen_dataset(), load_moon(), load_circle()]
+    datasets = [load_data('testSet.txt'), load_moon(), load_circle()]
 
     # X, y = np.array(dataset), np.array(labels)
     # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
