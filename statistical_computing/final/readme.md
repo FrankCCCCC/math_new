@@ -5,20 +5,21 @@
 
 ## Abstract
 
+In this article, I will derive SMO algorithm and the Fourier kernel approximation which are well-known algorithm for kernel machine. SMO can solve optimization problem of SVM efficiently and the Fourier kernel approximation is a kind of kernel approximation that can speed up the computation of the kernel matrix. In the last section, I will apply EDA on the dataset "Women's Clothing E-Commerce Review" and conduct a evaluation of my manual SVM.
 
-## Lagrange Multiplier
+<!-- ## Lagrange Multiplier -->
 
-## Karush, Kuhn, Tucker(KKT) Condition
+<!-- ## Karush, Kuhn, Tucker(KKT) Condition -->
 
-## Hard-Margin SVM
+<!-- ## Hard-Margin SVM -->
 
-## Soft-Margin SVM
+<!-- ## Soft-Margin SVM -->
 
-## Kernel Trick
+<!-- ## Kernel Trick -->
 
 ## Sequential Minimal Optimization(SMO)
 
-Based on the paper **Sequential Minimal Optimization: A Fast Algorithm for Training Support Vector Machines**.
+The SMO(Sequential Minimal Optimization) algorithm is proposed from the paper **Sequential Minimal Optimization: A Fast Algorithm for Training Support Vector Machines** in 1998 by J. Platt. In short, SMO picks 2 variables $\alpha_i, \alpha_j$ for every iteration, regulate them to satisfy KKT condition and, update them. In the following article, I will derive the whole algorithm and provide the evaluation on the simulation and real dataset.
 
 We've known he dual problem of soft-SVM is
 
@@ -412,9 +413,9 @@ while($loss > \epsilon$ and $iter \leq \text{max-iter}$):
 - $iter = iter + 1$
 ---
 
-## Random Feature For Kernel Approximation
+## Fourier Kernel Approximation
 
-Based on the paper **Random Features for Large-Scale Kernel Machines** on NIPS'07.
+The Fourier kernel approximation is proposed from the paper **Random Features for Large-Scale Kernel Machines** on NIPS'07. It's a widely-used approximation to accelerate the kernel computing especially for the high dimensional dataset. For a dataset with dimension $D$ and data points $N$, the time complexity of computing the exact kernel is $\mathcal{O}(DN^2)$ and the Fourier kernel approximation is $\mathcal{O}(SN^3)$ with $S$ samples. While the dimension goes up, the approximation remains the same computing time because it is regardless to the dimension of the dataset.
 
 **Bochner's Theorem**
 
@@ -471,7 +472,7 @@ We draw 200 samples from $p(\omega)$ to approximate the RBF kernel. As we can se
 
 **PCA Preprocess**
 
-Apply SVM on the "Women’s Clothing E-Commerce Review Dataset" with C = 0.6 and $\gamma$ of RBF kernel = 2, the **training accuracy is 82.03%** and the **testing accuracy is 81.54%**. The accuracy, loss and, the movement of variables are showed in the following graph. 
+Apply SVM on the "Women's Clothing E-Commerce Review Dataset" with C = 0.6 and $\gamma$ of RBF kernel = 2, the **training accuracy is 82.03%** and the **testing accuracy is 81.54%**. The accuracy, loss and, the movement of variables are showed in the following graph. 
 
 ![](SMO/SVM/pca5_train.png)
 
@@ -487,7 +488,7 @@ The **training accuracy is also 82.03%** and the **testing accuracy is 81.54%**,
 
 ### Overview
 
-The dataset is called "Women’s Clothing E-Commerce Review" which contains reviews written by customers for a online clothing shop. It has 9 features and each feature represents the meaning as the following table.
+The dataset is called **"Women’s Clothing E-Commerce Review"** which contains reviews written by customers for a online clothing shop. It has 9 features and each feature represents the meaning as the following table.
 
 **Features**                  | **Description**
 ------------------------------|:-----------
