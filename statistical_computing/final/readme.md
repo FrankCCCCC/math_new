@@ -210,10 +210,10 @@ $$
 = -\alpha_2 (K_{1, 1} + K_{2, 2} - 2 K_{1, 2}) + \zeta y_2 K_{1, 1}- \zeta y_2 K_{1, 2} - y_1 y_2 + y_2(v_1 - v_2) + 1
 $$
 
-Replace with old $\alpha$
+Replace $v_1 - v_2$ containing old $\alpha_1^{old}, \alpha_2^{old}$ (derived in 2.2.3)
 
 $$
-= -\alpha_2 (K_{1, 1} + K_{2, 2} - 2 K_{1, 2}) + \zeta y_2 K_{1, 1}- \zeta y_2 K_{1, 2} - y_1 y_2 + y_2 [ \ f_{\phi}(x_1) - f_{\phi}(x_2) - \zeta  K_{1, 1} + \zeta K_{1, 2} + ( K_{1, 1} + K_{2, 2} -  2 K_{1, 2}) \alpha_2^{old} y_2 \ ] + 1
+\frac{\partial \mathcal{L}_d(\alpha)}{\partial \alpha_2} = -\alpha_2 (K_{1, 1} + K_{2, 2} - 2 K_{1, 2}) + \zeta y_2 K_{1, 1}- \zeta y_2 K_{1, 2} - y_1 y_2 + y_2 [ \ f_{\phi}(x_1) - f_{\phi}(x_2) - \zeta  K_{1, 1} + \zeta K_{1, 2} + ( K_{1, 1} + K_{2, 2} -  2 K_{1, 2}) \alpha_2^{old} y_2 \ ] + 1
 $$
 
 $$
@@ -318,26 +318,30 @@ $$
 
 **2.3.4 Update $\alpha_1$**
 
+We've know the complementary slackness.
+
 $$
 \alpha_1^* y_1 + \alpha_2^* y_2 = \alpha_1^{old} y_1 + \alpha_2^{old} y_2 = \zeta
 $$
+
+Move the updated value $\alpha_1^*$ to the left side and we can get
 
 $$
 \alpha_1^* = \frac{\alpha_1^{old} y_1 + \alpha_2^{old} y_2 - \alpha_2^* y_2}{y_1}
 $$
 
 $$
-\alpha^* = \alpha_1^{old} + y_1 y_2(\alpha_2^{old} - \alpha_2^*)
+\alpha_1^* = \alpha_1^{old} + y_1 y_2(\alpha_2^{old} - \alpha_2^*)
 $$
 
 ### 2.4 Step 3. Update Bias
 
-The only equation that we can find out the bias $b$ is the function $f_{\phi}(x) = b + \sum_{i=1}^N \alpha_i y_i k(x_i, x)$. When $0 \lt \alpha_i \lt C$, it means that the data point $x_i$ is right on the margin that $f_{\phi}(x_i) = y_i$ and the bias $b_1^*, b_2^*$ can be derived directly. For convenience, denote $f_{\phi}^*$ as the hyperplane that contains the new variables $\alpha_1^*, \alpha_2^*$.
+The only equation that contains bias $b$ is the function $f_{\phi}(x) = b + \sum_{i=1}^N \alpha_i y_i k(x_i, x)$. When $0 \lt \alpha_i^* \lt C$, it means that the data point $x_i$ is right on the margin such that $f_{\phi}(x)=y_i$, $f_{\phi}^*(x_i) = y_i$ and the bias $b_1^*, b_2^*$ can be derived directly. Note that for convenience, $f_{\phi}^*(x_w) = \sum_{i=3}^N \alpha_i y_i K_{i, w} - \alpha_1^* y_1 K_{1, w} - \alpha_2^* y_2 K_{2, w} + b^* = y_w$ contains updated variables $\alpha_2^*, \alpha_2^*, b^*$. 
 
-The bias derived from $\alpha_1$
+If $0 < \alpha_1^* < C$, the data point $x_1$ should right on the margin and $f_{\phi}^*(x_1) = y_1$. The bias derived from $\alpha_1$.
 
 $$
-b_1^* = y_1 - f_{\phi}^*(x_1) = y_1 - \sum_{i=3}^N \alpha_i y_i K_{i, 1} - \alpha_1^* y_1 K_{1, 1} - \alpha_2^* y_2 K_{2, 1}
+b_1^* = y_1 - \sum_{i=3}^N \alpha_i y_i K_{i, 1} - \alpha_1^* y_1 K_{1, 1} - \alpha_2^* y_2 K_{2, 1}
 $$
 
 $$
@@ -348,10 +352,10 @@ $$
 = - E_1 - y_1 K_{1, 1} (\alpha_1^* - \alpha_1^{old}) - y_2 K_{2, 1} (\alpha_2^* - \alpha_2^{old}) + b
 $$
 
-In addition, the bias derived from $\alpha_2$
+If $0 < \alpha_2^* < C$, the data point $x_2$ should right on the margin and $f_{\phi}^*(x_2) = y_2$. The bias derived from $\alpha_2$.
 
 $$
-b_2^* = y_2 - f_{\phi}^*(x_2) = y_2 - \sum_{i=3}^N \alpha_i y_i K_{i, 2} - \alpha_1^* y_1 K_{1, 2} - \alpha_2^* y_2 K_{2, 2}
+b_2^* = y_2 - \sum_{i=3}^N \alpha_i y_i K_{i, 2} - \alpha_1^* y_1 K_{1, 2} - \alpha_2^* y_2 K_{2, 2}
 $$
 
 $$
@@ -362,7 +366,7 @@ $$
 = - E_2 - y_1 K_{1, 2} (\alpha_1^* - \alpha_1^{old}) - y_2 K_{2, 2} (\alpha_2^* - \alpha_2^{old}) + b
 $$
 
-When the data point $x_i, x_j$ are both not on the margin, the bias can be 
+When the data point $x_i, x_j$ are both not on the margin, we choose the average of $b_1^*, b_2^*$ as the updated value.
 
 $$
 b^* = \frac{b_1^* + b_2^*}{2}
@@ -383,11 +387,11 @@ For all $\alpha_i = 0, 1 \leq i \leq N$
 
 $b = 0$
 
-$loss = \infty$
+$move = \infty$
 
-while($loss > \epsilon$ and $iter \leq \text{max-iter}$):
+while($move > \epsilon$ and $iter \leq \text{max-iter}$):
 
-- $\alpha_1^* = \alpha_2^* = b^* = loss = 0$
+- $\alpha_1^* = \alpha_2^* = b^* = move = 0$
 
 - for($n$ in $N/2$):
   
@@ -428,7 +432,7 @@ while($loss > \epsilon$ and $iter \leq \text{max-iter}$):
     
     - $b^* = \frac{b_i^* + b_j^*}{2}$
 
-  - $loss = loss + |\alpha_1^* - \alpha_1| + |\alpha_2^* - \alpha_2| + |b^* - b|$
+  - $move = move + |\alpha_1^* - \alpha_1| + |\alpha_2^* - \alpha_2| + |b^* - b|$
 
   - $\alpha_i = \alpha_i^*, \quad \alpha_j = \alpha_j^*, \quad b = b^*$
 
@@ -449,7 +453,7 @@ Thus, we can extend the Bochner's theorem to kernel.
 
 According to Bochner's theorem, a continuous kernel $k(x, y) = k(x-y) \in \mathbb{R}^d$ is positive definite if and only if $k(\delta)$ is the Fourier transform of a non-negative measure.
 
-If a shift-invariant kernel $k(\delta)$ is a properly scaled, Bochner's therorem guarantees that its Fourier transform $p(\omega)$ is a proper probability distribution. Defining $\zeta_{\omega}(x) = e^{j \omega' x}$, we have 
+If a shift-invariant kernel $k(\delta)$ is a properly scaled, Bochner's theorem guarantees that its Fourier transform $p(\omega)$ is a proper probability distribution. Defining $\zeta_{\omega}(x) = e^{j \omega' x}$, we have 
 
 $$
 k(x-y) = \int_{\omega} p(\omega) e^{j \omega' (x - y)} d \omega = E_{\omega}[\zeta_{\omega}(x) \zeta_{\omega}(y)]
