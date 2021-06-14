@@ -3,7 +3,7 @@
 106033233 資工21 周聖諺
 ---
 
-## Abstract
+## 1. Abstract
 
 In this article, I will derive SMO algorithm and the Fourier kernel approximation which are well-known algorithm for kernel machine. SMO can solve optimization problem of SVM efficiently and the Fourier kernel approximation is a kind of kernel approximation that can speed up the computation of the kernel matrix. In the last section, I will apply EDA on the dataset "Women's Clothing E-Commerce Review" and conduct a evaluation of my manual SVM.
 
@@ -17,7 +17,7 @@ In this article, I will derive SMO algorithm and the Fourier kernel approximatio
 
 <!-- ## Kernel Trick -->
 
-## Sequential Minimal Optimization(SMO)
+## 2. Sequential Minimal Optimization(SMO)
 
 The SMO(Sequential Minimal Optimization) algorithm is proposed from the paper **Sequential Minimal Optimization: A Fast Algorithm for Training Support Vector Machines** in 1998 by J. Platt. In short, SMO picks 2 variables $\alpha_i, \alpha_j$ for every iteration, regulate them to satisfy KKT condition and, update them. In the following article, I will derive the whole algorithm and provide the evaluation on the simulation and real dataset.
 
@@ -37,9 +37,9 @@ $$
 
 where $\phi$ is an embedding function projecting the data points to a high dimensional space.
 
-However, it's very hard to solve because we need to optimize $N$ variables. 
+However, it's very hard to solve because we need to optimize $N$ variables. As a result, J. Platt proposed SMO to solve this problem efficiently.
 
-### Notation
+### 2.1 Notation
 
 We denote the target function as $\mathcal{L}_d(\alpha, C)$
 
@@ -49,7 +49,7 @@ $$
 
 We also denote the kernel of $x_1, x_2$ as $K_{1, 2} = k(x_1, x_2)$.
 
-### Step 1. Update 2 Variable
+### 2.2 Step 1. Update 2 Variable
 
 First, we need to pick 2 variables to update in sequence, so we split the variables $\alpha_1, \alpha_2$ from the summation. 
 
@@ -83,7 +83,7 @@ $$
 
 where $\mathcal{Const} = \sum_{i=3}^{N} \alpha_i - \frac{1}{2} \sum_{i=3}^{N} \sum_{j=3}^{N} \alpha_i \alpha_j y_i y_j k(x_i, x_j)$. We see it as a constant because it is regardless to $\alpha_1, \alpha_2$.
 
-**The Relation Between The Update Values and The Hyperplane**
+**2.2.1 The Relation Between The Update Values and The Hyperplane**
 
 We've derive the partial derivative of the dual problem.
 
@@ -125,7 +125,7 @@ $$
 
 where $\alpha_1^{old}$ and $\alpha_2^{old}$ are $\alpha_1$ and $\alpha_2$ of the previous iteration. Since we see $\alpha_i, i \geq 3$ as constant, $\alpha_i$ shouldn't depends on update variables $\alpha_1, \alpha_2$.
 
-**Rewrite The Complementary Slackness**
+**2.2.2 Rewrite The Complementary Slackness**
 
 The constraint can be represented as
 
@@ -172,7 +172,7 @@ $$
 - (\zeta - \alpha_2 y_2) v_1 - \alpha_2 y_2 v_2
 $$
 
-**Combine the $v_1$, $v_2$ and $\zeta$**
+**2.2.3 Combine the $v_1$, $v_2$ and $\zeta$**
 
 $$
 v_1 - v_2 = [ \ f_{\phi}(x_1) - b -  \alpha_1^{old} y_1 K_{1, 1} - \alpha_2^{old} y_2 K_{2, 1} \ ] - [ \ f_{\phi}(x_2) - b -  \alpha_1^{old} y_1 K_{1, 2} - \alpha_2^{old} y_2 K_{2, 2} \ ]
@@ -194,7 +194,7 @@ $$
 = f_{\phi}(x_1) - f_{\phi}(x_2) - \zeta  K_{1, 1} + \zeta K_{1, 2} + ( K_{1, 1} + K_{2, 2} -  2 K_{1, 2} ) \alpha_2^{old} y_2
 $$
 
-**Derive Gradient of $\alpha_2$**
+**2.2.4 Derive Gradient of $\alpha_2$**
 
 $$
 \frac{\partial \mathcal{L}_d(\alpha)}{\partial \alpha_2} = 
@@ -248,17 +248,39 @@ $$
 \alpha_2^{new} = \alpha_2^{old} + \frac{y_2 (E_1 - E_2)}{\eta}
 $$
 
-### Step 2. Clip with Bosk Constraint
+### 2.3 Step 2. Clip with Bosk Constraint
+
+The new values should satisfy the complementary slackness as 
 
 $$
 \alpha_1 y_1 + \alpha_2 y_2  = \zeta, \quad 0 \leq \alpha_i \leq C
 $$
 
-**Case 1: Inequality**
+Since $y_1, y_2$ may have different labels, thus we consider 2 cases. The first case is $y_1 \neq y_2$ as the left part of the figure 1 and another case is $y_1 = y_2$ which corresponds to he right part of the figure.
 
-When $y_1 \neq y_2$, the equation is either $\alpha_1 - \alpha_2 = k$ or $\alpha_1 - \alpha_2 = -k$ where $k$ is a positive constant.
+Note that there is another line in quadrant 3 in the case 2 but it doesn't show in the figure due to the limit of the size.
 
-The upper bound can be written as
+![](./imgs/bosk.png)
+
+***Figure 1***
+
+**2.3.1 Case 1: Inequality**
+
+When $y_1 \neq y_2$, the equation is either $\alpha_1 - \alpha_2 = k$ or $\alpha_1 - \alpha_2 = -k$ where $k = |\zeta|$ is a positive constant.
+
+First, we consider the blue area $\alpha_1 - \alpha_2 = -k$. We can see $\alpha_1 \in [C, k] = [C, \alpha_2 - \alpha_1]$. The upper bound should be $C$ and the lower bound should be $\alpha_2 - \alpha_1$.
+
+$$
+B_U = C, \ B_L = \alpha_2 - \alpha_1
+$$
+
+Next, we consider the grey area $\alpha_1 - \alpha_2 = k$. We can see $\alpha_1 \in [0, C-k] = [0, C + \alpha_2 - \alpha_1]$. The upper bound should be $C + \alpha_2 - \alpha_1$ and the lower bound should be 0.
+
+$$
+B_U = C + \alpha_2 - \alpha_1, \ B_L = 0
+$$
+
+Combine 2 cases, both new and old values should satisfy the bosk constraint. The upper bound of $\alpha_2^{new}$  can be written as
 
 $$
 B_U = \min(C, C + \alpha_2^{old} - \alpha_1^{old})
@@ -270,11 +292,11 @@ $$
 B_L = \max(0, \alpha_2^{old} - \alpha_1^{old})
 $$
 
-**Case 2: Equality**
+**2.3.2 Case 2: Equality**
 
 When $y_1 = y_2$, the equation is either $\alpha_1 + \alpha_2 = k$ or $\alpha_1 + \alpha_2 = -k$ where $k$ is a positive constant.
 
-The upper bound can be written as
+In similar way, we can derive the case of equality. The upper bound can be written as
 
 $$
 B_U = \min(C, \alpha_2^{old} + \alpha_1^{old})
@@ -286,7 +308,7 @@ $$
 B_L = \max(0, \alpha_2^{old} + \alpha_1^{old} - C)
 $$
 
-**Clip The Value**
+**2.3.3 Clip The Value**
 
 According the bound we've derived, we need **clip** the updated variable $\alpha_2^{new}$ to satisfy the constraint. In addition, we denote the new value after clipping as $\alpha_2^*$.
 
@@ -294,7 +316,7 @@ $$
 \alpha_2^* = CLIP(\alpha_2^{new}, B_L, B_U)
 $$
 
-**Update $\alpha_1$**
+**2.3.4 Update $\alpha_1$**
 
 $$
 \alpha_1^* y_1 + \alpha_2^* y_2 = \alpha_1^{old} y_1 + \alpha_2^{old} y_2 = \zeta
@@ -308,7 +330,7 @@ $$
 \alpha^* = \alpha_1^{old} + y_1 y_2(\alpha_2^{old} - \alpha_2^*)
 $$
 
-### Step 3. Update Bias
+### 2.4 Step 3. Update Bias
 
 The only equation that we can find out the bias $b$ is the function $f_{\phi}(x) = b + \sum_{i=1}^N \alpha_i y_i k(x_i, x)$. When $0 \lt \alpha_i \lt C$, it means that the data point $x_i$ is right on the margin that $f_{\phi}(x_i) = y_i$ and the bias $b_1^*, b_2^*$ can be derived directly. For convenience, denote $f_{\phi}^*$ as the hyperplane that contains the new variables $\alpha_1^*, \alpha_2^*$.
 
@@ -348,7 +370,7 @@ $$
 
 For more detail, please see the pseudo code.
 
-### Pseudo Code
+### 2.5 Pseudo Code
 
 ---
 Given $C$, otherwise the default value is $C = 5$
@@ -413,17 +435,17 @@ while($loss > \epsilon$ and $iter \leq \text{max-iter}$):
 - $iter = iter + 1$
 ---
 
-## Fourier Kernel Approximation
+## 3. Fourier Kernel Approximation
 
 The Fourier kernel approximation is proposed from the paper **Random Features for Large-Scale Kernel Machines** on NIPS'07. It's a widely-used approximation to accelerate the kernel computing especially for the high dimensional dataset. For a dataset with dimension $D$ and data points $N$, the time complexity of computing the exact kernel is $\mathcal{O}(DN^2)$ and the Fourier kernel approximation is $\mathcal{O}(SN^3)$ with $S$ samples. While the dimension goes up, the approximation remains the same computing time because it is regardless to the dimension of the dataset.
 
-**Bochner's Theorem**
+### 3.1 Bochner's Theorem
 
 If $\phi: \mathbb{R}^n \to \mathbb{C}$ is a positive definite, continuous, and satisfies $\phi(0)=1$, then there is some Borel probability measure $\mu \in \mathbb{R}^n$ such that $\phi = \hat{\mu}$
 
 Thus, we can extend the Bochner's theorem to kernel.
 
-**Theorem 1**
+### 3.2 Theorem 1
 
 According to Bochner's theorem, a continuous kernel $k(x, y) = k(x-y) \in \mathbb{R}^d$ is positive definite if and only if $k(\delta)$ is the Fourier transform of a non-negative measure.
 
@@ -447,9 +469,9 @@ $$
 
 In order to approximate the RBF kernel $k(k, y) = e^{-\frac{||x - y||_2^2}{2}}$, we draw $\omega$ from Fourier transformed distribution  $p(\omega) = \mathcal{N}(0, 1)$.
 
-## Experiments
+## 4. Experiments
 
-### Simulation With Exact Kernel
+### 4.1 Simulation With Exact Kernel
 
 ![](SMO/SVM/all.png)
 
@@ -461,16 +483,16 @@ Here we generate 3 kinds of data. The first row is generated by a Gaussian mixtu
 
 The SMO and kernel seem work properly even under noise and nonlinear dataset.
 
-### Simulation With Approximated Kernel
+### 4.2 Simulation With Approximated Kernel
 
 ![](SMO/SVM/all_approx_200.png)
 
 We draw 200 samples from $p(\omega)$ to approximate the RBF kernel. As we can see, the testing accuracies are close to the ones of exact kernels in most of cases.
 
-### Real Dataset
+### 4.3 Real Dataset
 
 
-**PCA Preprocess**
+**4.3.1 PCA Preprocess**
 
 Apply SVM on the "Women's Clothing E-Commerce Review Dataset" with C = 0.6 and $\gamma$ of RBF kernel = 2, the **training accuracy is 82.03%** and the **testing accuracy is 81.54%**. The accuracy, loss and, the movement of variables are showed in the following graph. 
 
@@ -478,15 +500,15 @@ Apply SVM on the "Women's Clothing E-Commerce Review Dataset" with C = 0.6 and $
 
 As we can see, the movement of variable gets smaller during training and converge around 50 and the accuracy remains about 82%.
 
-**LDA Preprocess**
+**4.3.2 LDA Preprocess**
 
 ![](SMO/SVM/lda5_train.png)
 
 The **training accuracy is also 82.03%** and the **testing accuracy is 81.54%**, but the curves are smoother than the ones of PCA. 
 
-## Data Analysis
+## 5. Data Analysis
 
-### Overview
+### 5.1 Overview
 
 The dataset is called **"Women’s Clothing E-Commerce Review"** which contains reviews written by customers for a online clothing shop. It has 9 features and each feature represents the meaning as the following table.
 
@@ -526,7 +548,7 @@ The average rating of all goods is 4.2 but the class "Trend" has only 3.8.
 
 The graph is the result of LDA with 5 topics. Ttopics are 3 and 4 seems interesting. The topic 3 seems related to boys and their girlfriend, since words like girlfriend, gift and, birthday appear in the top 10 words. We can infer that most of purchases in this topic are the gifts for girlfriends by the boyfriends. The topic 4 seems also related to gift but not between lovers. The comment are mainly about receivers' compliment.
 
-### Rating
+### 5.2 Rating
 
 **Rating Score 5**
 
@@ -544,7 +566,7 @@ There are many positive words in the word cloud like perfect, comfort, style...
 
 An interesting thing is that "cute" seems neutral since it appears in both side. It may be caused by cultural difference between western and eastern societies.
 
-### Ages
+### 5.3 Ages
 
 LDA
 
@@ -599,7 +621,12 @@ Word Cloud
 **More Than 60**
 
 ![](SMO/age_gt60/age_gt60.png)
-## Reference
+
+## 7. Conclusion
+
+In this article, we've seen detailed derivation of SMO algorithm and the implementation of SVM. We've also conducted the evaluation on the simulated dataset and real dataset. On the other hand, we've reviewed the Fourier kernel approximation briefly and compared the approximation kernel with the exact kernel. Finally, we've also seen an EDA on the Women's E-Commerce Clothing Reviews dataset and had some interesting insights.
+
+## 7. Reference
 
 ### SMO
 - [Sequential Minimal Optimization: A Fast Algorithm for Training Support Vector Machines](https://www.microsoft.com/en-us/research/publication/sequential-minimal-optimization-a-fast-algorithm-for-training-support-vector-machines/)
