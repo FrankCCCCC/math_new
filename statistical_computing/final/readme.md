@@ -5,7 +5,7 @@
 
 ## 1. Abstract
 
-In this article, I will derive SMO algorithm and the Fourier kernel approximation which are well-known algorithm for kernel machine. SMO can solve optimization problem of SVM efficiently and the Fourier kernel approximation is a kind of kernel approximation that can speed up the computation of the kernel matrix. In the last section, I will apply EDA on the dataset "Women's Clothing E-Commerce Review" and conduct a evaluation of my manual SVM.
+In this article, I will derive SMO algorithm and the Fourier kernel approximation which are well-known algorithm for kernel machine. **SMO** can solve optimization problem of SVM efficiently and the **Fourier kernel approximation** is a kind of kernel approximation that can speed up the computation of the kernel matrix. In the last section, I will apply **EDA on the dataset "Women's Clothing E-Commerce Review"** and conduct a evaluation of my manual SVM.
 
 <!-- ## Lagrange Multiplier -->
 

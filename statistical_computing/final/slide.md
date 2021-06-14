@@ -20,9 +20,11 @@ pagination: true
 
 ---
 
-# SMO
+# Sequential Minimal Optimization(SMO)
+---
+# SMO - Step 1. Select & Update
 
-Denote $x_i$, $y_i$ as i-th data point and label. Let $K_{i, j} = k(x_i, x_j)$, where $k(a, b)$ is the kernel function.
+Denote $x_i$, $y_i$ as i-th data point and label. Let $K_{i, j} = k(x_i, x_j)$, where $k(a, b)$ is the kernel function and $f_{\phi}(x_i)$ is the prediction function.
 
 $$E_i = f(x_i) - y_i, \ E_j = f(x_j) - y_j$$
 
@@ -37,15 +39,15 @@ To understand intuitively, you can see $\eta$ as **Learning Rate** and $y_j (E_i
 For more detailed derivation, please refer to the report.
 
 ---
-# SMO - Bosk Constraint
+# SMO - Step 2. Bosk Constraint
 
-To satisfy the complementary slackness $\alpha_1 y_1 + \alpha_2 y_2  = \zeta, \ 0 \leq \alpha_i \leq C$, we need to **clip** the $\alpha_j^{new}$
+To satisfy the complementary slackness $\alpha_1 y_1 + \alpha_2 y_2  = \zeta, \ 0 \leq \alpha_i \leq C$, we need to **clip** the $\alpha_j^{new}$ under blue and grey area.
 
 ![](./imgs/bosk.png)
 
 ---
 
-# SMO - Bosk Constraint
+# SMO - Step 2. Bosk Constraint
 
 - if($y_i = y_j$):
 
@@ -59,7 +61,9 @@ To satisfy the complementary slackness $\alpha_1 y_1 + \alpha_2 y_2  = \zeta, \ 
 
 ---
 
-# SMO - Update Bias
+# SMO - Step 3. Update Bias
+
+When $0 \lt \alpha_i^* \lt C$, the data point $x_i$ is right on the margin such that $f_{\phi}(x)=y_i$.
 
 - $b_i^* = - E_i - y_i K_{i, i} (\alpha_i^* - \alpha_i) - y_j K_{j, i} (\alpha_j^* - \alpha_j) + b$  
 - $b_j^* = - E_j - y_i K_{i, j} (\alpha_i^* - \alpha_i) - y_j K_{j, j} (\alpha_j^* - \alpha_j) + b$
@@ -79,9 +83,12 @@ To satisfy the complementary slackness $\alpha_1 y_1 + \alpha_2 y_2  = \zeta, \ 
 
 # Fourier Kernel Approximation
 
+---
+# Fourier Kernel Approximation
+
 Based on the paper **Random Features for Large-Scale Kernel Machines** on NIPS'07
 
-If a shift-invariant kernel $k(\delta)$ is a properly scaled, Bochner's theorem guarantees that its Fourier transform $p(\omega)$ is a proper probability distribution. Defining $\zeta_{\omega}(x) = e^{j \omega' x}$, we have 
+For a shift-invariant kernel $k(\delta)$, Bochner's theorem guarantees that its Fourier transform $p(\omega)$ is a proper probability distribution. Defining $\zeta_{\omega}(x) = e^{j \omega' x}$, we have 
 
 $$
 k(x-y) = \int_{\omega} p(\omega) e^{j \omega' (x - y)} d \omega = E_{\omega}[\zeta_{\omega}(x) \zeta_{\omega}(y)]
@@ -103,3 +110,5 @@ $$
 $$
 \mathbb{z}_{\omega}(x) = \sqrt{2} cos(\omega x + b) \ \text{where} \ \omega \sim p(\omega) = \mathcal{N}(0, 1)
 $$
+
+But when I apply the approximation to the dataset, it is still **not fast enough**. It may need GPU to speed up.
