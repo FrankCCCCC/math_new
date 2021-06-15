@@ -137,6 +137,9 @@ else:
     df_original = pd.read_pickle("no_null.pkl")
 # %%
 # Condition slicing
+# Small datset for debugging
+df = df.sample(frac=0.1, replace=False, random_state=42)
+
 # df = df[df["Recommended IND"] == 1]
 # df = df[df["Rating"] == 1]
 
@@ -160,30 +163,30 @@ decom_text, lda = lda(vec_text, n_comp=5)
 
 # %%
 # Plot distribution of properties
-# plot_dist(df)
+plot_dist(df)
 
 # Average age & rating of each group
-# groups = ['Division Name', 'Department Name', 'Class Name']
-# fields = ['Age', 'Rating']
+groups = ['Division Name', 'Department Name', 'Class Name']
+fields = ['Age', 'Rating']
 
-# for group in groups:
-#     for field in fields:
-#         print("Group By: ", group)
-#         display(pd.DataFrame(df[[group, field]]).groupby(group).mean())
+for group in groups:
+    for field in fields:
+        print("Group By: ", group)
+        display(pd.DataFrame(df[[group, field]]).groupby(group).mean())
 
 # %%
 # Vectorizer features
-# summary_text = np.sum(vec_text, axis=0)
-# vectorizer._validate_vocabulary()
-# display(pd.DataFrame(summary_text, index=vectorizer.get_feature_names()).nlargest(10, columns=[0]))
+summary_text = np.sum(vec_text, axis=0)
+vectorizer._validate_vocabulary()
+display(pd.DataFrame(summary_text, index=vectorizer.get_feature_names()).nlargest(10, columns=[0]))
 
 # Top words of LDA topics
-# n_top_words = 10
-# plot_top_words(lda, vectorizer, n_top_words, 'Topics in LDA model')
+n_top_words = 10
+plot_top_words(lda, vectorizer, n_top_words, 'Topics in LDA model')
 
 # Word Cloud
-# cloud = WordCloud().generate(" ".join(list(df['Review Text'])))
-# cloud.to_file('output.png')
+cloud = WordCloud().generate(" ".join(list(df['Review Text'])))
+cloud.to_file('output.png')
 
 # %%
 # Select review text of specific topic
@@ -243,6 +246,6 @@ def plot_training(svm, text=''):
 
     fig.tight_layout()
 
-# plot_training(svm, text=' With LDA Preprocess')
-plot_training(svm2, text=' With PCA Preprocess')
+plot_training(svm, text=' With LDA Preprocess')
+# plot_training(svm2, text=' With PCA Preprocess')
 # %%

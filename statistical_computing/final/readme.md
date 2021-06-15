@@ -586,7 +586,7 @@ An interesting thing is that the topic 4 contains broke, cheeky, obsess and, for
 
 ![](SMO/age_30s/age_30s_lda.png)
 
-The topic 4 perhaps is about wedding. 
+The topic 4 contains wed, love and, pleasant. It perhaps is about wedding. 
 
 **40s**
 
