@@ -21,6 +21,24 @@ pagination: true
 ---
 
 # Sequential Minimal Optimization(SMO)
+
+---
+
+# SMO
+# Step 1. Select & Update
+
+Select 2 variables $\alpha_i, \alpha_j$ and update
+
+# Step 2. Bosk Constraint
+
+Clip the value of $\alpha_j$ with complementary slackness
+
+Derive the new values $\alpha_i^*, \alpha_j^*$
+
+# Step 3. Update Bias
+
+Derive new bias $b^*$ from $\alpha_i^*, \alpha_j^*$
+
 ---
 # SMO - Step 1. Select & Update
 
@@ -88,7 +106,7 @@ When $0 \lt \alpha_i^* \lt C$, the data point $x_i$ is right on the margin such 
 
 Based on the paper **Random Features for Large-Scale Kernel Machines** on NIPS'07
 
-For a shift-invariant kernel $k(\delta)$, Bochner's theorem guarantees that its Fourier transform $p(\omega)$ is a proper probability distribution. Defining $\zeta_{\omega}(x) = e^{j \omega' x}$, we have 
+For a **shift-invariant kernel** $k(\delta)$, **Bochner's theorem** guarantees that its **Fourier transform $p(\omega)$** is a **probability distribution**. Defining $\zeta_{\omega}(x) = e^{j \omega' x}$, we have 
 
 $$
 k(x-y) = \int_{\omega} p(\omega) e^{j \omega' (x - y)} d \omega = E_{\omega}[\zeta_{\omega}(x) \zeta_{\omega}(y)]

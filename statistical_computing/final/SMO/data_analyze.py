@@ -138,7 +138,7 @@ else:
 # %%
 # Condition slicing
 # Small datset for debugging
-df = df.sample(frac=0.1, replace=False, random_state=42)
+# df = df.sample(frac=0.1, replace=False, random_state=42)
 
 # df = df[df["Recommended IND"] == 1]
 # df = df[df["Rating"] == 1]
