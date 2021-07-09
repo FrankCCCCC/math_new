@@ -1,0 +1,749 @@
+---
+header-includes:
+- \usepackage{xeCJK} 
+- \usepackage{fontspec} 
+- \setCJKmainfont{微軟正黑體} 
+- \XeTeXlinebreaklocale "zh"
+- \XeTeXlinebreakskip = 0pt plus 1pt
+title: "Statistical Computing Mid"
+author: "周聖諺"
+date: "4/23/2021"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: 
+   latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+## Utility Functions
+
+```{r}
+suppressPackageStartupMessages(require(matrixcalc))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(data.table))
+suppressPackageStartupMessages(library(purrr))
+suppressPackageStartupMessages(library(mvtnorm))
+suppressPackageStartupMessages(library(Matrix))
+suppressPackageStartupMessages(library(gganimate))
+
+# Define ggplot2 theme
+gg_theme <- function(){
+  p <- theme(
+      plot.title = element_text(size = 20,face = 'bold',
+                                margin = margin(0,0,3,0), hjust = 0.5),
+      axis.text = element_text(size = rel(1.05), color = 'black'),
+      axis.title = element_text(size = rel(1.45), color = 'black'),
+      axis.title.y = element_text(margin = margin(0,10,0,0)),
+      axis.title.x = element_text(margin = margin(10,0,0,0)),
+      axis.ticks.x = element_line(colour = "black", size = rel(0.8)),
+      axis.ticks.y = element_blank(),
+      legend.position = "right",
+      legend.key.size = unit(1.4, 'lines'),
+      legend.title = element_text(size = 12, face = 'bold'),
+      legend.text = element_text(size = 12),
+      panel.border = element_blank(),
+      panel.grid.major = element_line(colour = "gainsboro"),
+      panel.background = element_blank()
+    )
+  return(p)
+}
+
+# Mixture density of predictive Student-t distribution
+mixture_pdf_t <- function(model, data){
+  mixture <- vector(mode = "numeric", length = NROW(data))
+  
+  for (k in 1:length(model$nu)) {
+    L_k <- solve((((model$nu[k] + 1 - NROW(model$m)) * model$beta[k]) / (1 + model$beta[k])) * model$W[,,k])
+    
+    mixture <- mixture + (model$alpha[k]/sum(model$alpha)) * dmvt(x = cbind(data$x,data$y), 
+                                                                  delta = model$m[, k], 
+                                                                  sigma = L_k, 
+                                                                  df = model$nu[k] + 1 - NROW(model$m), 
+                                                                  log = FALSE, type = "shifted")
+  }
+  return(mixture)
+}
+
+# Mixture density of predictive Student-t distribution
+multi_mixture_t_pdf <- function(model, data){
+  prob_mat <- matrix(0, nrow=model$N, ncol=model$K)
+  
+  for (k in 1:length(model$K)) {
+    L_k <- solve((((model$nu[k] + 1 - NROW(model$m)) * model$beta[k]) / (1 + model$beta[k])) * model$W[,,k])
+    
+    prob_mat[, k] <- (model$alpha[k]/sum(model$alpha)) * dmvt(x=data, 
+                                                              delta=model$m[, k], 
+                                                              sigma=L_k, 
+                                                              df=model$nu[k] + 1 - NROW(model$m), 
+                                                              log=FALSE)
+  }
+  return(prob_mat)
+}
+
+# Enhance the numerical stability, compute ln(sum(e^x))
+log_sum_exp <- function(x) {
+  offset <- max(x)
+  s <- log(sum(exp(x - offset))) + offset
+  i <- which(!is.finite(s))
+  if (length(i) > 0) { s[i] <- offset }
+  return(s)
+}
+```
+
+## E Step
+
+Update $ln \ \rho_{nk}$
+
+$$
+ln \ \rho_{nk} = E_{\pi_k}[ln \ \pi_k] − \frac{D}{2} ln(2\pi) + \frac{1}{2} E_{\Lambda_k}[ln \ |\Lambda_k|] − \frac{1}{2} E_{\mu_k, \Lambda_k}[(x_n − \mu_k)^{\top} \Lambda_k (x_n − \mu_k)]
+$$
+
+```{r}
+update_log_rho_nk <- function(X, k, m_k, log_pi, log_Lambda, D, nu_k, W_k){
+  diff <- sweep(X, MARGIN = 2, STATS = m_k[, k], FUN = "-")
+  log_rho_nk <- log_pi[k] + 
+                     0.5 * log_Lambda[k] - 
+                     0.5 * (D / log(pi)) - 
+                     0.5 * nu_k[k] * diag(diff %*% W_k[,,k] %*% t(diff))
+  return(log_rho_nk)
+}
+```
+
+### Some Utility Variables
+
+Update $N_k, \bar{x}_k, S_k$
+
+$$
+N_k = \sum^N_{n=1} r_{nk}
+$$
+
+$$
+\bar{x}_k = \frac{1}{N_k} \sum^N_{n=1} r_{nk} x_n
+$$
+
+$$
+S_k = \frac{1}{N_k} \sum^N_{n=1} r_{nk} (x_n - \bar{x}_k) (x_n - \bar{x}_k)^{\top}
+$$
+
+```{r}
+update_N_k <- function(r_nk, epsilon){
+  return(colSums(r_nk) + epsilon)
+}
+
+update_x_bar_k <- function(k, r_nk, X, N_k){
+  return((r_nk[ ,k] %*% X) / N_k[k])
+}
+
+update_S_k <- function(k, X, x_bar_k, r_nk, N_k){
+  x_cen <- sweep(X, MARGIN=2, STATS=x_bar_k[, k], FUN="-")
+  return(t(x_cen) %*% (x_cen * r_nk[, k]) / N_k[k])
+}
+
+update_log_r_nk <- function(log_rho_nk){
+  # Use LogSumExp to enhance numerical stability
+  Z <- apply(log_rho_nk, 1, log_sum_exp)
+  log_r_nk <- log_rho_nk - Z
+  
+  return(log_r_nk)
+}
+
+update_r_nk <- function(log_r_nk){
+  r_nk <- apply(log_r_nk, 2, exp)
+  return(r_nk)
+}
+
+update_r_nk_both <- function(log_rho_nk){
+  # Use LogSumExp to enhance numerical stability
+  Z <- apply(log_rho_nk, 1, log_sum_exp)
+  log_r_nk <- log_rho_nk - Z 
+  r_nk <- apply(log_r_nk, 2, exp)
+  
+  res$Z <- Z
+  res$log_r_nk <- log_r_nk
+  res$r_nk <- r_nk
+  
+  return(res)
+}
+```
+
+## M Step
+
+### 2. Gaussian Miture
+
+Update $ln \ \Lambda_k$
+
+$$
+ln \ \bar{\Lambda}_k = E[ln \ |\Lambda_k|] = \sum^D_{d=1} \psi(\frac{\nu_k + 1 - d}{2}) + D \ ln2 + ln \ |W_k|
+$$
+
+Update $m_k$
+
+$$
+m_k = \frac{1}{\beta_k}(\beta_0 m_0 + N_k \bar{x}_k)
+$$
+
+Update $ln \ \pi_k$, where $\hat{\alpha} = \sum_k \alpha_k$
+
+$$
+ln \ \bar{\pi}_k = E[ln \ \pi_k] = \psi(\alpha_k) - \psi(\hat{\alpha})
+$$
+
+```{r}
+init_log_pi <- function(alpha){
+  return(digamma(alpha) - digamma(sum(alpha)))
+}
+
+update_log_Lambda_k <- function(k, nu_k, D, W_k){
+  return(sum(digamma((nu_k[k] + 1 - 1:D) / 2)) + D * log(2) + log(det(W_k[,,k])))
+}
+
+update_m_k <- function(k, beta_k, m_0, N_k, x_bar_k){
+  return((1 / beta_k[k]) * (beta_0 * m_0 + N_k[k] * x_bar_k[, k]))
+}
+
+update_log_pi <- function(alpha){
+  return(digamma(alpha) - digamma(sum(alpha)))
+}
+
+update_pi_k <- function(alpha_0, N_k, K, N){
+  return((alpha_0 + N_k) / (K * alpha_0 + N))
+}
+```
+
+### 3. Dirichlet Distribution
+
+Support $x_1, ..., x_K$ where $x_i \in (0, 1)$ and $\sum^K_{i=1} x_i = 1, K > 2$ with parameters $\alpha_1, ..., \alpha_K > 0$
+
+$$
+X \sim \mathcal{Dir}(\alpha) = \frac{1}{B(\alpha)} \prod^K_{i=1} x^{\alpha_i - 1}_{i}
+$$
+
+where the Beta function $B(\alpha)=\frac{\prod^K_{i=1} \Gamma(\alpha_i)}{\Gamma(\sum^K_{i=1} \alpha_i)}$ and $\alpha$ and $X$ are a set of random variables that $\alpha = \{ \alpha_1, ..., \alpha_K\}$ and $X = \{ X_1, ..., X_K\}$. Note that $x_i$ is a sample value generated by $X_i$.
+
+The mean of the Dirichlet distribution is
+
+$$
+E[ln \ X_i] = \psi(\alpha_i) - \psi(\sum^K_{k=1} \alpha_k)
+$$
+
+where $\psi$ is **digamma** function 
+
+$$
+\psi(x) = \frac{d}{dx} ln(\Gamma(x)) = \frac{\Gamma'(x)}{\Gamma(x)} \approx ln(x) - \frac{1}{2x}
+$$
+
+In order to reduce the number of parameters, we use **Symmetric Dirichlet distribution** which is a  special form of Dirichlet distribution that defined as the following
+
+$$
+X \sim \mathcal{SymmDir}(\alpha_0) = \frac{\Gamma(\alpha_0 K)}{\Gamma(\alpha_0)^K} \prod^K_{i=1} x^{\alpha_0-1}_i = f(x_1, ..., x_{K-1}; \alpha_0)
+$$
+
+Thus, we can model the distribution of the weights of mixture Gaussian as a symmetric Dirichlet distribution.
+
+$$
+p(\pi) = \mathcal{Dir}(\pi | \alpha_0) = \frac{1}{B(\alpha_0)} \prod^K_{k=1} \pi^{\alpha_0 - 1}_{k} = C(\alpha_0) \prod^K_{k=1} \pi^{\alpha_0 - 1}_{k}
+$$
+
+```{r}
+update_alpha <- function(alpha_0, N_k){
+  return(alpha_0 + N_k)
+}
+```
+
+### 4. Gaussian-Wishart Distribution
+
+The parameters of mixture Gaussian follow the distribution of Wishart distribution. It is called Gaussian-Wishart distribution 
+
+$$
+p(\mu, \Lambda) = p(\mu | \Lambda) p(\Lambda) = \prod^K_{k=1} \mathcal{N}(\mu_k | m_0, (\beta_0 \Lambda_k)^{-1}) \mathcal{W}(\Lambda_k | W_0, \nu_0)
+$$
+
+Update $W_k$
+
+$$
+W^{-1}_k = W^{-1}_0 + N_k S_k + \frac{\beta_0 N_k}{\beta_0 + N_k} (\bar{x}_k - m_0) (\bar{x}_k - m_0)^{\top}
+$$
+
+Update $\nu_k$
+
+$$
+\nu_k = \nu_k + N_k + 1
+$$
+
+Update $\beta_k$
+
+$$
+\beta_k = \beta_0 + N_k
+$$
+
+```{r}
+init_log_Lambda_k <- function(k, D, nu_k, W_k){
+  return(sum(digamma((nu_k[k] + 1 - c(1:D))/2)) + D*log(2) + log(det(W_k[,,k])))
+}
+
+update_W_k <- function(k, W_0_inv, N_k, S_k, beta_0, x_bar_k, m_0){
+  W_k <- W_0_inv + 
+         N_k[k] * S_k[,,k] + 
+         ((beta_0*N_k[k]) / (beta_0 + N_k[k])) * tcrossprod((x_bar_k[, k] - m_0))
+  return(solve(W_k))
+}
+
+update_nu_k <- function(nu_0, N_k){
+  return(nu_0 + N_k + 1)
+}
+
+update_beta_k <- function(beta_0, N_k){
+  return(beta_0 + N_k)
+}
+```
+
+## Animation
+
+```{r}
+init_animate <- function(X, dt_all, is_animation, GW, DIR){
+  if (is_animation) {
+    # Variables needed for plotting
+    dt <- data.table(expand.grid(x = seq(from = min(X[,1]) - 2, 
+                                         to = max(X[,1]) + 2, 
+                                         length.out = 80), 
+                                 y = seq(from = min(X[,2]) - 8, 
+                                         to = max(X[,2]) + 2, 
+                                         length.out = 80)))
+  }
+  dt_all <- data.table(x = numeric(), 
+                       y = numeric(), 
+                       z = numeric(), 
+                       iter = numeric())
+  
+  # Create animation for initial assignments
+  if (is_animation) {
+    my_z = mixture_pdf_t(model = list(m = GW$m_k, W = GW$W_k, beta = GW$beta_k, nu = GW$nu_k, alpha = DIR$alpha), data = dt)
+    dt_all <- rbind(dt_all, dt[, z := my_z] %>% .[, iter := 0])
+  }
+  
+  return(dt_all)
+}
+
+add_animate <- function(dt_all, is_animation, i, iter, GW, DIR){
+  if (is_animation) {
+    if ( (i - 1) %% 5 == 0 | i < 10) {
+      my_z = mixture_pdf_t(model = list(m = GW$m_k, W = GW$W_k, beta = GW$beta_k, nu = GW$nu_k, alpha = DIR$alpha), data = dt)
+      dt_all <- rbind(dt_all, dt[, z := my_z] %>% .[, iter := i - 1])
+    }
+  }
+  return(dt_all)
+}
+```
+
+## Variational Bayesian Gaussian Mixture Model
+
+```{r}
+
+e_step <- function(K, D, epsilon, GM, GW, UTIL){
+  for (k in 1:K) {
+    UTIL$log_rho_nk[, k] <- update_log_rho_nk(X, k, GW$m_k, GM$log_pi, GW$log_Lambda, D, GW$nu_k, GW$W_k)
+  }
+  
+  UTIL$log_r_nk <- update_log_r_nk(UTIL$log_rho_nk)
+  UTIL$r_nk <- update_r_nk(UTIL$log_r_nk)
+  UTIL$N_k <- update_N_k(UTIL$r_nk, epsilon)
+  
+  for (k in 1:K) {
+    UTIL$x_bar_k[, k] <- update_x_bar_k(k, UTIL$r_nk, X, UTIL$N_k)
+    UTIL$S_k[, , k] <- update_S_k(k, X, UTIL$x_bar_k, UTIL$r_nk, UTIL$N_k)
+  }
+  
+  res$GM <- GM
+  res$GW <- GW
+  res$UTIL <- UTIL
+  
+  return(res)
+}
+
+m_step <- function(N, D, K, GM, GW, DIR, UTIL){
+  # Update Dirichlet parameter
+  DIR$alpha <- update_alpha(DIR$alpha_0, UTIL$N_k)
+  GM$pi_k <- update_pi_k(DIR$alpha_0, UTIL$N_k, K, N)
+  GM$log_pi <- update_log_pi(DIR$alpha)
+  
+  # Update parameters for Gaussia-Wishart distribution
+  GW$beta_k <- update_beta_k(GW$beta_0, UTIL$N_k)
+  GW$nu_k <- update_nu_k(GW$nu_0, UTIL$N_k)
+  for (k in 1:K) {
+    GW$m_k[, k] <- update_m_k(k, GW$beta_k, GW$m_0, UTIL$N_k, UTIL$x_bar_k)
+    GW$W_k[, , k] <- update_W_k(k, GW$W_0_inv, UTIL$N_k, UTIL$S_k, GW$beta_0, UTIL$x_bar_k, GW$m_0)
+    GW$log_Lambda[k] <- update_log_Lambda_k(k, GW$nu_k, D, GW$W_k)
+  }
+  
+  res$GM <- GM
+  res$GW <- GW
+  res$DIR <- DIR
+  
+  return(res)
+}
+
+get_label <- function(X, N, K, GW, DIR){
+  prob_mat <- matrix(0, nrow=N, ncol=K)
+  
+  for (k in 1:K){
+    L_k <- solve((((GW$nu_k[k] + 1 - NROW(GW$m_k)) * GW$beta_k[k]) / 
+                    (1 + GW$beta_k[k])) * GW$W_k[,,k])
+    
+    prob_mat[, k] <- (DIR$alpha[k]/sum(DIR$alpha)) * 
+                dmvt(X, delta=GW$m_k[, k], sigma=L_k, df=GW$nu_k[k] + 1 - NROW(GW$m_k), log=FALSE)
+  }
+  
+  #print(data.frame(prob_mat))
+  label <- apply(prob_mat, 1, which.max)
+  #print(label)
+  return(label)
+}
+
+vb_gmm <- function(X, 
+                   K = 3, 
+                   alpha_0 = 1/K, 
+                   m_0 = c(colMeans(X)), 
+                   beta_0 = 1, 
+                   nu_0 = NCOL(X) + 50, 
+                   W_0 = diag(100, NCOL(X)), 
+                   max_iter = 500, 
+                   threshold = 1e-4, 
+                   epsilon = 1e-10,
+                   is_animation = FALSE, 
+                   is_verbose = FALSE){
+  
+  X <- as.matrix(X)
+  # Dimension
+  D <- NCOL(X)
+  # Number of data points
+  N <- NROW(X)
+  
+  # Gaussian Mixture
+  GM <- structure(list(log_pi=rep(0, K), pi_k=0), class="Gaussian-Mixture")
+  
+  # Gaussian Wishart
+  GW <- structure(list(W_0=W_0,
+                       W_0_inv=solve(W_0), 
+                       W_k=array(0, c(D, D, K)), 
+                       log_Lambda=rep(0, K),
+                       m_0=m_0,
+                       m_k=t(kmeans(X, K, nstart = 25)$centers), # Scale of precision matrix
+                       beta_0=beta_0,
+                       beta_k=rep(beta_0, K), # Degrees of freedom
+                       nu_0=nu_0,
+                       nu_k=rep(nu_0, K)), # Degrees of freedom
+                   class="Gaussian-Wishart")
+  
+  # Dirichlet 
+  DIR <- structure(list(alpha_0=alpha_0, 
+                        alpha=rep(alpha_0, K)), 
+                   class="Dirichlet")
+  
+  # ELBO
+  L <- rep(-Inf, max_iter)  # Store the lower bounds
+  
+  # Utility Variable
+  UTIL <- structure(list(r_nk=matrix(0, nrow=N, ncol=K), 
+                         log_r_nk=matrix(0, nrow=N, ncol=K), 
+                         log_rho_nk=matrix(0, nrow=N, ncol=K), 
+                         x_bar_k=matrix(0, nrow=D, ncol=K),
+                         S_k=array(0, c(D, D, K)),
+                         N_k=0), 
+                    class="Utility")
+  
+  # Initialization
+  #GM$log_pi <- digamma(DIR$alpha) - digamma(sum(DIR$alpha))
+  GM$log_pi <- init_log_pi(DIR$alpha)
+  
+  for (k in 1:K) {
+    GW$W_k[,,k] <-  GW$W_0  # Scale matrix for Wishart
+    #GW$log_Lambda[k] <- sum(digamma((GW$nu_k[k] + 1 - c(1:D))/2)) + D*log(2) + log(det(GW$W_k[,,k]))
+    GW$log_Lambda[k] <- init_log_Lambda_k(k, D, GW$nu_k, GW$W_k)
+  }
+  
+  # Add Animation
+  if (is_animation) {
+    # Variables needed for plotting
+    dt <- data.table(expand.grid(x = seq(from = min(X[,1]) - 2, 
+                                         to = max(X[,1]) + 2, 
+                                         length.out = 80), 
+                                 y = seq(from = min(X[,2]) - 8, 
+                                         to = max(X[,2]) + 2, 
+                                         length.out = 80)))
+  }
+  dt_all <- data.table(x = numeric(), 
+                       y = numeric(), 
+                       z = numeric(), 
+                       iter = numeric())
+  
+  if (is_animation) { # Create animation for initial assignments
+    my_z = mixture_pdf_t(model = list(m = GW$m_k, W = GW$W_k, beta = GW$beta_k, nu = GW$nu_k, alpha = DIR$alpha), data = dt)
+    dt_all <- rbind(dt_all, dt[, z := my_z] %>% .[, iter := 0])
+  }
+  
+  # Iterate to find optimal parameters
+  for (i in 2:max_iter) {
+    # Variational E-Step
+    e_step_res <- e_step(K, D, epsilon, GM, GW, UTIL)
+    GM <- e_step_res$GM
+    GW <- e_step_res$GW
+    UTIL <- e_step_res$UTIL
+    
+    # Variational M-Step
+    m_step_res <- m_step(N, D, K, GM, GW, DIR, UTIL)
+    GM <- m_step_res$GM
+    GW <- m_step_res$GW
+    DIR <- m_step_res$DIR
+    
+    # Evaluate mixture density for plotting
+    if (is_animation) {
+      if ( (i - 1) %% 5 == 0 | i < 10) {
+        my_z = mixture_pdf_t(model = list(m = GW$m_k, W = GW$W_k, beta = GW$beta_k, nu = GW$nu_k, alpha = DIR$alpha), data = dt)
+        dt_all <- rbind(dt_all, dt[, z := my_z] %>% .[, iter := i - 1])
+      }
+    }
+  }
+  
+  label <- get_label(X, N, K, GW, DIR)
+    
+  obj <- structure(list(data=X, cluster=label, K=K, N=N, D=D, pi_k=GM$pi_k, 
+                        alpha=DIR$alpha, r_nk=UTIL$r_nk,  m=GW$m_k, W=GW$W_k, 
+                        beta=GW$beta_k, nu=GW$nu_k, L=L[2:i], 
+                        dt_all=dt_all), class="VB-GMM")
+  return(obj)
+}
+```
+
+```{r}
+# Generate Simulation Data
+library(gtools)
+library(extraDistr)
+
+gen_mus <- function(n, d, scale=10){
+  mus <- matrix(0, nrow=n, ncol=d)
+  for(j in 1:d){
+    mus[,j] <- runif(n=n, min=-scale, max=scale)
+  }
+  return(mus)
+}
+
+gen_sigmas <- function(n, d, df=20, seed=42){
+  S <- toeplitz((d:1)/d)
+  #set.seed(seed)
+  return(rWishart(n, df, S))
+}
+
+gen_coef <- function(K){
+  return(rdirichlet(1, rep(1, K)))
+}
+
+gen_datas <- function(n, d, mus, sigmas, coef){
+  data <- matrix(0, nrow=n, ncol=d)
+  norm_coef <- coef / (sum(coef) + 1e-9)
+  idxs <- rcat(n, norm_coef)
+  
+  for(i in 1:n){
+    data[i,] <- mvtnorm::rmvnorm(1, mean=mus[idxs[i], ], sigma=sigmas[,,idxs[i]])
+  }
+  
+  #sapply(1:n, function(i){})
+  
+  return(data)
+}
+
+real_K <- 5
+D <- 2
+N <- 500
+df <- 3
+scale <- 10
+
+set.seed(17231)  
+mus <- gen_mus(real_K, D, scale)
+sigmas <- gen_sigmas(real_K, D, df=df)
+coef <- gen_coef(real_K)
+data <- gen_datas(N, D, mus, sigmas, coef)
+X <- data
+colnames(X) <- c('X', 'Y')
+head(X)
+```
+
+```{r}
+# Eliminate Randomness
+set.seed(42)
+# Number of cluster
+K <- 20
+
+vb_gmm_model <- vb_gmm(X = X, 
+                       K = K, 
+                       alpha_0 = 1e-5, 
+                       max_iter = 200, 
+                       is_animation = TRUE, 
+                       is_verbose = FALSE)
+kmean_model <- kmeans(X, real_K)
+```
+
+```{r}
+draw_contour <- function(X, vb_gmm_model, aes){
+  data.grid <- expand.grid(x = seq(from = min(X[,1]) - 2, 
+                                   to = max(X[,1]) + 2, length.out = 100), 
+                           y = seq(from = min(X[,2]) - 8, 
+                                   to = max(X[,2]) + 2, length.out = 100))
+  q.samp <- cbind(data.grid, z=mixture_pdf_t(vb_gmm_model, data.grid))
+  
+  ggplot() + 
+    geom_point(data=data.frame(X), mapping=aes) + 
+    geom_contour(data=q.samp, mapping=aes(x=x, y=y, z=z, colour=..level..), binwidth=0.001) +
+    gg_theme()
+}
+
+draw_animate <- function(X, vb_gmm_model, aes){
+  dt <- vb_gmm_model$dt_all %>% .[, iter := as.factor(iter)]
+  p <- ggplot() + 
+    geom_point(data = data.frame(X), aes) + 
+    geom_contour(data = dt, mapping = aes(x = x, y = y, z = z, 
+                 colour = ..level..), binwidth = 0.001) + 
+    transition_manual(iter) +
+    gg_theme()
+  
+  return(p)
+}
+
+
+```
+
+```{r}
+library(ggpubr)
+library(factoextra)
+library(cluster)
+
+draw_contour(X, vb_gmm_model, aes(X,Y))
+
+fviz_cluster(kmean_model, data = X,
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw(),
+             main="Simulation Cluster Plot of K-Means"
+             )
+
+fviz_cluster(vb_gmm_model, data = X,
+             geom = "point",
+             ellipse.type = "convex", 
+             ggtheme = theme_bw(),
+             main="Simulation Cluster Plot of VB-GMM"
+             )
+
+```
+
+```{r}
+draw_animate(X, vb_gmm_model, aes(X,Y))
+```
+
+## Real Dataset
+
+### Beaver2
+
+```{r}
+library(tidyverse)  # data manipulation
+library(rattle)
+
+#data <- faithful
+#data <- iris[, 1:4]
+#data <- USArrests
+data <- beaver2[, 1:3]
+
+print(data)
+#X <- as.matrix(data)
+```
+
+```{r}
+#pca <- prcomp(data, scale=TRUE)
+#print(pca)
+#X <- pca$x
+X <- scale(data)
+```
+
+```{r}
+set.seed(42)
+vb_gmm_model <- vb_gmm(X=X, 
+                       K=3, 
+                       alpha_0=1e-5, 
+                       max_iter=1001, 
+                       is_animation=FALSE, 
+                       is_verbose=FALSE)
+kmean_model <- kmeans(X, 3)
+```
+
+```{r}
+fviz_cluster(kmean_model, 
+             data=X,
+             geom="point",
+             ellipse.type="convex", 
+             ggtheme=theme_bw(),
+             main="Beaver2: Cluster Plot of K-Means"
+             )
+
+fviz_cluster(vb_gmm_model, 
+             data=X,
+             geom="point",
+             ellipse.type="convex", 
+             ggtheme=theme_bw(),
+             main="Beaver2: Cluster Plot of VB-GMM"
+             )
+
+clusplot(X, kmean_model$cluster, main='Beaver2: Cluster solution of K-Means',
+         color=TRUE, shade=TRUE,
+         labels=2, lines=0)
+
+clusplot(X, vb_gmm_model$cluster, main='Beaver2: Cluster solution of VB-GMM',
+         color=TRUE, shade=TRUE,
+         labels=2, lines=0)
+```
+
+### Beaver1
+
+```{r}
+data <- beaver1
+print(data)
+X <- scale(data)
+```
+
+```{r}
+set.seed(5)
+vb_gmm_model <- vb_gmm(X=X, 
+                       K=3, 
+                       alpha_0=1e-5, 
+                       max_iter=1001, 
+                       is_animation=FALSE, 
+                       is_verbose=FALSE)
+kmean_model <- kmeans(X, 3)
+
+fviz_cluster(kmean_model, 
+             data=X,
+             geom="point",
+             ellipse.type="convex", 
+             ggtheme=theme_bw(),
+             main="Beaver1: Cluster Plot of K-Means"
+             )
+
+fviz_cluster(vb_gmm_model, 
+             data=X,
+             geom="point",
+             ellipse.type="convex", 
+             ggtheme=theme_bw(),
+             main="Beaver1: Cluster Plot of VB-GMM"
+             )
+
+clusplot(X, kmean_model$cluster, main='Beaver1: Cluster solution of K-Means',
+         color=TRUE, shade=TRUE,
+         labels=2, lines=0)
+
+clusplot(X, vb_gmm_model$cluster, main='Beaver1: Cluster solution of VB-GMM',
+         color=TRUE, shade=TRUE,
+         labels=2, lines=0)
+```
