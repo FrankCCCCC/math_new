@@ -36,7 +36,7 @@ def load_data(filename):
 
 def draw_boundary(datasets, classifiers, names, is_trained=True):
     h = .02  # step size in the mesh
-    figure = plt.figure(figsize=((len(classifiers))*3, len(datasets)*3))
+    figure = plt.figure(figsize=((len(classifiers))*3, len(datasets)*2))
     i = 1
     # iterate over datasets
     for ds_cnt, ds in enumerate(datasets):
@@ -134,9 +134,12 @@ class SVM():
         self.max_iter = max_iter
 
         # Kernel
+        # kernel_type = "linear" or "rbf"
         self.kernel_type=kernel_type
         self.gamma=gamma
         self.K = np.zeros((self.n, self.n))
+        # Set up kernel function
+        self.kernel_method = getattr(self, self.kernel_type)
 
         # Some utility 
         self.loss_history = []
@@ -214,28 +217,33 @@ class SVM():
     def kernel(self, x_i, x_j, name="rbf", gamma=10):
         return np.exp(-gamma * (x_i - x_j)^2)
 
-    def cal_kernel(self, X):
-        if self.kernel_type == "rbf":
-            # RBF Kernel
-            # Scipy, compute exact kernel
-            # pairwise_dists = squareform(pdist(X, 'euclidean'))
-            # K = snp.exp(-self.gamma * (pairwise_dists ** 2))
+    def rbf(self, X):
+        # RBF Kernel
+        # Scipy, compute exact kernel
+        pairwise_dists = squareform(pdist(X, 'euclidean'))
+        K = snp.exp(-self.gamma * (pairwise_dists ** 2))
+        return K
+    
+    def rbf_approx(self, X):
+        # Kernel Approx
+        n = snp.array(X).shape[0]
+        d = snp.array(X).shape[1]
+        sample_n = 100*d
+        W = np.random.normal(loc=0, scale=self.gamma/2, size=(sample_n, self.dim))
+        b = np.random.uniform(0, 2*np.pi, size=sample_n)
+        B = np.repeat(b[:, snp.newaxis], n, axis=1)
+        norm = 1./ snp.sqrt(sample_n)
+        Z = norm * snp.sqrt(2) * snp.cos(snp.dot(W, X.T) + B)
+        K = np.array(snp.dot(Z.T, Z))
+        return K
+    
+    def linear(self, X):
+        # Linear Kernel
+        K = snp.dot(X, X.T)
+        return K
 
-            # Kernel Approx
-            n = snp.array(X).shape[0]
-            d = snp.array(X).shape[1]
-            sample_n = 100*d
-            W = np.random.normal(loc=0, scale=1, size=(sample_n, self.dim))
-            b = np.random.uniform(0, 2*np.pi, size=sample_n)
-            B = np.repeat(b[:, snp.newaxis], n, axis=1)
-            norm = 1./ snp.sqrt(sample_n)
-            Z = norm * snp.sqrt(2) * snp.cos(snp.dot(W, X.T) + B)
-            K = np.array(snp.dot(Z.T, Z))
-            return K
-        else:
-            # Linear Kernel
-            K = snp.dot(X, X.T)
-            return K
+    def cal_kernel(self, X):
+        return self.kernel_method(X)
 
     def fit(self, X, y):
         # self.info_level = info_level
@@ -438,10 +446,5 @@ if __name__ == "__main__":
     # display(test_pred[:10])
 
     # draw_boundary([(dataset, labels)], [svm], ["RBF SVM"], is_trained=True)
-    draw_boundary(datasets, [SVM(C=0.6, max_iter=1000, kernel_type="rbf", gamma=2), SVM(C=0.6, max_iter=1000, kernel_type="linear")], ["RBF SVM", "Linear SVM"], is_trained=False)
-
-# %%
-
-# %%
-
-# %%
+    # draw_boundary(datasets, [SVM(C=0.6, max_iter=1000, kernel_type="rbf", gamma=2), SVM(C=0.6, max_iter=1000, kernel_type="linear")], ["RBF SVM", "Linear SVM"], is_trained=False)
+    draw_boundary(datasets, [SVM(C=0.6, max_iter=1000, kernel_type="rbf_approx", gamma=2), SVM(C=0.6, max_iter=1000, kernel_type="linear")], ["RBF SVM", "Linear SVM"], is_trained=False)

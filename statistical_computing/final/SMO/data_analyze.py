@@ -183,6 +183,7 @@ display(pd.DataFrame(summary_text, index=vectorizer.get_feature_names()).nlarges
 # Top words of LDA topics
 n_top_words = 10
 plot_top_words(lda, vectorizer, n_top_words, 'Topics in LDA model')
+# plot_top_words(pca, vectorizer, n_top_words, 'Topics in PCA model')
 
 # Word Cloud
 cloud = WordCloud().generate(" ".join(list(df['Review Text'])))
