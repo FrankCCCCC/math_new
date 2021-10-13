@@ -4,6 +4,9 @@ f(x) =
     4 - x, if 0 < x < 4
     -4 - x, if -4 < x < 0
 for -4 < x < 4, p=4
+
+I've tried up to 12 terms, but it seems hard to strectch the curve as a
+straight line.
 %}
 fn1 = @(x) 8/pi * (sin(pi*x/4) + (1/2) * sin(pi*x/2) + (1/3) * sin(3*pi*x/4) + (1/4) * sin(pi*x) + (1/5) * sin(5*pi*x/4));
 f1 = figure;
@@ -17,6 +20,9 @@ saveas(gcf,'plot_problem10.png')
 %{
 P491 11.
 f(x) = x^2, -1 < x < 1, p=2
+
+It seems approximate the quadratic function well, although it still has
+some slightly-unfitted parts.
 %}
 fn2 = @(x) (1/3) + (4/(pi^2)) * (-cos(pi*x) + (1/4) * cos(2*pi*x) - (1/9) * cos(3*pi*x) + (1/16) * cos(4*pi*x) - (1/25) * cos(5*pi*x));
 f2 = figure;
@@ -33,6 +39,10 @@ f(x) =
     1, if 2 < x < 4
     0, if 0 < x < 2
 for -4 < x < 4, p=4 (Half Wave)
+
+It's clear that the Fourier series approximate the up and down of the
+function. However, it still doesn't perform well on the detail and still
+have some periodic clogging.
 %}
 fn24_odd = @(x) (2/pi) * (sin(pi*x/4) - sin(pi*x/2) + (1/3) * sin(3*pi*x/4) + (1/5) * sin(5*pi*x/4) - (1/3) * sin(3*pi*x/2));
 f24_odd = figure;
@@ -56,6 +66,10 @@ saveas(gcf,'plot_problem24_even.png')
 P491 28.
 f(x) = x
 for 0 <= x <= L, p=2L (Half Wave)
+
+It's clear that the Fourier series approximate the function well in general. 
+However, it still doesn't perform well on the detail and still
+have some periodic clogging.
 %}
 fn28_odd = @(x) (2/pi) * (sin(pi*x) - (1/2) * sin(2*pi*x) + (1/3) * sin(3*pi*x) - (1/4) * sin(4*pi*x) + (1/5) * sin(5*pi*x));
 f28_odd = figure;
