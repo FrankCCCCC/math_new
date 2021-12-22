@@ -248,7 +248,7 @@ $$
 \alpha_2^{new} = \alpha_2^{old} + \frac{y_2 (E_1 - E_2)}{\eta}
 $$
 
-### 2.3 Step 2. Clip with Bosk Constraint
+### 2.3 Step 2. Clip with Box Constraint
 
 The new values should satisfy the complementary slackness as 
 
@@ -260,7 +260,7 @@ Since $y_1, y_2$ may have different labels, thus we consider 2 cases. The first 
 
 Note that there is another line in quadrant 3 in the case 2 but it doesn't show in the figure due to the limit of the size.
 
-![](./imgs/bosk.png)
+![](./imgs/box.png)
 
 ***Figure 1***
 
@@ -280,7 +280,7 @@ $$
 B_U = C + \alpha_2 - \alpha_1, \ B_L = 0
 $$
 
-Combine 2 cases, both new and old values should satisfy the bosk constraint. The upper bound of $\alpha_2^{new}$  can be written as
+Combine 2 cases, both new and old values should satisfy the box constraint. The upper bound of $\alpha_2^{new}$  can be written as
 
 $$
 B_U = \min(C, C + \alpha_2^{old} - \alpha_1^{old})
@@ -401,7 +401,7 @@ while($move > \epsilon$ and $iter \leq \text{max-iter}$):
    - $\eta = K_{i, i} + K_{j, j} -  2 K_{i, j}$
    - $\alpha_j^{new} = \alpha_j + \frac{y_j (E_i - E_j)}{\eta}$
   
-     **Bosk Constraint**
+     **Box Constraint**
 
    - if($y_i = y_j$):
     

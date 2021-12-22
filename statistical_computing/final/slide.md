@@ -29,7 +29,7 @@ pagination: true
 
 Select 2 variables $\alpha_i, \alpha_j$ and update
 
-# Step 2. Bosk Constraint
+# Step 2. Box Constraint
 
 Clip the value of $\alpha_j$ with complementary slackness
 
@@ -57,15 +57,15 @@ To understand intuitively, you can see $\eta$ as **Learning Rate** and $y_j (E_i
 For more detailed derivation, please refer to the report.
 
 ---
-# SMO - Step 2. Bosk Constraint
+# SMO - Step 2. Box Constraint
 
 To satisfy the complementary slackness $\alpha_1 y_1 + \alpha_2 y_2  = \zeta, \ 0 \leq \alpha_i \leq C$, we need to **clip** the $\alpha_j^{new}$ under blue and grey area.
 
-![](./imgs/bosk.png)
+![](./imgs/box.png)
 
 ---
 
-# SMO - Step 2. Bosk Constraint
+# SMO - Step 2. Box Constraint
 
 - if($y_i = y_j$):
 
